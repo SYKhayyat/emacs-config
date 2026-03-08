@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+name: Hebrew document
+key: hebdoc
+--
+#+TITLE: ${1:כותרת}
+#+AUTHOR: ${2:Author}
+#+DATE: `(format-time-string "%Y-%m-%d")`
+#+LATEX_CLASS: article-unlimited
+#+LATEX_HEADER: \babelprovide[main, import]{hebrew}
+#+OPTIONS: toc:nil
+
+$0

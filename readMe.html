@@ -1,0 +1,4233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2026-03-03 Tue 20:28 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Emacs Configuration Guide</title>
+<meta name="author" content="User" />
+<meta name="generator" content="Org Mode" />
+<style type="text/css">
+  #content { max-width: 60em; margin: auto; }
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #e6e6e6;
+    border-radius: 3px;
+    background-color: #f2f2f2;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: auto;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    padding: 3px;
+    color: #555;
+    background-color: #f2f2f299;
+  }
+  pre.src:hover:before { display: inline; margin-top: 14px;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-authinfo::before { content: 'Authinfo'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { }
+</style>
+</head>
+<body>
+<div id="content" class="content">
+<h1 class="title">Emacs Configuration Guide</h1>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#orgafccc57">1. Installation</a>
+<ul>
+<li><a href="#orgf052117">1.1. NixOS Configuration</a></li>
+<li><a href="#org4440b03">1.2. Emacs Configuration</a></li>
+<li><a href="#org59c10f1">1.3. First Run Tasks</a></li>
+</ul>
+</li>
+<li><a href="#org47e7cc5">2. Basic Emacs Usage</a>
+<ul>
+<li><a href="#org8928a49">2.1. Key Notation</a></li>
+<li><a href="#orgcb2c4a1">2.2. Essential Commands</a></li>
+<li><a href="#orge9ab8ef">2.3. Navigation</a></li>
+<li><a href="#org16a49eb">2.4. Editing</a></li>
+<li><a href="#orga809d62">2.5. Windows</a></li>
+</ul>
+</li>
+<li><a href="#org334b044">3. Hebrew and RTL Support</a>
+<ul>
+<li><a href="#orgbaa8cdd">3.1. Switching Languages</a></li>
+<li><a href="#org3e06107">3.2. Visual Indicators</a></li>
+<li><a href="#org14f8f2a">3.3. How Direction Works</a></li>
+<li><a href="#orgcbf3045">3.4. Best Practices</a></li>
+<li><a href="#orgedde432">3.5. Spell Checking</a></li>
+</ul>
+</li>
+<li><a href="#org476061c">4. Document Systems Overview</a>
+<ul>
+<li><a href="#org6af4f39">4.1. Quick Document Creation</a></li>
+<li><a href="#org6a3ee67">4.2. Document Systems Menu</a></li>
+</ul>
+</li>
+<li><a href="#org7e71fad">5. Org Mode</a>
+<ul>
+<li><a href="#org3d6ceaf">5.1. Basic Structure</a></li>
+<li><a href="#org38b216b">5.2. Headings (Unlimited Levels)</a></li>
+<li><a href="#org285cfe8">5.3. Heading Keybindings</a></li>
+<li><a href="#orgbbd6b5b">5.4. Lists (Unlimited Levels)</a>
+<ul>
+<li><a href="#orga2a99ac">5.4.1. Unordered Lists</a></li>
+<li><a href="#org63fe81c">5.4.2. Ordered Lists</a></li>
+<li><a href="#org315c734">5.4.3. List Keybindings</a></li>
+</ul>
+</li>
+<li><a href="#org8ebd4c7">5.5. Checkboxes</a></li>
+<li><a href="#org02efd6a">5.6. Links</a></li>
+<li><a href="#org3af1b19">5.7. Code Blocks</a></li>
+<li><a href="#orgd6a5df3">5.8. Exporting</a></li>
+<li><a href="#org1298c25">5.9. Org to LaTeX Export Settings</a></li>
+</ul>
+</li>
+<li><a href="#org6df66cc">6. LaTeX and AUCTeX</a>
+<ul>
+<li><a href="#orgf31fc94">6.1. Creating a New Document</a></li>
+<li><a href="#orgd736603">6.2. Basic Document Structure (Hebrew)</a></li>
+<li><a href="#orgab70007">6.3. Quick Preamble Insertion</a></li>
+<li><a href="#org6463784">6.4. AUCTeX Keybindings</a></li>
+<li><a href="#org547739e">6.5. Compiling Documents</a></li>
+<li><a href="#orgd203fed">6.6. Unlimited Sectioning in LaTeX</a></li>
+<li><a href="#org21ea914">6.7. Unlimited Lists in LaTeX</a></li>
+</ul>
+</li>
+<li><a href="#org73885d2">7. Nested Footnotes in LaTeX</a>
+<ul>
+<li><a href="#orgc2749b7">7.1. Overview</a></li>
+<li><a href="#orgff76ba9">7.2. Method 1: Simple Footnotes (Non-Nested)</a></li>
+<li><a href="#orgd89bbdb">7.3. Method 2: True Nesting (Footnote Within Footnote)</a></li>
+<li><a href="#org2a9d724">7.4. Footnote Levels Reference</a></li>
+<li><a href="#org81ed6e1">7.5. Keybindings</a>
+<ul>
+<li><a href="#orgc03410d">7.5.1. Simple Footnotes (<code>C-c f &lt;number&gt;</code>)</a></li>
+<li><a href="#org2400481">7.5.2. Nested Footnotes (Marks and Texts)</a></li>
+<li><a href="#org9f3a685">7.5.3. Footnotes Menu</a></li>
+</ul>
+</li>
+<li><a href="#orgc308268">7.6. Adding More Levels</a></li>
+</ul>
+</li>
+<li><a href="#org725a021">8. ConTeXt</a>
+<ul>
+<li><a href="#org7050746">8.1. What is ConTeXt?</a></li>
+<li><a href="#org38bfb3e">8.2. Creating a ConTeXt Document</a></li>
+<li><a href="#org6fa949f">8.3. Compiling ConTeXt</a></li>
+<li><a href="#orgf349800">8.4. ConTeXt Keybindings</a></li>
+<li><a href="#orgfc6b67f">8.5. ConTeXt Sectioning</a></li>
+<li><a href="#org20c1134">8.6. Local Footnotes in ConTeXt</a></li>
+</ul>
+</li>
+<li><a href="#orgddf014c">9. Typst</a>
+<ul>
+<li><a href="#org2853cdf">9.1. What is Typst?</a></li>
+<li><a href="#org262e861">9.2. Creating a Typst Document</a></li>
+<li><a href="#org11ac8b6">9.3. Compiling Typst</a></li>
+<li><a href="#orgfb48fbe">9.4. Typst Keybindings</a></li>
+<li><a href="#orgfd96390">9.5. Typst Syntax Basics</a>
+<ul>
+<li><a href="#org5f14714">9.5.1. Headings</a></li>
+<li><a href="#org1277197">9.5.2. Text Formatting</a></li>
+<li><a href="#org8e6f2b1">9.5.3. Lists</a></li>
+<li><a href="#orgd91f2d6">9.5.4. Links</a></li>
+</ul>
+</li>
+<li><a href="#org874eed0">9.6. Basic Footnotes in Typst</a></li>
+<li><a href="#org83031e2">9.7. Nested Footnotes in Typst</a>
+<ul>
+<li><a href="#org18554c3">9.7.1. The Problem</a></li>
+<li><a href="#org919d35f">9.7.2. The Solution</a></li>
+<li><a href="#orgaa7cf18">9.7.3. Why It Works</a></li>
+<li><a href="#orgf308e06">9.7.4. Full Working Example</a></li>
+<li><a href="#org6fcd219">9.7.5. Hebrew Example</a></li>
+<li><a href="#org845a7cd">9.7.6. Optional Styling</a></li>
+<li><a href="#org851d79b">9.7.7. Caveats</a></li>
+<li><a href="#orgf6fccb7">9.7.8. Comparison with LaTeX/ConTeXt</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#orgb7e147d">10. Nested Footnotes Comparison</a></li>
+<li><a href="#org1a3a305">11. Org-Roam</a>
+<ul>
+<li><a href="#org64e96a6">11.1. What is Org-Roam?</a></li>
+<li><a href="#org3342b08">11.2. Keybindings</a></li>
+<li><a href="#org8fb906d">11.3. Creating Notes</a></li>
+<li><a href="#orga5c9a91">11.4. Linking Notes</a></li>
+<li><a href="#orgbd35d5c">11.5. Viewing Backlinks</a></li>
+<li><a href="#org34fa7e7">11.6. Visual Graph</a></li>
+</ul>
+</li>
+<li><a href="#orgeec6baf">12. Bibliography</a>
+<ul>
+<li><a href="#org49c9ae1">12.1. Citar Keybindings</a></li>
+<li><a href="#orgaaffca1">12.2. Bibliography File</a></li>
+<li><a href="#org3c3af45">12.3. Adding References</a></li>
+<li><a href="#org52cb6b2">12.4. Using in LaTeX</a></li>
+<li><a href="#orgb548f9c">12.5. Using in Org</a></li>
+</ul>
+</li>
+<li><a href="#org6a0fe36">13. Programming</a>
+<ul>
+<li><a href="#orgdc72f72">13.1. Supported Languages</a></li>
+<li><a href="#org96d6aba">13.2. LSP (Eglot) Keybindings</a></li>
+<li><a href="#orgd635dfe">13.3. Running Code in Org</a></li>
+</ul>
+</li>
+<li><a href="#orgc25a2db">14. Version Control (Magit)</a>
+<ul>
+<li><a href="#orgbdfa27e">14.1. Keybindings</a></li>
+<li><a href="#org1d7ebcd">14.2. Basic Magit Workflow</a></li>
+</ul>
+</li>
+<li><a href="#orgef64783">15. Adding New Packages</a>
+<ul>
+<li><a href="#orgdeea67b">15.1. Method 1: Edit config.org (Recommended)</a></li>
+<li><a href="#org3e06081">15.2. Method 2: Quick Install (Temporary)</a></li>
+<li><a href="#org0a68b34">15.3. Use-Package Syntax Reference</a></li>
+<li><a href="#org83ad853">15.4. Common Use-Package Keywords</a></li>
+<li><a href="#orgfdcc831">15.5. Adding System Packages (NixOS)</a></li>
+</ul>
+</li>
+<li><a href="#orgb003c60">16. Customization</a>
+<ul>
+<li><a href="#org9eafc0e">16.1. Changing Theme</a></li>
+<li><a href="#org97bf540">16.2. Changing Fonts</a></li>
+<li><a href="#org51a1f9d">16.3. Changing Hebrew Fonts</a></li>
+<li><a href="#orgb05a617">16.4. Adding Custom Keybindings</a></li>
+<li><a href="#orgf737e3f">16.5. Creating Custom Functions</a></li>
+</ul>
+</li>
+<li><a href="#org18fc14a">17. Keybinding Reference</a>
+<ul>
+<li><a href="#orgbac353f">17.1. Global</a></li>
+<li><a href="#orgbad5c35">17.2. Spell Checking</a></li>
+<li><a href="#orgacce188">17.3. Document Creation</a></li>
+<li><a href="#org2658666">17.4. Org Mode</a></li>
+<li><a href="#orgf7a67c0">17.5. Org-Roam</a></li>
+<li><a href="#org4ccc0cd">17.6. LaTeX</a></li>
+<li><a href="#orgc3e3b1e">17.7. ConTeXt</a></li>
+<li><a href="#org48727d1">17.8. Typst</a></li>
+<li><a href="#org8b449f5">17.9. Bibliography</a></li>
+</ul>
+</li>
+<li><a href="#orgdcf79db">18. Troubleshooting</a>
+<ul>
+<li><a href="#orga129602">18.1. Packages Not Installing</a></li>
+<li><a href="#org36edb4d">18.2. Hebrew Not Displaying</a></li>
+<li><a href="#orgb66b9bf">18.3. PDF Not Opening in Emacs</a></li>
+<li><a href="#orgb29c997">18.4. Org-Roam Database Errors</a></li>
+<li><a href="#orgf8c3702">18.5. LaTeX Compilation Fails</a></li>
+<li><a href="#org15fcf41">18.6. ConTeXt Compilation Fails</a></li>
+<li><a href="#orgfa86c9c">18.7. Typst Compilation Fails</a></li>
+<li><a href="#org88fda1f">18.8. Typst LSP Not Working</a></li>
+<li><a href="#org27d920c">18.9. Spell Check Not Working</a></li>
+<li><a href="#orgc46897a">18.10. Slow Startup</a></li>
+<li><a href="#org1719d35">18.11. Config Changes Not Taking Effect</a></li>
+</ul>
+</li>
+<li><a href="#org5f2025a">19. Getting Help</a>
+<ul>
+<li><a href="#org673c18b">19.1. Built-in Help</a></li>
+<li><a href="#org0e20daa">19.2. Which-Key</a></li>
+<li><a href="#org8d74df8">19.3. Online Resources</a></li>
+</ul>
+</li>
+<li><a href="#org44c1652">20. File Locations Summary</a></li>
+<li><a href="#org024e233">21. Quick Start Summary</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgafccc57" class="outline-2">
+<h2 id="orgafccc57"><span class="section-number-2">1.</span> Installation</h2>
+<div class="outline-text-2" id="text-1">
+</div>
+<div id="outline-container-orgf052117" class="outline-3">
+<h3 id="orgf052117"><span class="section-number-3">1.1.</span> NixOS Configuration</h3>
+<div class="outline-text-3" id="text-1-1">
+<ol class="org-ol">
+<li>Copy <code>emacs-packages.nix</code> to <code>/etc/nixos/</code></li>
+
+<li><p>
+Edit <code>/etc/nixos/configuration.nix</code> and add:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-nix">imports = [
+  ./hardware-configuration.nix
+  ./emacs-packages.nix
+];
+</pre>
+</div></li>
+
+<li><p>
+Rebuild:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">sudo nixos-rebuild switch
+</pre>
+</div></li>
+</ol>
+</div>
+</div>
+<div id="outline-container-org4440b03" class="outline-3">
+<h3 id="org4440b03"><span class="section-number-3">1.2.</span> Emacs Configuration</h3>
+<div class="outline-text-3" id="text-1-2">
+<ol class="org-ol">
+<li><p>
+Create directory:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">mkdir -p ~/.emacs.d
+</pre>
+</div></li>
+
+<li><p>
+Copy files:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">cp config.org ~/.emacs.d/
+cp init.el ~/.emacs.d/
+</pre>
+</div></li>
+
+<li><p>
+Create required directories:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">mkdir -p ~/Documents/roam
+mkdir -p ~/Documents/org
+touch ~/Documents/bibliography.bib
+</pre>
+</div></li>
+
+<li>Start Emacs and wait for packages to install</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-org59c10f1" class="outline-3">
+<h3 id="org59c10f1"><span class="section-number-3">1.3.</span> First Run Tasks</h3>
+<div class="outline-text-3" id="text-1-3">
+<p>
+After first launch:
+</p>
+
+<ol class="org-ol">
+<li><p>
+Install icon fonts:
+</p>
+<pre class="example">
+M-x all-the-icons-install-fonts RET
+</pre></li>
+
+<li><p>
+Initialize org-roam database:
+</p>
+<pre class="example">
+M-x org-roam-db-sync RET
+</pre></li>
+</ol>
+</div>
+</div>
+</div>
+<div id="outline-container-org47e7cc5" class="outline-2">
+<h2 id="org47e7cc5"><span class="section-number-2">2.</span> Basic Emacs Usage</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-org8928a49" class="outline-3">
+<h3 id="org8928a49"><span class="section-number-3">2.1.</span> Key Notation</h3>
+<div class="outline-text-3" id="text-2-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Notation</th>
+<th scope="col" class="org-left">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-</code></td>
+<td class="org-left">Hold Control key</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-</code></td>
+<td class="org-left">Hold Alt/Meta key</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>S-</code></td>
+<td class="org-left">Hold Shift key</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>RET</code></td>
+<td class="org-left">Press Enter</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>SPC</code></td>
+<td class="org-left">Press Space</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orgcb2c4a1" class="outline-3">
+<h3 id="orgcb2c4a1"><span class="section-number-3">2.2.</span> Essential Commands</h3>
+<div class="outline-text-3" id="text-2-2">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-x C-f</code></td>
+<td class="org-left">Open/create file</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-x C-s</code></td>
+<td class="org-left">Save file</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-x C-c</code></td>
+<td class="org-left">Quit Emacs</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-x b</code></td>
+<td class="org-left">Switch buffer</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-x k</code></td>
+<td class="org-left">Close buffer</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-g</code></td>
+<td class="org-left">Cancel command</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-x</code></td>
+<td class="org-left">Run any command</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-h k</code></td>
+<td class="org-left">Describe keybinding</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-h f</code></td>
+<td class="org-left">Describe function</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-h v</code></td>
+<td class="org-left">Describe variable</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orge9ab8ef" class="outline-3">
+<h3 id="orge9ab8ef"><span class="section-number-3">2.3.</span> Navigation</h3>
+<div class="outline-text-3" id="text-2-3">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-f</code> / <code>C-b</code></td>
+<td class="org-left">Forward/backward char</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-f</code> / <code>M-b</code></td>
+<td class="org-left">Forward/backward word</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-n</code> / <code>C-p</code></td>
+<td class="org-left">Next/previous line</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-a</code> / <code>C-e</code></td>
+<td class="org-left">Beginning/end of line</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-&lt;</code> / <code>M-&gt;</code></td>
+<td class="org-left">Beginning/end of buffer</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-v</code> / <code>M-v</code></td>
+<td class="org-left">Page down/up</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-s</code></td>
+<td class="org-left">Search (consult-line)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-g g</code></td>
+<td class="org-left">Go to line number</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org16a49eb" class="outline-3">
+<h3 id="org16a49eb"><span class="section-number-3">2.4.</span> Editing</h3>
+<div class="outline-text-3" id="text-2-4">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-d</code></td>
+<td class="org-left">Delete character</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-d</code></td>
+<td class="org-left">Delete word</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-k</code></td>
+<td class="org-left">Kill to end of line</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-w</code></td>
+<td class="org-left">Kill region (cut)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-w</code></td>
+<td class="org-left">Copy region</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-y</code></td>
+<td class="org-left">Yank (paste)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-y</code></td>
+<td class="org-left">Cycle kill ring</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-/</code></td>
+<td class="org-left">Undo</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orga809d62" class="outline-3">
+<h3 id="orga809d62"><span class="section-number-3">2.5.</span> Windows</h3>
+<div class="outline-text-3" id="text-2-5">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-x 2</code></td>
+<td class="org-left">Split horizontally</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-x 3</code></td>
+<td class="org-left">Split vertically</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-x 0</code></td>
+<td class="org-left">Close current window</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-x 1</code></td>
+<td class="org-left">Close other windows</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-x o</code></td>
+<td class="org-left">Switch to other window</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="outline-container-org334b044" class="outline-2">
+<h2 id="org334b044"><span class="section-number-2">3.</span> Hebrew and RTL Support</h2>
+<div class="outline-text-2" id="text-3">
+</div>
+<div id="outline-container-orgbaa8cdd" class="outline-3">
+<h3 id="orgbaa8cdd"><span class="section-number-3">3.1.</span> Switching Languages</h3>
+<div class="outline-text-3" id="text-3-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-\</code></td>
+<td class="org-left">Toggle input method (Hebrew ↔ English)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c d</code></td>
+<td class="org-left">Toggle text direction (RTL ↔ LTR)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c r</code></td>
+<td class="org-left">Force RTL direction</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c l</code></td>
+<td class="org-left">Force LTR direction</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org3e06107" class="outline-3">
+<h3 id="org3e06107"><span class="section-number-3">3.2.</span> Visual Indicators</h3>
+<div class="outline-text-3" id="text-3-2">
+<p>
+The modeline shows current state:
+</p>
+<ul class="org-ul">
+<li><code>[RTL עב]</code> - Hebrew mode, right-to-left</li>
+<li><code>[LTR EN]</code> - English mode, left-to-right</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org14f8f2a" class="outline-3">
+<h3 id="org14f8f2a"><span class="section-number-3">3.3.</span> How Direction Works</h3>
+<div class="outline-text-3" id="text-3-3">
+<ul class="org-ul">
+<li><b>RTL (Right-to-Left)</b>: Default. Text flows right to left.</li>
+<li><b>LTR (Left-to-Right)</b>: For English/code. Text flows left to right.</li>
+</ul>
+
+<p>
+For mixed text:
+</p>
+<ul class="org-ul">
+<li>Paragraph direction determines base direction</li>
+<li>Opposite-direction runs handled automatically</li>
+<li>Use <code>C-c d</code> to switch if display looks wrong</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgcbf3045" class="outline-3">
+<h3 id="orgcbf3045"><span class="section-number-3">3.4.</span> Best Practices</h3>
+<div class="outline-text-3" id="text-3-4">
+<ol class="org-ol">
+<li><b>Hebrew documents</b>: Keep default RTL</li>
+<li><b>English documents</b>: Use <code>C-c l</code> for LTR</li>
+<li><b>Mixed documents</b>: Set direction based on majority language</li>
+<li><b>Code</b>: Always use LTR (<code>C-c l</code>)</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-orgedde432" class="outline-3">
+<h3 id="orgedde432"><span class="section-number-3">3.5.</span> Spell Checking</h3>
+<div class="outline-text-3" id="text-3-5">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c s e</code></td>
+<td class="org-left">Switch to English</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c s h</code></td>
+<td class="org-left">Switch to Hebrew</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="outline-container-org476061c" class="outline-2">
+<h2 id="org476061c"><span class="section-number-2">4.</span> Document Systems Overview</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+This configuration supports three document systems:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">System</th>
+<th scope="col" class="org-left">Best For</th>
+<th scope="col" class="org-left">Hebrew</th>
+<th scope="col" class="org-left">Nested Footnotes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><b>LaTeX</b></td>
+<td class="org-left">Academic papers, journals</td>
+<td class="org-left">✓</td>
+<td class="org-left">Separate blocks (bigfoot)</td>
+</tr>
+
+<tr>
+<td class="org-left"><b>ConTeXt</b></td>
+<td class="org-left">Complex typography, books</td>
+<td class="org-left">✓</td>
+<td class="org-left">Native local footnotes</td>
+</tr>
+
+<tr>
+<td class="org-left"><b>Typst</b></td>
+<td class="org-left">Fast iteration, modern syntax</td>
+<td class="org-left">✓</td>
+<td class="org-left">Sequential (with show rule)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="outline-container-org6af4f39" class="outline-3">
+<h3 id="org6af4f39"><span class="section-number-3">4.1.</span> Quick Document Creation</h3>
+<div class="outline-text-3" id="text-4-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c h l</code></td>
+<td class="org-left">Create Hebrew LaTeX doc</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c h x</code></td>
+<td class="org-left">Create Hebrew ConTeXt doc</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c h t</code></td>
+<td class="org-left">Create Hebrew Typst doc</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c h o</code></td>
+<td class="org-left">Create Hebrew Org doc</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org6a3ee67" class="outline-3">
+<h3 id="org6a3ee67"><span class="section-number-3">4.2.</span> Document Systems Menu</h3>
+<div class="outline-text-3" id="text-4-2">
+<p>
+Press <code>C-c P</code> to open the document systems hydra menu with all preamble insertion options.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org7e71fad" class="outline-2">
+<h2 id="org7e71fad"><span class="section-number-2">5.</span> Org Mode</h2>
+<div class="outline-text-2" id="text-5">
+</div>
+<div id="outline-container-org3d6ceaf" class="outline-3">
+<h3 id="org3d6ceaf"><span class="section-number-3">5.1.</span> Basic Structure</h3>
+<div class="outline-text-3" id="text-5-1">
+<pre class="example" id="orgc6bb9fa">
+* Heading Level 1
+** Heading Level 2
+*** Heading Level 3 (unlimited levels)
+**** Level 4
+***** Level 5
+****** Level 6 (and so on...)
+
+Regular paragraph text.
+
+- Unordered list item
+  - Nested item (unlimited nesting)
+    - Even more nested
+      - And more...
+
+1. Ordered list item
+   1. Nested numbered item
+      1. More nesting
+         1. Unlimited levels
+</pre>
+</div>
+</div>
+<div id="outline-container-org38b216b" class="outline-3">
+<h3 id="org38b216b"><span class="section-number-3">5.2.</span> Headings (Unlimited Levels)</h3>
+<div class="outline-text-3" id="text-5-2">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Syntax</th>
+<th scope="col" class="org-left">Level</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>*</code></td>
+<td class="org-left">Level 1</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>**</code></td>
+<td class="org-left">Level 2</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>***</code></td>
+<td class="org-left">Level 3</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>****</code></td>
+<td class="org-left">Level 4</td>
+</tr>
+
+<tr>
+<td class="org-left">&#x2026;</td>
+<td class="org-left">(no limit)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org285cfe8" class="outline-3">
+<h3 id="org285cfe8"><span class="section-number-3">5.3.</span> Heading Keybindings</h3>
+<div class="outline-text-3" id="text-5-3">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>M-RET</code></td>
+<td class="org-left">Insert heading at same level</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-S-RET</code></td>
+<td class="org-left">Insert TODO heading</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-LEFT/RIGHT</code></td>
+<td class="org-left">Promote/demote heading</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-UP/DOWN</code></td>
+<td class="org-left">Move heading up/down</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>TAB</code></td>
+<td class="org-left">Cycle visibility</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>S-TAB</code></td>
+<td class="org-left">Cycle global visibility</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orgbbd6b5b" class="outline-3">
+<h3 id="orgbbd6b5b"><span class="section-number-3">5.4.</span> Lists (Unlimited Levels)</h3>
+<div class="outline-text-3" id="text-5-4">
+</div>
+<div id="outline-container-orga2a99ac" class="outline-4">
+<h4 id="orga2a99ac"><span class="section-number-4">5.4.1.</span> Unordered Lists</h4>
+<div class="outline-text-4" id="text-5-4-1">
+<pre class="example" id="org695bdfa">
+- Item 1
+  - Sub-item (indent 2 spaces)
+    - Sub-sub-item
+      - And so on...
++ Alternative bullet
+  + Sub-item
+</pre>
+</div>
+</div>
+<div id="outline-container-org63fe81c" class="outline-4">
+<h4 id="org63fe81c"><span class="section-number-4">5.4.2.</span> Ordered Lists</h4>
+<div class="outline-text-4" id="text-5-4-2">
+<pre class="example" id="org2085f50">
+1. First item
+   1. Sub-item
+      1. Sub-sub-item
+         1. Unlimited nesting
+2. Second item
+</pre>
+</div>
+</div>
+<div id="outline-container-org315c734" class="outline-4">
+<h4 id="org315c734"><span class="section-number-4">5.4.3.</span> List Keybindings</h4>
+<div class="outline-text-4" id="text-5-4-3">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>M-RET</code></td>
+<td class="org-left">Insert new list item</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-LEFT/RIGHT</code></td>
+<td class="org-left">Change indent level</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-UP/DOWN</code></td>
+<td class="org-left">Move item up/down</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c -</code></td>
+<td class="org-left">Cycle bullet style</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-c</code></td>
+<td class="org-left">Toggle checkbox</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="outline-container-org8ebd4c7" class="outline-3">
+<h3 id="org8ebd4c7"><span class="section-number-3">5.5.</span> Checkboxes</h3>
+<div class="outline-text-3" id="text-5-5">
+<pre class="example" id="orgf960eba">
+- [ ] Unchecked item
+- [X] Checked item
+- [-] Partially done
+</pre>
+</div>
+</div>
+<div id="outline-container-org02efd6a" class="outline-3">
+<h3 id="org02efd6a"><span class="section-number-3">5.6.</span> Links</h3>
+<div class="outline-text-3" id="text-5-6">
+<pre class="example" id="orgafe4cee">
+[[https://example.com][Link text]]
+[[file:./other-file.org][Internal link]]
+[[#custom-id][Link to heading]]
+</pre>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c C-l</code></td>
+<td class="org-left">Insert/edit link</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-o</code></td>
+<td class="org-left">Open link</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org3af1b19" class="outline-3">
+<h3 id="org3af1b19"><span class="section-number-3">5.7.</span> Code Blocks</h3>
+<div class="outline-text-3" id="text-5-7">
+<pre class="example" id="orgd405c66">
+#+begin_src python
+  print("Hello, World!")
+#+end_src
+
+#+begin_src shell
+  echo "Shell command"
+#+end_src
+</pre>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c C-c</code></td>
+<td class="org-left">Execute code block</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c '</code></td>
+<td class="org-left">Edit in dedicated buffer</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orgd6a5df3" class="outline-3">
+<h3 id="orgd6a5df3"><span class="section-number-3">5.8.</span> Exporting</h3>
+<div class="outline-text-3" id="text-5-8">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c C-e</code></td>
+<td class="org-left">Open export dispatcher</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-e l l</code></td>
+<td class="org-left">Export to LaTeX</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-e l p</code></td>
+<td class="org-left">Export to PDF</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-e h h</code></td>
+<td class="org-left">Export to HTML</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org1298c25" class="outline-3">
+<h3 id="org1298c25"><span class="section-number-3">5.9.</span> Org to LaTeX Export Settings</h3>
+<div class="outline-text-3" id="text-5-9">
+<p>
+Add to the top of your org file:
+</p>
+
+<pre class="example" id="org64b0127">
+#+TITLE: Document Title
+#+AUTHOR: Your Name
+#+LANGUAGE: he
+#+LATEX_COMPILER: lualatex
+#+LATEX_CLASS: article-unlimited
+</pre>
+
+<p>
+Available classes:
+</p>
+<ul class="org-ul">
+<li><code>article-unlimited</code> (default)</li>
+<li><code>report-unlimited</code></li>
+<li><code>book-unlimited</code></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org6df66cc" class="outline-2">
+<h2 id="org6df66cc"><span class="section-number-2">6.</span> LaTeX and AUCTeX</h2>
+<div class="outline-text-2" id="text-6">
+</div>
+<div id="outline-container-orgf31fc94" class="outline-3">
+<h3 id="orgf31fc94"><span class="section-number-3">6.1.</span> Creating a New Document</h3>
+<div class="outline-text-3" id="text-6-1">
+<ol class="org-ol">
+<li>Create file: <code>C-x C-f myfile.tex RET</code></li>
+<li>AUCTeX mode activates automatically</li>
+</ol>
+
+<p>
+Or use: <code>C-c h l</code> to create a Hebrew LaTeX document with full preamble.
+</p>
+</div>
+</div>
+<div id="outline-container-orgd736603" class="outline-3">
+<h3 id="orgd736603"><span class="section-number-3">6.2.</span> Basic Document Structure (Hebrew)</h3>
+<div class="outline-text-3" id="text-6-2">
+<div class="org-src-container">
+<pre class="src src-latex">\documentclass{article}
+\usepackage{fontspec}
+\usepackage[bidi=basic]{babel}
+\babelprovide[main, import]{hebrew}
+\babelprovide[import]{english}
+\babelfont{rm}{David CLM}
+
+\begin{document}
+
+\section{כותרת}
+
+טקסט בעברית.
+
+\begin{english}
+English text here.
+\end{english}
+
+\end{document}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgab70007" class="outline-3">
+<h3 id="orgab70007"><span class="section-number-3">6.3.</span> Quick Preamble Insertion</h3>
+<div class="outline-text-3" id="text-6-3">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Command</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>M-x my/insert-hebrew-preamble</code></td>
+<td class="org-left">Insert Babel Hebrew preamble</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-x my/insert-polyglossia-preamble</code></td>
+<td class="org-left">Insert Polyglossia preamble</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-x my/insert-unlimited-structure</code></td>
+<td class="org-left">Insert only unlimited structure</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+Or use <code>C-c P</code> for the document systems menu.
+</p>
+</div>
+</div>
+<div id="outline-container-org6463784" class="outline-3">
+<h3 id="org6463784"><span class="section-number-3">6.4.</span> AUCTeX Keybindings</h3>
+<div class="outline-text-3" id="text-6-4">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c C-c</code></td>
+<td class="org-left">Run command (compile, view)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-a</code></td>
+<td class="org-left">Compile and view</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-v</code></td>
+<td class="org-left">View PDF</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-e</code></td>
+<td class="org-left">Insert environment</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-s</code></td>
+<td class="org-left">Insert section</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-m</code></td>
+<td class="org-left">Insert macro</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-f C-b</code></td>
+<td class="org-left">Bold</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-f C-i</code></td>
+<td class="org-left">Italic</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c `</code></td>
+<td class="org-left">Go to next error</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org547739e" class="outline-3">
+<h3 id="org547739e"><span class="section-number-3">6.5.</span> Compiling Documents</h3>
+<div class="outline-text-3" id="text-6-5">
+<ol class="org-ol">
+<li>Press <code>C-c C-c</code></li>
+<li>Press <code>RET</code> for default (LaTeX)</li>
+<li>View with <code>C-c C-c</code> then <code>View</code></li>
+</ol>
+
+<p>
+Documents compile with LuaLaTeX automatically.
+</p>
+</div>
+</div>
+<div id="outline-container-orgd203fed" class="outline-3">
+<h3 id="orgd203fed"><span class="section-number-3">6.6.</span> Unlimited Sectioning in LaTeX</h3>
+<div class="outline-text-3" id="text-6-6">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-right" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-right">Level</th>
+<th scope="col" class="org-left">Command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-right">1</td>
+<td class="org-left"><code>\section{}</code></td>
+</tr>
+
+<tr>
+<td class="org-right">2</td>
+<td class="org-left"><code>\subsection{}</code></td>
+</tr>
+
+<tr>
+<td class="org-right">3</td>
+<td class="org-left"><code>\subsubsection{}</code></td>
+</tr>
+
+<tr>
+<td class="org-right">4</td>
+<td class="org-left"><code>\paragraph{}</code></td>
+</tr>
+
+<tr>
+<td class="org-right">5</td>
+<td class="org-left"><code>\subparagraph{}</code></td>
+</tr>
+
+<tr>
+<td class="org-right">6</td>
+<td class="org-left"><code>\subsubparagraph{}</code></td>
+</tr>
+
+<tr>
+<td class="org-right">7</td>
+<td class="org-left"><code>\subsubsubparagraph{}</code></td>
+</tr>
+
+<tr>
+<td class="org-right">8</td>
+<td class="org-left"><code>\subsubsubsubparagraph{}</code></td>
+</tr>
+
+<tr>
+<td class="org-right">9</td>
+<td class="org-left"><code>\subsubsubsubsubparagraph{}</code></td>
+</tr>
+
+<tr>
+<td class="org-right">10</td>
+<td class="org-left">(continue pattern)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org21ea914" class="outline-3">
+<h3 id="org21ea914"><span class="section-number-3">6.7.</span> Unlimited Lists in LaTeX</h3>
+<div class="outline-text-3" id="text-6-7">
+<p>
+Standard LaTeX limits lists to 4 levels. With our config, you can nest up to 20 levels:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-latex">\begin{itemize}
+  \item Level 1
+  \begin{itemize}
+    \item Level 2
+    \begin{itemize}
+      \item Level 3
+      % ... continue to level 20
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org73885d2" class="outline-2">
+<h2 id="org73885d2"><span class="section-number-2">7.</span> Nested Footnotes in LaTeX</h2>
+<div class="outline-text-2" id="text-7">
+</div>
+<div id="outline-container-orgc2749b7" class="outline-3">
+<h3 id="orgc2749b7"><span class="section-number-3">7.1.</span> Overview</h3>
+<div class="outline-text-3" id="text-7-1">
+<p>
+The <code>bigfoot</code> package provides multiple footnote levels. Each level appears in its own <b>separate block</b> at the bottom of the page.
+</p>
+</div>
+</div>
+<div id="outline-container-orgff76ba9" class="outline-3">
+<h3 id="orgff76ba9"><span class="section-number-3">7.2.</span> Method 1: Simple Footnotes (Non-Nested)</h3>
+<div class="outline-text-3" id="text-7-2">
+<p>
+Use <code>\footnoteB{}</code>, <code>\footnoteC{}</code>, etc. directly from body text. Each level gets its own block:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-latex">Main text.\footnote{First level footnote.}
+
+More text.\footnoteB{Second level, appears in separate block.}
+</pre>
+</div>
+
+<p>
+<b>Result at page bottom:</b>
+</p>
+<pre class="example" id="orga36a9ac">
+─────────────────────────────
+¹ First level footnote.
+
+─────────────────────────────
+¹ Second level, appears in separate block.
+</pre>
+</div>
+</div>
+<div id="outline-container-orgd89bbdb" class="outline-3">
+<h3 id="orgd89bbdb"><span class="section-number-3">7.3.</span> Method 2: True Nesting (Footnote Within Footnote)</h3>
+<div class="outline-text-3" id="text-7-3">
+<p>
+To place a footnote <b>inside</b> another footnote, use <code>\footnotemarkX</code> + <code>\footnotetextX{}</code>:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-latex">\usepackage{bigfoot}
+\DeclareNewFootnote{default}
+\DeclareNewFootnote{B}
+\DeclareNewFootnote{C}
+
+\begin{document}
+
+Main text.\footnote{%
+  This is the first-level footnote. It discusses a concept\footnotemarkB{}
+  that needs further explanation.
+  \footnotetextB{%
+    This second-level footnote appears in its own separate block
+    at the bottom of the page, below the first-level footnotes.
+    It can even contain another level\footnotemarkC{}.
+    \footnotetextC{Third level footnote, in its own block.}%
+  }%
+}
+
+\end{document}
+</pre>
+</div>
+
+<p>
+<b>Result at page bottom:</b>
+</p>
+<pre class="example" id="orgd78fff8">
+─────────────────────────────
+¹ This is the first-level footnote. It discusses a concept¹
+  that needs further explanation.
+
+─────────────────────────────
+¹ This second-level footnote appears in its own separate block
+  at the bottom of the page, below the first-level footnotes.
+  It can even contain another level¹.
+
+─────────────────────────────
+¹ Third level footnote, in its own block.
+</pre>
+</div>
+</div>
+<div id="outline-container-org2a9d724" class="outline-3">
+<h3 id="org2a9d724"><span class="section-number-3">7.4.</span> Footnote Levels Reference</h3>
+<div class="outline-text-3" id="text-7-4">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-right" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Command</th>
+<th scope="col" class="org-right">Level</th>
+<th scope="col" class="org-left">Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>\footnote{}</code></td>
+<td class="org-right">1</td>
+<td class="org-left">Normal footnotes</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>\footnoteB{}</code></td>
+<td class="org-right">2</td>
+<td class="org-left">Second level</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>\footnoteC{}</code></td>
+<td class="org-right">3</td>
+<td class="org-left">Third level</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>\footnoteD{}</code></td>
+<td class="org-right">4</td>
+<td class="org-left">Fourth level</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>\footnoteE{}</code></td>
+<td class="org-right">5</td>
+<td class="org-left">Fifth level</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>\footnoteF{}</code></td>
+<td class="org-right">6</td>
+<td class="org-left">Sixth level</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>\footnoteG{}</code></td>
+<td class="org-right">7</td>
+<td class="org-left">Seventh level</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>\footnoteH{}</code></td>
+<td class="org-right">8</td>
+<td class="org-left">Eighth level</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>\footnoteI{}</code></td>
+<td class="org-right">9</td>
+<td class="org-left">Ninth level</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>\footnoteJ{}</code></td>
+<td class="org-right">10</td>
+<td class="org-left">Tenth level</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+For nesting, use:
+</p>
+<ul class="org-ul">
+<li><code>\footnotemarkB</code> through <code>\footnotemarkJ</code> (places the superscript)</li>
+<li><code>\footnotetextB{}</code> through <code>\footnotetextJ{}</code> (places the text in its block)</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org81ed6e1" class="outline-3">
+<h3 id="org81ed6e1"><span class="section-number-3">7.5.</span> Keybindings</h3>
+<div class="outline-text-3" id="text-7-5">
+</div>
+<div id="outline-container-orgc03410d" class="outline-4">
+<h4 id="orgc03410d"><span class="section-number-4">7.5.1.</span> Simple Footnotes (<code>C-c f &lt;number&gt;</code>)</h4>
+<div class="outline-text-4" id="text-7-5-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c f 1</code></td>
+<td class="org-left">Insert <code>\footnote{}</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f 2</code></td>
+<td class="org-left">Insert <code>\footnoteB{}</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f 3</code></td>
+<td class="org-left">Insert <code>\footnoteC{}</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f 4</code></td>
+<td class="org-left">Insert <code>\footnoteD{}</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f 5</code></td>
+<td class="org-left">Insert <code>\footnoteE{}</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f 6</code></td>
+<td class="org-left">Insert <code>\footnoteF{}</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f 7</code></td>
+<td class="org-left">Insert <code>\footnoteG{}</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f 8</code></td>
+<td class="org-left">Insert <code>\footnoteH{}</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f 9</code></td>
+<td class="org-left">Insert <code>\footnoteI{}</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f 0</code></td>
+<td class="org-left">Insert <code>\footnoteJ{}</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org2400481" class="outline-4">
+<h4 id="org2400481"><span class="section-number-4">7.5.2.</span> Nested Footnotes (Marks and Texts)</h4>
+<div class="outline-text-4" id="text-7-5-2">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c f m 2</code></td>
+<td class="org-left">Insert <code>\footnotemarkB</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f m 3</code></td>
+<td class="org-left">Insert <code>\footnotemarkC</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f m 4</code></td>
+<td class="org-left">Insert <code>\footnotemarkD</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f m 5</code></td>
+<td class="org-left">Insert <code>\footnotemarkE</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f t 2</code></td>
+<td class="org-left">Insert <code>\footnotetextB{}</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f t 3</code></td>
+<td class="org-left">Insert <code>\footnotetextC{}</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f t 4</code></td>
+<td class="org-left">Insert <code>\footnotetextD{}</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f t 5</code></td>
+<td class="org-left">Insert <code>\footnotetextE{}</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f n</code></td>
+<td class="org-left">Insert nested template</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org9f3a685" class="outline-4">
+<h4 id="org9f3a685"><span class="section-number-4">7.5.3.</span> Footnotes Menu</h4>
+<div class="outline-text-4" id="text-7-5-3">
+<p>
+Press <code>C-c F</code> to open the LaTeX footnotes hydra menu with all options.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgc308268" class="outline-3">
+<h3 id="orgc308268"><span class="section-number-3">7.6.</span> Adding More Levels</h3>
+<div class="outline-text-3" id="text-7-6">
+<p>
+If you need more than 10 levels, add to your preamble:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-latex">\DeclareNewFootnote{K}
+\DeclareNewFootnote{L}
+</pre>
+</div>
+
+<p>
+Then use <code>\footnoteK{}</code>, <code>\footnotemarkK</code>, <code>\footnotetextK{}</code>, etc.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org725a021" class="outline-2">
+<h2 id="org725a021"><span class="section-number-2">8.</span> ConTeXt</h2>
+<div class="outline-text-2" id="text-8">
+</div>
+<div id="outline-container-org7050746" class="outline-3">
+<h3 id="org7050746"><span class="section-number-3">8.1.</span> What is ConTeXt?</h3>
+<div class="outline-text-3" id="text-8-1">
+<p>
+ConTeXt is a TeX-based document system with:
+</p>
+<ul class="org-ul">
+<li>Native RTL/Hebrew support (no packages needed)</li>
+<li>Built-in local footnotes (nested footnotes in separate blocks)</li>
+<li>Excellent typography</li>
+<li>"Batteries included" philosophy</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org38bfb3e" class="outline-3">
+<h3 id="org38bfb3e"><span class="section-number-3">8.2.</span> Creating a ConTeXt Document</h3>
+<div class="outline-text-3" id="text-8-2">
+<p>
+Use <code>C-c h x</code> to create a Hebrew ConTeXt document, or create manually:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-tex">\mainlanguage[he]
+\setupalign[r2l]
+\definefontfamily[hebrew][rm][David CLM]
+\definefontfamily[hebrew][ss][Nachlieli CLM]
+\definefontfamily[hebrew][tt][Miriam Mono CLM]
+\setupbodyfont[hebrew]
+
+\starttext
+
+\startsection[title={מבוא}]
+
+טקסט בעברית.
+
+\stopsection
+
+\stoptext
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org6fa949f" class="outline-3">
+<h3 id="org6fa949f"><span class="section-number-3">8.3.</span> Compiling ConTeXt</h3>
+<div class="outline-text-3" id="text-8-3">
+<p>
+In Emacs:
+</p>
+<ol class="org-ol">
+<li>Press <code>C-c C-c</code></li>
+<li>Type <code>ConTeXt</code> and press <code>RET</code></li>
+</ol>
+
+<p>
+Or from command line:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">context myfile.tex
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf349800" class="outline-3">
+<h3 id="orgf349800"><span class="section-number-3">8.4.</span> ConTeXt Keybindings</h3>
+<div class="outline-text-3" id="text-8-4">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c C-c</code></td>
+<td class="org-left">Compile (type "ConTeXt")</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-v</code></td>
+<td class="org-left">View PDF</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-p h</code></td>
+<td class="org-left">Insert Hebrew preamble</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orgfc6b67f" class="outline-3">
+<h3 id="orgfc6b67f"><span class="section-number-3">8.5.</span> ConTeXt Sectioning</h3>
+<div class="outline-text-3" id="text-8-5">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Command</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>\startpart[title={...}]</code></td>
+<td class="org-left">Part</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>\startchapter[title={...}]</code></td>
+<td class="org-left">Chapter</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>\startsection[title={...}]</code></td>
+<td class="org-left">Section</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>\startsubsection[title={...}]</code></td>
+<td class="org-left">Subsection</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>\startsubsubsection[title={...}]</code></td>
+<td class="org-left">Subsubsection</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+Each must be closed with <code>\stop...</code>
+</p>
+</div>
+</div>
+<div id="outline-container-org20c1134" class="outline-3">
+<h3 id="org20c1134"><span class="section-number-3">8.6.</span> Local Footnotes in ConTeXt</h3>
+<div class="outline-text-3" id="text-8-6">
+<p>
+ConTeXt's killer feature: footnotes that appear at the bottom of their <b>parent footnote</b>, not at the bottom of the page.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-tex">זהו טקסט ראשי.\footnote{
+  זוהי הערת שוליים ראשונה.
+  \startlocalfootnotes
+  מונח כלשהו.\localfootnote{
+    הערה מקוננת — מופיעה בתחתית ההערה הראשונה, לא בתחתית העמוד.
+    \startlocalfootnotes
+    עוד מונח.\localfootnote{
+      הערה שלישית — בתחתית ההערה השנייה.
+    }
+    \placelocalfootnotes
+    \stoplocalfootnotes
+  }
+  \placelocalfootnotes
+  \stoplocalfootnotes
+}
+</pre>
+</div>
+
+<p>
+<b>Result:</b>
+</p>
+<ul class="org-ul">
+<li>Level 1 footnote → bottom of page</li>
+<li>Level 2 footnote → bottom of level 1 block</li>
+<li>Level 3 footnote → bottom of level 2 block</li>
+</ul>
+
+<p>
+Use <code>C-c P</code> then <code>cf</code> to insert a local footnote structure.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgddf014c" class="outline-2">
+<h2 id="orgddf014c"><span class="section-number-2">9.</span> Typst</h2>
+<div class="outline-text-2" id="text-9">
+</div>
+<div id="outline-container-org2853cdf" class="outline-3">
+<h3 id="org2853cdf"><span class="section-number-3">9.1.</span> What is Typst?</h3>
+<div class="outline-text-3" id="text-9-1">
+<p>
+Typst is a modern document system with:
+</p>
+<ul class="org-ul">
+<li>Instant compilation (watch mode)</li>
+<li>Clean, readable syntax</li>
+<li>Native RTL support</li>
+<li>Easy scripting</li>
+<li>~50MB vs ~4GB for LaTeX</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org262e861" class="outline-3">
+<h3 id="org262e861"><span class="section-number-3">9.2.</span> Creating a Typst Document</h3>
+<div class="outline-text-3" id="text-9-2">
+<p>
+Use <code>C-c h t</code> to create a Hebrew Typst document, or create manually:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-typst">#set text(lang: "he", font: "David CLM")
+#set page(flipped: true)
+#set heading(numbering: "1.1.1")
+
+= מבוא
+
+טקסט בעברית.
+
+== תת-כותרת
+
+עוד טקסט.
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org11ac8b6" class="outline-3">
+<h3 id="org11ac8b6"><span class="section-number-3">9.3.</span> Compiling Typst</h3>
+<div class="outline-text-3" id="text-9-3">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c C-c</code></td>
+<td class="org-left">Compile once</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-w</code></td>
+<td class="org-left">Watch mode (live preview)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-v</code></td>
+<td class="org-left">View PDF</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+Or from command line:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">typst compile myfile.typ      # Compile once
+typst watch myfile.typ        # Watch mode
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgfb48fbe" class="outline-3">
+<h3 id="orgfb48fbe"><span class="section-number-3">9.4.</span> Typst Keybindings</h3>
+<div class="outline-text-3" id="text-9-4">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c C-c</code></td>
+<td class="org-left">Compile</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-w</code></td>
+<td class="org-left">Watch (live preview)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-v</code></td>
+<td class="org-left">View PDF</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-p h</code></td>
+<td class="org-left">Insert Hebrew preamble</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-p f</code></td>
+<td class="org-left">Insert nested footnote helper</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orgfd96390" class="outline-3">
+<h3 id="orgfd96390"><span class="section-number-3">9.5.</span> Typst Syntax Basics</h3>
+<div class="outline-text-3" id="text-9-5">
+</div>
+<div id="outline-container-org5f14714" class="outline-4">
+<h4 id="org5f14714"><span class="section-number-4">9.5.1.</span> Headings</h4>
+<div class="outline-text-4" id="text-9-5-1">
+<div class="org-src-container">
+<pre class="src src-typst">= Level 1
+== Level 2
+=== Level 3
+==== Level 4 (unlimited)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org1277197" class="outline-4">
+<h4 id="org1277197"><span class="section-number-4">9.5.2.</span> Text Formatting</h4>
+<div class="outline-text-4" id="text-9-5-2">
+<div class="org-src-container">
+<pre class="src src-typst">*bold*
+_italic_
+`code`
+#underline[underlined]
+#strike[strikethrough]
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org8e6f2b1" class="outline-4">
+<h4 id="org8e6f2b1"><span class="section-number-4">9.5.3.</span> Lists</h4>
+<div class="outline-text-4" id="text-9-5-3">
+<div class="org-src-container">
+<pre class="src src-typst">- Unordered item
+  - Nested item
+    - More nesting (unlimited)
+
++ Ordered item
+  + Nested ordered
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgd91f2d6" class="outline-4">
+<h4 id="orgd91f2d6"><span class="section-number-4">9.5.4.</span> Links</h4>
+<div class="outline-text-4" id="text-9-5-4">
+<div class="org-src-container">
+<pre class="src src-typst">#link("https://example.com")[Link text]
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org874eed0" class="outline-3">
+<h3 id="org874eed0"><span class="section-number-3">9.6.</span> Basic Footnotes in Typst</h3>
+<div class="outline-text-3" id="text-9-6">
+<div class="org-src-container">
+<pre class="src src-typst">This is text#footnote[This is a footnote].
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org83031e2" class="outline-3">
+<h3 id="org83031e2"><span class="section-number-3">9.7.</span> Nested Footnotes in Typst</h3>
+<div class="outline-text-3" id="text-9-7">
+</div>
+<div id="outline-container-org18554c3" class="outline-4">
+<h4 id="org18554c3"><span class="section-number-4">9.7.1.</span> The Problem</h4>
+<div class="outline-text-4" id="text-9-7-1">
+<p>
+By default, Typst doesn't allow you to place a <code>#footnote</code> inside another <code>#footnote</code>. If you try, you'll get an error because Typst tries to render all footnote entries inline in a single flow at the bottom of the page.
+</p>
+</div>
+</div>
+<div id="outline-container-org919d35f" class="outline-4">
+<h4 id="org919d35f"><span class="section-number-4">9.7.2.</span> The Solution</h4>
+<div class="outline-text-4" id="text-9-7-2">
+<p>
+Add this show rule at the top of your document:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-typst">#show footnote.entry: it =&gt; {
+  block(it)
+}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgaa7cf18" class="outline-4">
+<h4 id="orgaa7cf18"><span class="section-number-4">9.7.3.</span> Why It Works</h4>
+<div class="outline-text-4" id="text-9-7-3">
+<p>
+By wrapping each <code>footnote.entry</code> in a <code>block()</code>:
+</p>
+
+<ol class="org-ol">
+<li><b>Isolates each footnote entry</b> into its own independent layout container</li>
+<li><b>Breaks the layout dependency</b> between parent and child footnotes</li>
+<li>Each footnote can now independently place its own sub-footnotes</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-orgf308e06" class="outline-4">
+<h4 id="orgf308e06"><span class="section-number-4">9.7.4.</span> Full Working Example</h4>
+<div class="outline-text-4" id="text-9-7-4">
+<div class="org-src-container">
+<pre class="src src-typst">// This is the critical line: wrap each footnote entry in its own block
+#show footnote.entry: it =&gt; {
+  block(it)
+}
+
+This is body text with a footnote.#footnote[
+  This is the first-level footnote, and it contains
+  another footnote inside it.#footnote[
+    This is a second-level (nested) footnote! You can even
+    go deeper.#footnote[
+      Third level nested footnote.
+    ]
+  ]
+]
+
+More body text here.#footnote[A normal, non-nested footnote for comparison.]
+</pre>
+</div>
+
+<p>
+<b>Result at page bottom:</b>
+</p>
+
+<pre class="example" id="org902ab71">
+──────────────────────────────────────
+¹ This is the first-level footnote, and it contains
+  another footnote inside it.²
+² This is a second-level (nested) footnote! You can even
+  go deeper.³
+³ Third level nested footnote.
+⁴ A normal, non-nested footnote for comparison.
+</pre>
+
+<p>
+Each footnote gets its own numbered entry, laid out sequentially at the page bottom.
+</p>
+</div>
+</div>
+<div id="outline-container-org6fcd219" class="outline-4">
+<h4 id="org6fcd219"><span class="section-number-4">9.7.5.</span> Hebrew Example</h4>
+<div class="outline-text-4" id="text-9-7-5">
+<div class="org-src-container">
+<pre class="src src-typst">#set text(lang: "he", font: "David CLM")
+#set page(flipped: true)
+
+// Enable nested footnotes
+#show footnote.entry: it =&gt; {
+  block(it)
+}
+
+= מבוא
+
+זהו טקסט ראשי עם הערת שוליים.#footnote[
+  זוהי הערת שוליים ראשונה, המכילה הערה נוספת.#footnote[
+    זוהי הערת שוליים מקוננת! אפשר להמשיך לעומק.#footnote[
+      הערת שוליים ברמה שלישית.
+    ]
+  ]
+]
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org845a7cd" class="outline-4">
+<h4 id="org845a7cd"><span class="section-number-4">9.7.6.</span> Optional Styling</h4>
+<div class="outline-text-4" id="text-9-7-6">
+<p>
+You can add styling while keeping the block wrapper:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-typst">#show footnote.entry: it =&gt; {
+  block({
+    set text(size: 9pt)
+    it
+  })
+}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org851d79b" class="outline-4">
+<h4 id="org851d79b"><span class="section-number-4">9.7.7.</span> Caveats</h4>
+<div class="outline-text-4" id="text-9-7-7">
+<ul class="org-ul">
+<li><b>Numbering is flat</b>: All footnotes share one sequential counter (1, 2, 3&#x2026;). Typst doesn't distinguish "levels."</li>
+<li><b>All appear at page bottom</b>: Nested footnotes don't appear indented under their parent — they're sequential entries.</li>
+<li><b>Deep nesting</b>: 2–3 levels work well; extremely deep nesting may be confusing.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgf6fccb7" class="outline-4">
+<h4 id="orgf6fccb7"><span class="section-number-4">9.7.8.</span> Comparison with LaTeX/ConTeXt</h4>
+<div class="outline-text-4" id="text-9-7-8">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Feature</th>
+<th scope="col" class="org-left">LaTeX (bigfoot)</th>
+<th scope="col" class="org-left">ConTeXt</th>
+<th scope="col" class="org-left">Typst</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Separate blocks</td>
+<td class="org-left">✓ Each level</td>
+<td class="org-left">✓ Hierarchical</td>
+<td class="org-left">✗ Sequential</td>
+</tr>
+
+<tr>
+<td class="org-left">Numbering</td>
+<td class="org-left">Per-level</td>
+<td class="org-left">Per-level</td>
+<td class="org-left">Flat (shared)</td>
+</tr>
+
+<tr>
+<td class="org-left">True hierarchy</td>
+<td class="org-left">✓</td>
+<td class="org-left">✓</td>
+<td class="org-left">✗</td>
+</tr>
+
+<tr>
+<td class="org-left">Ease of use</td>
+<td class="org-left">Medium</td>
+<td class="org-left">Easy</td>
+<td class="org-left">Easy</td>
+</tr>
+
+<tr>
+<td class="org-left">Setup required</td>
+<td class="org-left">Package + declare</td>
+<td class="org-left">None</td>
+<td class="org-left">One show rule</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb7e147d" class="outline-2">
+<h2 id="orgb7e147d"><span class="section-number-2">10.</span> Nested Footnotes Comparison</h2>
+<div class="outline-text-2" id="text-10">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Feature</th>
+<th scope="col" class="org-left">LaTeX (bigfoot)</th>
+<th scope="col" class="org-left">ConTeXt</th>
+<th scope="col" class="org-left">Typst</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><b>Setup required</b></td>
+<td class="org-left">Package + declare</td>
+<td class="org-left">None (built-in)</td>
+<td class="org-left">One show rule</td>
+</tr>
+
+<tr>
+<td class="org-left"><b>Syntax</b></td>
+<td class="org-left"><code>\footnotemarkB</code> etc.</td>
+<td class="org-left"><code>\localfootnote{}</code></td>
+<td class="org-left"><code>#footnote[]</code> inside</td>
+</tr>
+
+<tr>
+<td class="org-left"><b>Separate visual blocks</b></td>
+<td class="org-left">✓ Yes</td>
+<td class="org-left">✓ Yes (hierarchical)</td>
+<td class="org-left">✗ No (sequential)</td>
+</tr>
+
+<tr>
+<td class="org-left"><b>Numbering</b></td>
+<td class="org-left">Per-level</td>
+<td class="org-left">Per-level</td>
+<td class="org-left">Flat (all share)</td>
+</tr>
+
+<tr>
+<td class="org-left"><b>Max levels</b></td>
+<td class="org-left">Unlimited</td>
+<td class="org-left">Unlimited</td>
+<td class="org-left">~3 practical</td>
+</tr>
+
+<tr>
+<td class="org-left"><b>Best for</b></td>
+<td class="org-left">Journals, academic</td>
+<td class="org-left">Books, complex docs</td>
+<td class="org-left">Quick iteration</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+<b>Recommendations:</b>
+</p>
+<ul class="org-ul">
+<li>For true hierarchical footnotes in separate blocks: <b>ConTeXt</b></li>
+<li>For separate blocks with journal compatibility: <b>LaTeX</b> with bigfoot</li>
+<li>For fast iteration with acceptable nesting: <b>Typst</b></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org1a3a305" class="outline-2">
+<h2 id="org1a3a305"><span class="section-number-2">11.</span> Org-Roam</h2>
+<div class="outline-text-2" id="text-11">
+</div>
+<div id="outline-container-org64e96a6" class="outline-3">
+<h3 id="org64e96a6"><span class="section-number-3">11.1.</span> What is Org-Roam?</h3>
+<div class="outline-text-3" id="text-11-1">
+<p>
+Org-roam is a note-taking system based on the Zettelkasten method. It creates a network of interconnected notes.
+</p>
+</div>
+</div>
+<div id="outline-container-org3342b08" class="outline-3">
+<h3 id="org3342b08"><span class="section-number-3">11.2.</span> Keybindings</h3>
+<div class="outline-text-3" id="text-11-2">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c n f</code></td>
+<td class="org-left">Find or create node</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c n i</code></td>
+<td class="org-left">Insert link to node</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c n l</code></td>
+<td class="org-left">Toggle backlinks</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c n c</code></td>
+<td class="org-left">Capture new node</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c n g</code></td>
+<td class="org-left">Show graph</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c n t</code></td>
+<td class="org-left">Add tag</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c n r</code></td>
+<td class="org-left">Add reference</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c n a</code></td>
+<td class="org-left">Add alias</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c n h</code></td>
+<td class="org-left">Find Hebrew nodes</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c n R</code></td>
+<td class="org-left">Find research nodes</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org8fb906d" class="outline-3">
+<h3 id="org8fb906d"><span class="section-number-3">11.3.</span> Creating Notes</h3>
+<div class="outline-text-3" id="text-11-3">
+<ol class="org-ol">
+<li>Press <code>C-c n f</code></li>
+<li>Type a title</li>
+<li>If it doesn't exist, press <code>RET</code> to create</li>
+<li>Write your note</li>
+<li>Save with <code>C-x C-s</code></li>
+</ol>
+</div>
+</div>
+<div id="outline-container-orga5c9a91" class="outline-3">
+<h3 id="orga5c9a91"><span class="section-number-3">11.4.</span> Linking Notes</h3>
+<div class="outline-text-3" id="text-11-4">
+<ol class="org-ol">
+<li>In a note, press <code>C-c n i</code></li>
+<li>Search for note to link to</li>
+<li>Select and press <code>RET</code></li>
+</ol>
+</div>
+</div>
+<div id="outline-container-orgbd35d5c" class="outline-3">
+<h3 id="orgbd35d5c"><span class="section-number-3">11.5.</span> Viewing Backlinks</h3>
+<div class="outline-text-3" id="text-11-5">
+<p>
+Press <code>C-c n l</code> to see all notes that link TO the current note.
+</p>
+</div>
+</div>
+<div id="outline-container-org34fa7e7" class="outline-3">
+<h3 id="org34fa7e7"><span class="section-number-3">11.6.</span> Visual Graph</h3>
+<div class="outline-text-3" id="text-11-6">
+<p>
+Run <code>M-x org-roam-ui-open</code> to see your notes as an interactive graph.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgeec6baf" class="outline-2">
+<h2 id="orgeec6baf"><span class="section-number-2">12.</span> Bibliography</h2>
+<div class="outline-text-2" id="text-12">
+</div>
+<div id="outline-container-org49c9ae1" class="outline-3">
+<h3 id="org49c9ae1"><span class="section-number-3">12.1.</span> Citar Keybindings</h3>
+<div class="outline-text-3" id="text-12-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c b i</code></td>
+<td class="org-left">Insert citation</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c b o</code></td>
+<td class="org-left">Open reference</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c b n</code></td>
+<td class="org-left">Open notes</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c b r</code></td>
+<td class="org-left">Refresh bibliography</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orgaaffca1" class="outline-3">
+<h3 id="orgaaffca1"><span class="section-number-3">12.2.</span> Bibliography File</h3>
+<div class="outline-text-3" id="text-12-2">
+<p>
+Location: <code>~/Documents/bibliography.bib</code>
+</p>
+</div>
+</div>
+<div id="outline-container-org3c3af45" class="outline-3">
+<h3 id="org3c3af45"><span class="section-number-3">12.3.</span> Adding References</h3>
+<div class="outline-text-3" id="text-12-3">
+<ol class="org-ol">
+<li>Open <code>~/Documents/bibliography.bib</code></li>
+<li>Add entries in BibTeX format:</li>
+</ol>
+
+<div class="org-src-container">
+<pre class="src src-bibtex">@article{smith2024,
+  author = {Smith, John},
+  title = {Article Title},
+  journal = {Journal Name},
+  year = {2024},
+  volume = {1},
+  pages = {1--10}
+}
+
+@book{jones2023,
+  author = {Jones, Sarah},
+  title = {Book Title},
+  publisher = {Publisher Name},
+  year = {2023}
+}
+</pre>
+</div>
+
+<ol class="org-ol">
+<li>Save the file</li>
+<li>Run <code>C-c b r</code> to refresh</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-org52cb6b2" class="outline-3">
+<h3 id="org52cb6b2"><span class="section-number-3">12.4.</span> Using in LaTeX</h3>
+<div class="outline-text-3" id="text-12-4">
+<div class="org-src-container">
+<pre class="src src-latex">\usepackage[backend=biber]{biblatex}
+\addbibresource{~/Documents/bibliography.bib}
+
+% In document:
+\cite{smith2024}
+
+% At end:
+\printbibliography
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb548f9c" class="outline-3">
+<h3 id="orgb548f9c"><span class="section-number-3">12.5.</span> Using in Org</h3>
+<div class="outline-text-3" id="text-12-5">
+<pre class="example" id="orgb0056a8">
+See [cite:@smith2024] for details.
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org6a0fe36" class="outline-2">
+<h2 id="org6a0fe36"><span class="section-number-2">13.</span> Programming</h2>
+<div class="outline-text-2" id="text-13">
+</div>
+<div id="outline-container-orgdc72f72" class="outline-3">
+<h3 id="orgdc72f72"><span class="section-number-3">13.1.</span> Supported Languages</h3>
+<div class="outline-text-3" id="text-13-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Language</th>
+<th scope="col" class="org-left">LSP</th>
+<th scope="col" class="org-left">Org Babel</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Python</td>
+<td class="org-left">✓</td>
+<td class="org-left">✓</td>
+</tr>
+
+<tr>
+<td class="org-left">Rust</td>
+<td class="org-left">✓</td>
+<td class="org-left">✓</td>
+</tr>
+
+<tr>
+<td class="org-left">Java</td>
+<td class="org-left">✓</td>
+<td class="org-left">✗</td>
+</tr>
+
+<tr>
+<td class="org-left">Shell</td>
+<td class="org-left">✗</td>
+<td class="org-left">✓</td>
+</tr>
+
+<tr>
+<td class="org-left">Typst</td>
+<td class="org-left">✓</td>
+<td class="org-left">✗</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org96d6aba" class="outline-3">
+<h3 id="org96d6aba"><span class="section-number-3">13.2.</span> LSP (Eglot) Keybindings</h3>
+<div class="outline-text-3" id="text-13-2">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>M-.</code></td>
+<td class="org-left">Go to definition</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-,</code></td>
+<td class="org-left">Go back</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-?</code></td>
+<td class="org-left">Find references</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-r</code></td>
+<td class="org-left">Rename symbol</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orgd635dfe" class="outline-3">
+<h3 id="orgd635dfe"><span class="section-number-3">13.3.</span> Running Code in Org</h3>
+<div class="outline-text-3" id="text-13-3">
+<ol class="org-ol">
+<li>Create a code block:</li>
+</ol>
+
+<pre class="example" id="orgc0111d9">
+#+begin_src python
+print("Hello")
+#+end_src
+</pre>
+
+<ol class="org-ol">
+<li>Place cursor in block</li>
+<li>Press <code>C-c C-c</code> to execute</li>
+<li>Results appear below</li>
+</ol>
+</div>
+</div>
+</div>
+<div id="outline-container-orgc25a2db" class="outline-2">
+<h2 id="orgc25a2db"><span class="section-number-2">14.</span> Version Control (Magit)</h2>
+<div class="outline-text-2" id="text-14">
+</div>
+<div id="outline-container-orgbdfa27e" class="outline-3">
+<h3 id="orgbdfa27e"><span class="section-number-3">14.1.</span> Keybindings</h3>
+<div class="outline-text-3" id="text-14-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-x g</code></td>
+<td class="org-left">Magit status</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-x M-g</code></td>
+<td class="org-left">Magit dispatch</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c g</code></td>
+<td class="org-left">Magit file dispatch</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c G</code></td>
+<td class="org-left">Git timemachine</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org1d7ebcd" class="outline-3">
+<h3 id="org1d7ebcd"><span class="section-number-3">14.2.</span> Basic Magit Workflow</h3>
+<div class="outline-text-3" id="text-14-2">
+<ol class="org-ol">
+<li>Open status: <code>C-x g</code></li>
+<li>Stage changes: <code>s</code> on unstaged files</li>
+<li>Commit: <code>c c</code>, write message, <code>C-c C-c</code></li>
+<li>Push: <code>P p</code></li>
+</ol>
+</div>
+</div>
+</div>
+<div id="outline-container-orgef64783" class="outline-2">
+<h2 id="orgef64783"><span class="section-number-2">15.</span> Adding New Packages</h2>
+<div class="outline-text-2" id="text-15">
+</div>
+<div id="outline-container-orgdeea67b" class="outline-3">
+<h3 id="orgdeea67b"><span class="section-number-3">15.1.</span> Method 1: Edit config.org (Recommended)</h3>
+<div class="outline-text-3" id="text-15-1">
+<ol class="org-ol">
+<li>Open <code>~/.emacs.d/config.org</code></li>
+
+<li>Find appropriate section or create new heading</li>
+
+<li>Add a <code>use-package</code> block:</li>
+</ol>
+
+<pre class="example" id="orgc3c49e6">
+** My New Package
+
+#+begin_src emacs-lisp
+(use-package package-name
+  :config
+  ;; Configuration here
+  )
+#+end_src
+</pre>
+
+<ol class="org-ol">
+<li>Save the file</li>
+
+<li>Either:
+<ul class="org-ul">
+<li>Restart Emacs, OR</li>
+<li>Place cursor in the block and press <code>C-c C-c</code> to evaluate</li>
+</ul></li>
+</ol>
+</div>
+</div>
+<div id="outline-container-org3e06081" class="outline-3">
+<h3 id="org3e06081"><span class="section-number-3">15.2.</span> Method 2: Quick Install (Temporary)</h3>
+<div class="outline-text-3" id="text-15-2">
+<ol class="org-ol">
+<li><code>M-x package-install RET</code></li>
+<li>Type package name</li>
+<li>Press <code>RET</code></li>
+</ol>
+
+<p>
+Note: This won't persist after restart unless added to config.org.
+</p>
+</div>
+</div>
+<div id="outline-container-org0a68b34" class="outline-3">
+<h3 id="org0a68b34"><span class="section-number-3">15.3.</span> Use-Package Syntax Reference</h3>
+<div class="outline-text-3" id="text-15-3">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(use-package package-name
+  :ensure t                      ; Install if not present
+  :hook (mode-name . function)   ; Add hooks
+  :bind (("C-c x" . command))    ; Key bindings
+  :config                        ; Run after loading
+  (setq some-variable value)
+  :custom                        ; Set custom variables
+  (variable-name value)
+  :init                          ; Run before loading
+  (some-setup-function))
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org83ad853" class="outline-3">
+<h3 id="org83ad853"><span class="section-number-3">15.4.</span> Common Use-Package Keywords</h3>
+<div class="outline-text-3" id="text-15-4">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keyword</th>
+<th scope="col" class="org-left">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>:ensure</code></td>
+<td class="org-left">Install package if missing</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:hook</code></td>
+<td class="org-left">Add function to mode hook</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:bind</code></td>
+<td class="org-left">Define keybindings</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:config</code></td>
+<td class="org-left">Run code after package loads</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:init</code></td>
+<td class="org-left">Run code before package loads</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:custom</code></td>
+<td class="org-left">Set customization variables</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:after</code></td>
+<td class="org-left">Load after specified package</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:defer</code></td>
+<td class="org-left">Defer loading (lazy load)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>:mode</code></td>
+<td class="org-left">Associate with file extensions</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orgfdcc831" class="outline-3">
+<h3 id="orgfdcc831"><span class="section-number-3">15.5.</span> Adding System Packages (NixOS)</h3>
+<div class="outline-text-3" id="text-15-5">
+<ol class="org-ol">
+<li>Edit <code>/etc/nixos/emacs-packages.nix</code></li>
+
+<li>Add packages to <code>environment.systemPackages</code>:</li>
+</ol>
+
+<div class="org-src-container">
+<pre class="src src-nix">environment.systemPackages = with pkgs; [
+  # ... existing packages ...
+  new-package-name
+];
+</pre>
+</div>
+
+<ol class="org-ol">
+<li>Rebuild:</li>
+</ol>
+
+<div class="org-src-container">
+<pre class="src src-shell">sudo nixos-rebuild switch
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb003c60" class="outline-2">
+<h2 id="orgb003c60"><span class="section-number-2">16.</span> Customization</h2>
+<div class="outline-text-2" id="text-16">
+</div>
+<div id="outline-container-org9eafc0e" class="outline-3">
+<h3 id="org9eafc0e"><span class="section-number-3">16.1.</span> Changing Theme</h3>
+<div class="outline-text-3" id="text-16-1">
+<p>
+In <code>config.org</code>, find the doom-themes section and change:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(load-theme 'doom-one t)
+</pre>
+</div>
+
+<p>
+Available themes:
+</p>
+
+<ul class="org-ul">
+<li><code>doom-one</code> (dark, default)</li>
+<li><code>doom-one-light</code></li>
+<li><code>doom-dracula</code></li>
+<li><code>doom-gruvbox</code></li>
+<li><code>doom-nord</code></li>
+<li><code>doom-solarized-dark</code></li>
+<li><code>doom-solarized-light</code></li>
+<li><code>doom-tomorrow-night</code></li>
+<li><code>doom-monokai-pro</code></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org97bf540" class="outline-3">
+<h3 id="org97bf540"><span class="section-number-3">16.2.</span> Changing Fonts</h3>
+<div class="outline-text-3" id="text-16-2">
+<p>
+Add to config.org:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(set-face-attribute 'default nil
+                    :font "Fira Code"
+                    :height 120) ; 12pt
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org51a1f9d" class="outline-3">
+<h3 id="org51a1f9d"><span class="section-number-3">16.3.</span> Changing Hebrew Fonts</h3>
+<div class="outline-text-3" id="text-16-3">
+<p>
+Edit the <code>my/latex-hebrew-preamble</code> variable in config.org.
+</p>
+
+<p>
+Available Hebrew fonts (from culmus):
+</p>
+
+<ul class="org-ul">
+<li>David CLM</li>
+<li>Nachlieli CLM</li>
+<li>Miriam Mono CLM</li>
+<li>Frank Ruehl CLM</li>
+<li>Hadasim CLM</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgb05a617" class="outline-3">
+<h3 id="orgb05a617"><span class="section-number-3">16.4.</span> Adding Custom Keybindings</h3>
+<div class="outline-text-3" id="text-16-4">
+<p>
+Global keybinding:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(global-set-key (kbd "C-c m") 'my-command)
+</pre>
+</div>
+
+<p>
+Mode-specific:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(define-key org-mode-map (kbd "C-c m") 'my-command)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf737e3f" class="outline-3">
+<h3 id="orgf737e3f"><span class="section-number-3">16.5.</span> Creating Custom Functions</h3>
+<div class="outline-text-3" id="text-16-5">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(defun my/custom-function ()
+  "Description of what this function does."
+  (interactive)
+  ;; Your code here
+  (message "Function executed!"))
+
+;; Bind to key
+(global-set-key (kbd "C-c x") 'my/custom-function)
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org18fc14a" class="outline-2">
+<h2 id="org18fc14a"><span class="section-number-2">17.</span> Keybinding Reference</h2>
+<div class="outline-text-2" id="text-17">
+</div>
+<div id="outline-container-orgbac353f" class="outline-3">
+<h3 id="orgbac353f"><span class="section-number-3">17.1.</span> Global</h3>
+<div class="outline-text-3" id="text-17-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-\</code></td>
+<td class="org-left">Toggle Hebrew/English</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c d</code></td>
+<td class="org-left">Toggle RTL/LTR direction</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c r</code></td>
+<td class="org-left">Set RTL</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c l</code></td>
+<td class="org-left">Set LTR</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c D</code></td>
+<td class="org-left">Direction menu (hydra)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c P</code></td>
+<td class="org-left">Document systems menu</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-x g</code></td>
+<td class="org-left">Magit status</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-s</code></td>
+<td class="org-left">Search (consult-line)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-x b</code></td>
+<td class="org-left">Switch buffer</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orgbad5c35" class="outline-3">
+<h3 id="orgbad5c35"><span class="section-number-3">17.2.</span> Spell Checking</h3>
+<div class="outline-text-3" id="text-17-2">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c s e</code></td>
+<td class="org-left">English dictionary</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c s h</code></td>
+<td class="org-left">Hebrew dictionary</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orgacce188" class="outline-3">
+<h3 id="orgacce188"><span class="section-number-3">17.3.</span> Document Creation</h3>
+<div class="outline-text-3" id="text-17-3">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c h l</code></td>
+<td class="org-left">Create Hebrew LaTeX doc</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c h x</code></td>
+<td class="org-left">Create Hebrew ConTeXt doc</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c h t</code></td>
+<td class="org-left">Create Hebrew Typst doc</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c h o</code></td>
+<td class="org-left">Create Hebrew Org doc</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c h q</code></td>
+<td class="org-left">Insert Hebrew quotes</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c h p</code></td>
+<td class="org-left">Insert Hebrew parentheses</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c h c</code></td>
+<td class="org-left">Count Hebrew words</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org2658666" class="outline-3">
+<h3 id="org2658666"><span class="section-number-3">17.4.</span> Org Mode</h3>
+<div class="outline-text-3" id="text-17-4">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c C-e</code></td>
+<td class="org-left">Export</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-c</code></td>
+<td class="org-left">Execute/toggle</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c '</code></td>
+<td class="org-left">Edit source block</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>M-RET</code></td>
+<td class="org-left">New heading/item</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-l</code></td>
+<td class="org-left">Insert link</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-o</code></td>
+<td class="org-left">Open link</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orgf7a67c0" class="outline-3">
+<h3 id="orgf7a67c0"><span class="section-number-3">17.5.</span> Org-Roam</h3>
+<div class="outline-text-3" id="text-17-5">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c n f</code></td>
+<td class="org-left">Find node</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c n i</code></td>
+<td class="org-left">Insert link</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c n l</code></td>
+<td class="org-left">Toggle backlinks</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c n c</code></td>
+<td class="org-left">Capture</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c n h</code></td>
+<td class="org-left">Find Hebrew</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c n R</code></td>
+<td class="org-left">Find research</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c R</code></td>
+<td class="org-left">Org-roam menu</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org4ccc0cd" class="outline-3">
+<h3 id="org4ccc0cd"><span class="section-number-3">17.6.</span> LaTeX</h3>
+<div class="outline-text-3" id="text-17-6">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c C-c</code></td>
+<td class="org-left">Compile</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-v</code></td>
+<td class="org-left">View</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-e</code></td>
+<td class="org-left">Insert environment</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f 1-0</code></td>
+<td class="org-left">Insert simple footnote</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f m 2</code></td>
+<td class="org-left">Insert <code>\footnotemarkB</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f t 2</code></td>
+<td class="org-left">Insert <code>\footnotetextB{}</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c f n</code></td>
+<td class="org-left">Insert nested footnote template</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c F</code></td>
+<td class="org-left">Footnotes menu (hydra)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orgc3e3b1e" class="outline-3">
+<h3 id="orgc3e3b1e"><span class="section-number-3">17.7.</span> ConTeXt</h3>
+<div class="outline-text-3" id="text-17-7">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c C-c</code></td>
+<td class="org-left">Compile (type "ConTeXt")</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-v</code></td>
+<td class="org-left">View PDF</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-p h</code></td>
+<td class="org-left">Insert Hebrew preamble</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org48727d1" class="outline-3">
+<h3 id="org48727d1"><span class="section-number-3">17.8.</span> Typst</h3>
+<div class="outline-text-3" id="text-17-8">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c C-c</code></td>
+<td class="org-left">Compile</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-w</code></td>
+<td class="org-left">Watch (live preview)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-v</code></td>
+<td class="org-left">View PDF</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-p h</code></td>
+<td class="org-left">Insert Hebrew preamble</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c C-p f</code></td>
+<td class="org-left">Insert nested footnote helper</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org8b449f5" class="outline-3">
+<h3 id="org8b449f5"><span class="section-number-3">17.9.</span> Bibliography</h3>
+<div class="outline-text-3" id="text-17-9">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c b i</code></td>
+<td class="org-left">Insert citation</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c b o</code></td>
+<td class="org-left">Open reference</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c b n</code></td>
+<td class="org-left">Open notes</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c b r</code></td>
+<td class="org-left">Refresh</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="outline-container-orgdcf79db" class="outline-2">
+<h2 id="orgdcf79db"><span class="section-number-2">18.</span> Troubleshooting</h2>
+<div class="outline-text-2" id="text-18">
+</div>
+<div id="outline-container-orga129602" class="outline-3">
+<h3 id="orga129602"><span class="section-number-3">18.1.</span> Packages Not Installing</h3>
+<div class="outline-text-3" id="text-18-1">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">M-x package-refresh-contents RET
+</pre>
+</div>
+
+<p>
+Then restart Emacs.
+</p>
+</div>
+</div>
+<div id="outline-container-org36edb4d" class="outline-3">
+<h3 id="org36edb4d"><span class="section-number-3">18.2.</span> Hebrew Not Displaying</h3>
+<div class="outline-text-3" id="text-18-2">
+<ol class="org-ol">
+<li><p>
+Check fonts installed:
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">fc-list | grep -i hebrew
+</pre>
+</div></li>
+
+<li><p>
+Check input method:
+</p>
+<pre class="example">
+C-h v current-input-method RET
+</pre></li>
+
+<li><p>
+Check direction:
+</p>
+<pre class="example">
+C-h v bidi-paragraph-direction RET
+</pre></li>
+</ol>
+</div>
+</div>
+<div id="outline-container-orgb66b9bf" class="outline-3">
+<h3 id="orgb66b9bf"><span class="section-number-3">18.3.</span> PDF Not Opening in Emacs</h3>
+<div class="outline-text-3" id="text-18-3">
+<p>
+Run once:
+</p>
+<pre class="example">
+M-x pdf-tools-install RET
+</pre>
+</div>
+</div>
+<div id="outline-container-orgb29c997" class="outline-3">
+<h3 id="orgb29c997"><span class="section-number-3">18.4.</span> Org-Roam Database Errors</h3>
+<div class="outline-text-3" id="text-18-4">
+<pre class="example">
+M-x org-roam-db-sync RET
+</pre>
+</div>
+</div>
+<div id="outline-container-orgf8c3702" class="outline-3">
+<h3 id="orgf8c3702"><span class="section-number-3">18.5.</span> LaTeX Compilation Fails</h3>
+<div class="outline-text-3" id="text-18-5">
+<ol class="org-ol">
+<li>Check <code>*TeX Help*</code> buffer for errors</li>
+<li><p>
+Ensure LuaLaTeX installed:
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">which lualatex
+</pre>
+</div></li>
+<li>Check log: <code>C-c C-l</code></li>
+</ol>
+</div>
+</div>
+<div id="outline-container-org15fcf41" class="outline-3">
+<h3 id="org15fcf41"><span class="section-number-3">18.6.</span> ConTeXt Compilation Fails</h3>
+<div class="outline-text-3" id="text-18-6">
+<ol class="org-ol">
+<li><p>
+Ensure ConTeXt installed:
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">which context
+</pre>
+</div></li>
+<li><p>
+Check font access:
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">echo $OSFONTDIR
+</pre>
+</div></li>
+</ol>
+</div>
+</div>
+<div id="outline-container-orgfa86c9c" class="outline-3">
+<h3 id="orgfa86c9c"><span class="section-number-3">18.7.</span> Typst Compilation Fails</h3>
+<div class="outline-text-3" id="text-18-7">
+<ol class="org-ol">
+<li><p>
+Ensure Typst installed:
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">which typst
+</pre>
+</div></li>
+<li>Check for syntax errors in output</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-org88fda1f" class="outline-3">
+<h3 id="org88fda1f"><span class="section-number-3">18.8.</span> Typst LSP Not Working</h3>
+<div class="outline-text-3" id="text-18-8">
+<ol class="org-ol">
+<li><p>
+Ensure tinymist installed:
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">which tinymist
+</pre>
+</div></li>
+<li>Start eglot manually: <code>M-x eglot</code></li>
+</ol>
+</div>
+</div>
+<div id="outline-container-org27d920c" class="outline-3">
+<h3 id="org27d920c"><span class="section-number-3">18.9.</span> Spell Check Not Working</h3>
+<div class="outline-text-3" id="text-18-9">
+<ol class="org-ol">
+<li><p>
+Check hunspell:
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">which hunspell
+</pre>
+</div></li>
+
+<li><p>
+Check dictionaries:
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">hunspell -D
+</pre>
+</div></li>
+
+<li>Verify DICPATH environment variable</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-orgc46897a" class="outline-3">
+<h3 id="orgc46897a"><span class="section-number-3">18.10.</span> Slow Startup</h3>
+<div class="outline-text-3" id="text-18-10">
+<p>
+First startup is slow due to package installation. If still slow:
+</p>
+
+<ol class="org-ol">
+<li>Check <code>*Messages*</code> buffer</li>
+<li>Run: <code>emacs --debug-init</code></li>
+</ol>
+</div>
+</div>
+<div id="outline-container-org1719d35" class="outline-3">
+<h3 id="org1719d35"><span class="section-number-3">18.11.</span> Config Changes Not Taking Effect</h3>
+<div class="outline-text-3" id="text-18-11">
+<p>
+After editing <code>config.org</code>:
+</p>
+
+<ol class="org-ol">
+<li>Delete <code>~/.emacs.d/config.el</code></li>
+<li>Restart Emacs</li>
+</ol>
+
+<p>
+Or manually tangle:
+</p>
+<pre class="example">
+M-x org-babel-tangle RET
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org5f2025a" class="outline-2">
+<h2 id="org5f2025a"><span class="section-number-2">19.</span> Getting Help</h2>
+<div class="outline-text-2" id="text-19">
+</div>
+<div id="outline-container-org673c18b" class="outline-3">
+<h3 id="org673c18b"><span class="section-number-3">19.1.</span> Built-in Help</h3>
+<div class="outline-text-3" id="text-19-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Command</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-h r</code></td>
+<td class="org-left">Emacs manual</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-h k</code></td>
+<td class="org-left">Describe keybinding</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-h f</code></td>
+<td class="org-left">Describe function</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-h v</code></td>
+<td class="org-left">Describe variable</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-h a</code></td>
+<td class="org-left">Apropos (search)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-h m</code></td>
+<td class="org-left">Describe current mode</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-h b</code></td>
+<td class="org-left">List all keybindings</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org0e20daa" class="outline-3">
+<h3 id="org0e20daa"><span class="section-number-3">19.2.</span> Which-Key</h3>
+<div class="outline-text-3" id="text-19-2">
+<p>
+After pressing a prefix key (like <code>C-c</code>), wait briefly to see available completions.
+</p>
+</div>
+</div>
+<div id="outline-container-org8d74df8" class="outline-3">
+<h3 id="org8d74df8"><span class="section-number-3">19.3.</span> Online Resources</h3>
+<div class="outline-text-3" id="text-19-3">
+<ul class="org-ul">
+<li>Emacs Manual: <a href="https://www.gnu.org/software/emacs/manual/">https://www.gnu.org/software/emacs/manual/</a></li>
+<li>Org Mode Manual: <a href="https://orgmode.org/manual/">https://orgmode.org/manual/</a></li>
+<li>AUCTeX Manual: <a href="https://www.gnu.org/software/auctex/manual/">https://www.gnu.org/software/auctex/manual/</a></li>
+<li>Org-Roam: <a href="https://www.orgroam.com/">https://www.orgroam.com/</a></li>
+<li>ConTeXt Wiki: <a href="https://wiki.contextgarden.net/">https://wiki.contextgarden.net/</a></li>
+<li>Typst Documentation: <a href="https://typst.app/docs/">https://typst.app/docs/</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org44c1652" class="outline-2">
+<h2 id="org44c1652"><span class="section-number-2">20.</span> File Locations Summary</h2>
+<div class="outline-text-2" id="text-20">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">File</th>
+<th scope="col" class="org-left">Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Emacs config</td>
+<td class="org-left"><code>~/.emacs.d/config.org</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Init file</td>
+<td class="org-left"><code>~/.emacs.d/init.el</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Tangled config</td>
+<td class="org-left"><code>~/.emacs.d/config.el</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Org-roam notes</td>
+<td class="org-left"><code>~/Documents/roam/</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Org directory</td>
+<td class="org-left"><code>~/Documents/org/</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Bibliography</td>
+<td class="org-left"><code>~/Documents/bibliography.bib</code></td>
+</tr>
+
+<tr>
+<td class="org-left">NixOS config</td>
+<td class="org-left"><code>/etc/nixos/emacs-packages.nix</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Personal dict</td>
+<td class="org-left"><code>~/.hunspell_personal</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Backups</td>
+<td class="org-left"><code>~/.emacs.d/backups/</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Auto-saves</td>
+<td class="org-left"><code>~/.emacs.d/auto-saves/</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org024e233" class="outline-2">
+<h2 id="org024e233"><span class="section-number-2">21.</span> Quick Start Summary</h2>
+<div class="outline-text-2" id="text-21">
+<p>
+After installation:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Task</th>
+<th scope="col" class="org-left">Command/Key</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Switch to Hebrew</td>
+<td class="org-left"><code>C-\</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Switch direction</td>
+<td class="org-left"><code>C-c d</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Open file</td>
+<td class="org-left"><code>C-x C-f</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Save</td>
+<td class="org-left"><code>C-x C-s</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Create LaTeX doc</td>
+<td class="org-left"><code>C-c h l</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Create ConTeXt doc</td>
+<td class="org-left"><code>C-c h x</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Create Typst doc</td>
+<td class="org-left"><code>C-c h t</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Compile LaTeX</td>
+<td class="org-left"><code>C-c C-c</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Compile Typst</td>
+<td class="org-left"><code>C-c C-c</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Typst live preview</td>
+<td class="org-left"><code>C-c C-w</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Export Org to PDF</td>
+<td class="org-left"><code>C-c C-e l p</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Document systems menu</td>
+<td class="org-left"><code>C-c P</code></td>
+</tr>
+
+<tr>
+<td class="org-left">LaTeX footnotes menu</td>
+<td class="org-left"><code>C-c F</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Find note</td>
+<td class="org-left"><code>C-c n f</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Git status</td>
+<td class="org-left"><code>C-x g</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Search</td>
+<td class="org-left"><code>C-s</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Help on key</td>
+<td class="org-left"><code>C-h k</code> then key</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: User</p>
+<p class="date">Created: 2026-03-03 Tue 20:28</p>
+<p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
