@@ -109,26 +109,50 @@ After first launch:
 | =C-y=      | Yank (paste)              |
 | =M-y=      | Cycle kill ring           |
 | =C-/=      | Undo                      |
+| =C-?=      | Redo                      |
+| =C-x u=    | Visual undo tree          |
 
 ** Windows
 
-| Keybinding | Description              |
-|------------+--------------------------|
-| =C-x 2=    | Split horizontally       |
-| =C-x 3=    | Split vertically         |
-| =C-x 0=    | Close current window     |
-| =C-x 1=    | Close other windows      |
-| =C-x o=    | Switch to other window   |
+| Keybinding | Description                     |
+|------------+---------------------------------|
+| =C-x 2=    | Split horizontally (and follow) |
+| =C-x 3=    | Split vertically (and follow)   |
+| =C-x 0=    | Close current window            |
+| =C-x 1=    | Close other windows             |
+| =M-o=      | Switch window (ace-window)      |
+
+** Focused Writing Mode
+
+| Keybinding | Action                           |
+|------------+----------------------------------|
+| =C-c w=    | Toggle focused writing (80-col centered) |
+| =C-c W=    | Set column width                 |
+
+When enabled, text is soft-wrapped at 80 columns and visually centered in the window. No actual line breaks are inserted.
 
 * Hebrew and RTL Support
+** How Direction Works
+
+The config automatically sets direction per major mode:
+
+| Mode Type              | Default Direction |
+|------------------------+-------------------|
+| Org, LaTeX, text modes | RTL (Hebrew)      |
+| Programming modes      | LTR (English)     |
+| Other modes            | Auto-detect       |
+
+You can always override manually with the keybindings below.
+
 ** Switching Languages
 
 | Keybinding | Action                                 |
 |------------+----------------------------------------|
-| =C-\=      | Toggle input method (Hebrew ↔ English) |
+| =F9=       | Toggle input method (Hebrew ↔ English) |
 | =C-c d=    | Toggle text direction (RTL ↔ LTR)      |
 | =C-c r=    | Force RTL direction                    |
 | =C-c l=    | Force LTR direction                    |
+| =C-c D=    | Direction controls menu (hydra)        |
 
 ** Visual Indicators
 
@@ -136,38 +160,38 @@ The modeline shows current state:
 - =[RTL עב]= - Hebrew mode, right-to-left
 - =[LTR EN]= - English mode, left-to-right
 
-** How Direction Works
-
-- *RTL (Right-to-Left)*: Default. Text flows right to left.
-- *LTR (Left-to-Right)*: For English/code. Text flows left to right.
-
-For mixed text:
-- Paragraph direction determines base direction
-- Opposite-direction runs handled automatically
-- Use =C-c d= to switch if display looks wrong
-
 ** Best Practices
 
-1. *Hebrew documents*: Keep default RTL
-2. *English documents*: Use =C-c l= for LTR
-3. *Mixed documents*: Set direction based on majority language
-4. *Code*: Always use LTR (=C-c l=)
+1. *Hebrew documents*: Automatically RTL (Org, LaTeX, text modes)
+2. *English documents*: Use =C-c l= for LTR, or it auto-detects
+3. *Mixed documents*: Use =C-c d= to toggle as needed
+4. *Code*: Automatically LTR (prog-mode)
 
 ** Spell Checking
 
-| Keybinding | Action                |
-|------------+-----------------------|
-| =C-c s e=  | Switch to English     |
-| =C-c s h=  | Switch to Hebrew      |
+Spell checking uses Flyspell with Hunspell. Switch between languages manually:
+
+| Keybinding | Action                      |
+|------------+-----------------------------|
+| =C-c s e=  | Switch to English           |
+| =C-c s h=  | Switch to Hebrew            |
+| =M-$=      | Correct word at point       |
+| =i=        | Add word to personal dict   |
+
+When a correctly-spelled word is flagged (e.g., Hebrew word while in English mode), press =i= to add it to your personal dictionary (=~/.hunspell_personal=).
+
+Spell checking is active in:
+- All text/prose modes (Org, LaTeX, Markdown, etc.)
+- Comments and strings in programming modes
 
 * Document Systems Overview
 
 This configuration supports three document systems:
 
-| System    | Best For                          | Hebrew | Nested Footnotes       |
-|-----------+-----------------------------------+--------+------------------------|
+| System    | Best For                          | Hebrew | Nested Footnotes          |
+|-----------+-----------------------------------+--------+---------------------------|
 | *LaTeX*   | Academic papers, journals         | ✓      | Separate blocks (bigfoot) |
-| *ConTeXt* | Complex typography, books         | ✓      | Native local footnotes |
+| *ConTeXt* | Complex typography, books         | ✓      | Native local footnotes    |
 | *Typst*   | Fast iteration, modern syntax     | ✓      | Sequential (with show rule) |
 
 ** Quick Document Creation
@@ -294,6 +318,11 @@ This text has a footnote[fn:1].
 |-------------+--------------------------------------|
 | =C-c C-x f= | Insert footnote                      |
 | =C-c C-c=   | Jump between footnote and reference  |
+| =C-c h f=   | Fix RTL in all existing footnotes    |
+
+*** Hebrew Footnote RTL Fix
+
+Hebrew footnotes in Org mode can display as LTR because the footnote marker =[fn:N]= starts with LTR characters. The config automatically inserts a Right-to-Left Mark when creating new footnotes. For existing footnotes, use =C-c h f= to fix them all at once.
 
 ** Code Blocks
 
@@ -311,6 +340,8 @@ This text has a footnote[fn:1].
 |------------+--------------------------|
 | =C-c C-c=  | Execute code block       |
 | =C-c '=    | Edit in dedicated buffer |
+
+Note: Electric pairs (auto-closing brackets) are active when editing code blocks via =C-c '=.
 
 ** Exporting
 
@@ -452,7 +483,7 @@ Use =\footnoteB{}=, =\footnoteC{}=, etc. directly from body text. Each level get
 #+begin_example
   ─────────────────────────────
   ¹ First level footnote.
-  
+
   ─────────────────────────────
   ¹ Second level, appears in separate block.
 #+end_example
@@ -488,12 +519,12 @@ To place a footnote *inside* another footnote, use =\footnotemarkX= + =\footnote
   ─────────────────────────────
   ¹ This is the first-level footnote. It discusses a concept¹
     that needs further explanation.
-  
+
   ─────────────────────────────
   ¹ This second-level footnote appears in its own separate block
     at the bottom of the page, below the first-level footnotes.
     It can even contain another level¹.
-  
+
   ─────────────────────────────
   ¹ Third level footnote, in its own block.
 #+end_example
@@ -534,23 +565,35 @@ For nesting, use:
 | =C-c f 9=  | Insert =\footnoteI{}=    |
 | =C-c f 0=  | Insert =\footnoteJ{}=    |
 
-*** Nested Footnotes (Marks and Texts)
+*** Nested Footnotes (via Hydra Menu)
 
-| Keybinding  | Action                    |
-|-------------+---------------------------|
-| =C-c f m 2= | Insert =\footnotemarkB=   |
-| =C-c f m 3= | Insert =\footnotemarkC=   |
-| =C-c f m 4= | Insert =\footnotemarkD=   |
-| =C-c f m 5= | Insert =\footnotemarkE=   |
-| =C-c f t 2= | Insert =\footnotetextB{}= |
-| =C-c f t 3= | Insert =\footnotetextC{}= |
-| =C-c f t 4= | Insert =\footnotetextD{}= |
-| =C-c f t 5= | Insert =\footnotetextE{}= |
-| =C-c f n=   | Insert nested template    |
+Press =C-c F= to open the footnotes hydra, then:
 
-*** Footnotes Menu
+| Key | Action                    |
+|-----+---------------------------|
+| =m= | → Footnote marks sub-menu |
+| =t= | → Footnote texts sub-menu |
+| =n= | Insert nested template    |
 
-Press =C-c F= to open the LaTeX footnotes hydra menu with all options.
+In the *marks* sub-menu:
+
+| Key | Action                  |
+|-----+-------------------------|
+| =2= | Insert =\footnotemarkB= |
+| =3= | Insert =\footnotemarkC= |
+| =4= | Insert =\footnotemarkD= |
+| =5= | Insert =\footnotemarkE= |
+| =b= | ← Back to main menu     |
+
+In the *texts* sub-menu:
+
+| Key | Action                    |
+|-----+---------------------------|
+| =2= | Insert =\footnotetextB{}= |
+| =3= | Insert =\footnotetextC{}= |
+| =4= | Insert =\footnotetextD{}= |
+| =5= | Insert =\footnotetextE{}= |
+| =b= | ← Back to main menu       |
 
 ** Adding More Levels
 
@@ -607,14 +650,6 @@ Or from command line:
   context myfile.tex
 #+end_src
 
-** ConTeXt Keybindings
-
-| Keybinding   | Action                        |
-|--------------+-------------------------------|
-| =C-c C-c=    | Compile (type "ConTeXt")      |
-| =C-c C-v=    | View PDF                      |
-| =C-c C-p h=  | Insert Hebrew preamble        |
-
 ** ConTeXt Sectioning
 
 | Command                            | Description   |
@@ -654,7 +689,7 @@ ConTeXt's killer feature: footnotes that appear at the bottom of their *parent f
 - Level 2 footnote → bottom of level 1 block
 - Level 3 footnote → bottom of level 2 block
 
-Use =C-c P= then =cf= to insert a local footnote structure.
+Use =C-c P= then =f= to insert a local footnote structure.
 
 * Typst
 ** What is Typst?
@@ -691,6 +726,8 @@ Use =C-c h t= to create a Hebrew Typst document, or create manually:
 | =C-c C-c=  | Compile once                        |
 | =C-c C-w=  | Watch mode (live preview)           |
 | =C-c C-v=  | View PDF                            |
+| =C-c t h=  | Insert Hebrew preamble              |
+| =C-c t f=  | Insert nested footnote helper       |
 
 Or from command line:
 
@@ -698,16 +735,6 @@ Or from command line:
   typst compile myfile.typ      # Compile once
   typst watch myfile.typ        # Watch mode
 #+end_src
-
-** Typst Keybindings
-
-| Keybinding  | Action                      |
-|-------------+-----------------------------|
-| =C-c C-c=   | Compile                     |
-| =C-c C-w=   | Watch (live preview)        |
-| =C-c C-v=   | View PDF                    |
-| =C-c C-p h= | Insert Hebrew preamble      |
-| =C-c C-p f= | Insert nested footnote helper |
 
 ** Typst Syntax Basics
 
@@ -896,16 +923,27 @@ Org-roam is a note-taking system based on the Zettelkasten method. It creates a 
 | =C-c n t=  | Add tag             |
 | =C-c n r=  | Add reference       |
 | =C-c n a=  | Add alias           |
+| =C-c n d=  | Go to today's daily |
+| =C-c n D=  | Go to specific date |
 | =C-c n h=  | Find Hebrew nodes   |
 | =C-c n R=  | Find research nodes |
+| =C-c n x=  | Open random node    |
+| =C-c R=    | Org-roam hydra menu |
 
 ** Creating Notes
 
 1. Press =C-c n f=
 2. Type a title
 3. If it doesn't exist, press =RET= to create
-4. Write your note
-5. Save with =C-x C-s=
+4. Choose a template:
+   - =d= Default
+   - =h= Hebrew
+   - =r= Research
+   - =c= Concept
+   - =l= Literature note
+   - =p= Project
+5. Write your note
+6. Save with =C-x C-s=
 
 ** Linking Notes
 
@@ -920,6 +958,13 @@ Press =C-c n l= to see all notes that link TO the current note.
 ** Visual Graph
 
 Run =M-x org-roam-ui-open= to see your notes as an interactive graph.
+
+** Daily Notes
+
+| Keybinding | Action                |
+|------------+-----------------------|
+| =C-c n d=  | Go to today's daily   |
+| =C-c n D=  | Go to a specific date |
 
 * Bibliography
 ** Citar Keybindings
@@ -1014,6 +1059,17 @@ print("Hello")
 3. Press =C-c C-c= to execute
 4. Results appear below
 
+** Electric Pairs (Auto-closing Brackets)
+
+Electric pairs (auto-inserting matching =()=, ={}=, =""=, etc.) are enabled only in:
+- Programming modes (Python, Rust, Java, etc.)
+- LaTeX mode
+- ConTeXt mode
+- Typst mode
+- Org source block editing (via =C-c '=)
+
+They are *disabled* in prose modes (Org, Markdown, plain text) to avoid interfering with Hebrew writing.
+
 * Version Control (Magit)
 ** Keybindings
 
@@ -1030,6 +1086,23 @@ print("Hello")
 2. Stage changes: =s= on unstaged files
 3. Commit: =c c=, write message, =C-c C-c=
 4. Push: =P p=
+
+* Undo and Redo
+
+This config uses =undo-tree= for visual, persistent undo/redo:
+
+| Keybinding | Action                                  |
+|------------+-----------------------------------------|
+| =C-/=      | Undo                                    |
+| =C-?=      | Redo                                    |
+| =C-x u=    | Visual undo tree (graphical view)       |
+
+Undo history is saved between sessions in =~/.emacs.d/undo-tree-history/=.
+
+In the visual undo tree:
+- Use =p= / =n= to navigate up/down
+- Use =b= / =f= to switch branches
+- Press =q= to quit
 
 * Adding New Packages
 ** Method 1: Edit config.org (Recommended)
@@ -1136,7 +1209,15 @@ Available themes:
 
 ** Changing Fonts
 
-Add to config.org:
+In =config.org=, find the Font Configuration section. Default sizes:
+
+| Element     | Height | Approx Size |
+|-------------+--------+-------------|
+| Editor text | 100    | ~10pt       |
+| Modeline    | 80     | ~8pt        |
+| Minibuffer  | 80     | ~8pt        |
+
+To change the editor font:
 
 #+begin_src emacs-lisp
   (set-face-attribute 'default nil
@@ -1186,24 +1267,42 @@ Mode-specific:
 * Keybinding Reference
 ** Global
 
-| Keybinding | Action                   |
-|------------+--------------------------|
-| =C-\=      | Toggle Hebrew/English    |
-| =C-c d=    | Toggle RTL/LTR direction |
-| =C-c r=    | Set RTL                  |
-| =C-c l=    | Set LTR                  |
-| =C-c D=    | Direction menu (hydra)   |
-| =C-c P=    | Document systems menu    |
-| =C-x g=    | Magit status             |
-| =C-s=      | Search (consult-line)    |
-| =C-x b=    | Switch buffer            |
+| Keybinding | Action                          |
+|------------+---------------------------------|
+| =F9=       | Toggle Hebrew/English input     |
+| =C-c d=    | Toggle RTL/LTR direction        |
+| =C-c r=    | Set RTL                         |
+| =C-c l=    | Set LTR                         |
+| =C-c B=    | Toggle bidi reordering          |
+| =C-c D=    | Direction menu (hydra)          |
+| =C-c P=    | Document systems menu           |
+| =C-c w=    | Toggle focused writing          |
+| =C-c W=    | Set focused writing width       |
+| =C-x g=    | Magit status                    |
+| =C-s=      | Search (consult-line)           |
+| =C-x b=    | Switch buffer                   |
+| =M-o=      | Switch window (ace-window)      |
+| =C-c e i=  | Open config file                |
+| =C-c e r=  | Reload config                   |
+
+** Undo / Redo
+
+| Keybinding | Action               |
+|------------+----------------------|
+| =C-/=      | Undo                 |
+| =C-?=      | Redo                 |
+| =C-x u=    | Visual undo tree     |
 
 ** Spell Checking
 
-| Keybinding | Action             |
-|------------+--------------------|
-| =C-c s e=  | English dictionary |
-| =C-c s h=  | Hebrew dictionary  |
+** Spell Checking
+
+| Keybinding | Action                   |
+|------------+--------------------------|
+| =C-c s e=  | English dictionary       |
+| =C-c s h=  | Hebrew dictionary        |
+| =M-$=      | Correct word at point    |
+| =i=        | Add word to personal dict (when correcting) |
 
 ** Document Creation
 
@@ -1216,6 +1315,7 @@ Mode-specific:
 | =C-c h q=  | Insert Hebrew quotes      |
 | =C-c h p=  | Insert Hebrew parentheses |
 | =C-c h c=  | Count Hebrew words        |
+| =C-c h f=  | Fix RTL in all footnotes  |
 
 ** Org Mode
 
@@ -1236,40 +1336,32 @@ Mode-specific:
 | =C-c n i=  | Insert link      |
 | =C-c n l=  | Toggle backlinks |
 | =C-c n c=  | Capture          |
+| =C-c n d=  | Today's daily    |
+| =C-c n D=  | Specific date    |
 | =C-c n h=  | Find Hebrew      |
 | =C-c n R=  | Find research    |
+| =C-c n x=  | Random node      |
 | =C-c R=    | Org-roam menu    |
 
 ** LaTeX
 
-| Keybinding  | Action                          |
-|-------------+---------------------------------|
-| =C-c C-c=   | Compile                         |
-| =C-c C-v=   | View                            |
-| =C-c C-e=   | Insert environment              |
-| =C-c f 1-0= | Insert simple footnote          |
-| =C-c f m 2= | Insert =\footnotemarkB=         |
-| =C-c f t 2= | Insert =\footnotetextB{}=       |
-| =C-c f n=   | Insert nested footnote template |
-| =C-c F=     | Footnotes menu (hydra)          |
-
-** ConTeXt
-
-| Keybinding  | Action                        |
-|-------------+-------------------------------|
-| =C-c C-c=   | Compile (type "ConTeXt")      |
-| =C-c C-v=   | View PDF                      |
-| =C-c C-p h= | Insert Hebrew preamble        |
+| Keybinding | Action                          |
+|------------+---------------------------------|
+| =C-c C-c=  | Compile                         |
+| =C-c C-v=  | View                            |
+| =C-c C-e=  | Insert environment              |
+| =C-c f 1-0= | Insert simple footnote         |
+| =C-c F=    | Footnotes menu (hydra)          |
 
 ** Typst
 
-| Keybinding  | Action                          |
-|-------------+---------------------------------|
-| =C-c C-c=   | Compile                         |
-| =C-c C-w=   | Watch (live preview)            |
-| =C-c C-v=   | View PDF                        |
-| =C-c C-p h= | Insert Hebrew preamble          |
-| =C-c C-p f= | Insert nested footnote helper   |
+| Keybinding | Action                          |
+|------------+---------------------------------|
+| =C-c C-c=  | Compile                         |
+| =C-c C-w=  | Watch (live preview)            |
+| =C-c C-v=  | View PDF                        |
+| =C-c t h=  | Insert Hebrew preamble          |
+| =C-c t f=  | Insert nested footnote helper   |
 
 ** Bibliography
 
@@ -1301,6 +1393,10 @@ Then restart Emacs.
 
 3. Check direction:
    : C-h v bidi-paragraph-direction RET
+
+** Hebrew Footnotes Showing as LTR in Org
+
+Use =C-c h f= to fix all existing footnotes in the buffer. New footnotes are fixed automatically.
 
 ** PDF Not Opening in Emacs
 
@@ -1359,8 +1455,16 @@ Run once:
      hunspell -D
    #+end_src
 
-3. Verify DICPATH environment variable
+3. Verify both =en_US= and =he_IL= appear in available dictionaries
 
+4. Check DICPATH environment variable:
+   #+begin_src shell
+     echo $DICPATH
+   #+end_src
+
+5. Switch to correct language: =C-c s e= for English, =C-c s h= for Hebrew
+
+6. If a word is incorrectly flagged, press =i= to add it to personal dictionary
 ** Slow Startup
 
 First startup is slow due to package installation. If still slow:
@@ -1406,18 +1510,17 @@ After pressing a prefix key (like =C-c=), wait briefly to see available completi
 
 * File Locations Summary
 
-| File             | Location                         |
-|------------------+----------------------------------|
-| Emacs config     | =~/.emacs.d/config.org=          |
-| Init file        | =~/.emacs.d/init.el=             |
-| Tangled config   | =~/.emacs.d/config.el=           |
-| Org-roam notes   | =~/Documents/roam/=              |
-| Org directory    | =~/Documents/org/=               |
-| Bibliography     | =~/Documents/bibliography.bib=   |
-| NixOS config     | =/etc/nixos/emacs-packages.nix=  |
-| Personal dict    | =~/.hunspell_personal=           |
-| Backups          | =~/.emacs.d/backups/=            |
-| Auto-saves       | =~/.emacs.d/auto-saves/=         |
+| File              | Location                         |
+|-------------------+----------------------------------|
+| Emacs config      | =~/.emacs.d/config.org=          |
+| Init file         | =~/.emacs.d/init.el=             |
+| Tangled config    | =~/.emacs.d/config.el=           |
+| Org-roam notes    | =~/Documents/roam/=              |
+| Org directory     | =~/Documents/org/=               |
+| Bibliography      | =~/Documents/bibliography.bib=   |
+| NixOS config      | =/etc/nixos/emacs-packages.nix=  |
+| Personal dict     | =~/.hunspell_personal=           |
+| Undo history      | =~/.emacs.d/undo-tree-history/=  |
 
 * Quick Start Summary
 
@@ -1425,10 +1528,13 @@ After installation:
 
 | Task                   | Command/Key         |
 |------------------------+---------------------|
-| Switch to Hebrew       | =C-\=               |
+| Switch to Hebrew       | =F9=                |
 | Switch direction       | =C-c d=             |
 | Open file              | =C-x C-f=           |
 | Save                   | =C-x C-s=           |
+| Undo / Redo            | =C-/= / =C-?=      |
+| Visual undo tree       | =C-x u=             |
+| Focused writing        | =C-c w=             |
 | Create LaTeX doc       | =C-c h l=           |
 | Create ConTeXt doc     | =C-c h x=           |
 | Create Typst doc       | =C-c h t=           |
@@ -1441,4 +1547,7 @@ After installation:
 | Find note              | =C-c n f=           |
 | Git status             | =C-x g=             |
 | Search                 | =C-s=               |
+| Switch spell to English | =C-c s e=          |
+| Switch spell to Hebrew  | =C-c s h=          |
+| Fix footnotes RTL      | =C-c h f=           |
 | Help on key            | =C-h k= then key    |

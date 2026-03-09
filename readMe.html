@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-03-03 Tue 20:28 -->
+<!-- 2026-03-09 Mon 13:13 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Emacs Configuration Guide</title>
@@ -201,219 +201,226 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#orgafccc57">1. Installation</a>
+<li><a href="#orgeb9d370">1. Installation</a>
 <ul>
-<li><a href="#orgf052117">1.1. NixOS Configuration</a></li>
-<li><a href="#org4440b03">1.2. Emacs Configuration</a></li>
-<li><a href="#org59c10f1">1.3. First Run Tasks</a></li>
+<li><a href="#org6ddb944">1.1. NixOS Configuration</a></li>
+<li><a href="#org094e405">1.2. Emacs Configuration</a></li>
+<li><a href="#org36cb9eb">1.3. First Run Tasks</a></li>
 </ul>
 </li>
-<li><a href="#org47e7cc5">2. Basic Emacs Usage</a>
+<li><a href="#org207ea45">2. Basic Emacs Usage</a>
 <ul>
-<li><a href="#org8928a49">2.1. Key Notation</a></li>
-<li><a href="#orgcb2c4a1">2.2. Essential Commands</a></li>
-<li><a href="#orge9ab8ef">2.3. Navigation</a></li>
-<li><a href="#org16a49eb">2.4. Editing</a></li>
-<li><a href="#orga809d62">2.5. Windows</a></li>
+<li><a href="#orgf8107b4">2.1. Key Notation</a></li>
+<li><a href="#org380ecf5">2.2. Essential Commands</a></li>
+<li><a href="#org1e65b6b">2.3. Navigation</a></li>
+<li><a href="#org81dd27c">2.4. Editing</a></li>
+<li><a href="#org9d003af">2.5. Windows</a></li>
+<li><a href="#org99ac1be">2.6. Focused Writing Mode</a></li>
 </ul>
 </li>
-<li><a href="#org334b044">3. Hebrew and RTL Support</a>
+<li><a href="#org25b70e3">3. Hebrew and RTL Support</a>
 <ul>
-<li><a href="#orgbaa8cdd">3.1. Switching Languages</a></li>
-<li><a href="#org3e06107">3.2. Visual Indicators</a></li>
-<li><a href="#org14f8f2a">3.3. How Direction Works</a></li>
-<li><a href="#orgcbf3045">3.4. Best Practices</a></li>
-<li><a href="#orgedde432">3.5. Spell Checking</a></li>
+<li><a href="#org0f68327">3.1. How Direction Works</a></li>
+<li><a href="#orga93dffb">3.2. Switching Languages</a></li>
+<li><a href="#org929ce01">3.3. Visual Indicators</a></li>
+<li><a href="#orgc44e2de">3.4. Best Practices</a></li>
+<li><a href="#org2360e65">3.5. Spell Checking</a></li>
 </ul>
 </li>
-<li><a href="#org476061c">4. Document Systems Overview</a>
+<li><a href="#orge34eb09">4. Document Systems Overview</a>
 <ul>
-<li><a href="#org6af4f39">4.1. Quick Document Creation</a></li>
-<li><a href="#org6a3ee67">4.2. Document Systems Menu</a></li>
+<li><a href="#org615c64e">4.1. Quick Document Creation</a></li>
+<li><a href="#org923ac33">4.2. Document Systems Menu</a></li>
 </ul>
 </li>
-<li><a href="#org7e71fad">5. Org Mode</a>
+<li><a href="#org73efac0">5. Org Mode</a>
 <ul>
-<li><a href="#org3d6ceaf">5.1. Basic Structure</a></li>
-<li><a href="#org38b216b">5.2. Headings (Unlimited Levels)</a></li>
-<li><a href="#org285cfe8">5.3. Heading Keybindings</a></li>
-<li><a href="#orgbbd6b5b">5.4. Lists (Unlimited Levels)</a>
+<li><a href="#orgcd44004">5.1. Basic Structure</a></li>
+<li><a href="#org0a426cf">5.2. Headings (Unlimited Levels)</a></li>
+<li><a href="#org86e7a71">5.3. Heading Keybindings</a></li>
+<li><a href="#org15c843f">5.4. Lists (Unlimited Levels)</a>
 <ul>
-<li><a href="#orga2a99ac">5.4.1. Unordered Lists</a></li>
-<li><a href="#org63fe81c">5.4.2. Ordered Lists</a></li>
-<li><a href="#org315c734">5.4.3. List Keybindings</a></li>
+<li><a href="#orgc1b0565">5.4.1. Unordered Lists</a></li>
+<li><a href="#orgf8c0aaa">5.4.2. Ordered Lists</a></li>
+<li><a href="#orga1e293f">5.4.3. List Keybindings</a></li>
 </ul>
 </li>
-<li><a href="#org8ebd4c7">5.5. Checkboxes</a></li>
-<li><a href="#org02efd6a">5.6. Links</a></li>
-<li><a href="#org3af1b19">5.7. Code Blocks</a></li>
-<li><a href="#orgd6a5df3">5.8. Exporting</a></li>
-<li><a href="#org1298c25">5.9. Org to LaTeX Export Settings</a></li>
-</ul>
-</li>
-<li><a href="#org6df66cc">6. LaTeX and AUCTeX</a>
+<li><a href="#org336eec6">5.5. Checkboxes</a></li>
+<li><a href="#org7f78aee">5.6. Links</a>
 <ul>
-<li><a href="#orgf31fc94">6.1. Creating a New Document</a></li>
-<li><a href="#orgd736603">6.2. Basic Document Structure (Hebrew)</a></li>
-<li><a href="#orgab70007">6.3. Quick Preamble Insertion</a></li>
-<li><a href="#org6463784">6.4. AUCTeX Keybindings</a></li>
-<li><a href="#org547739e">6.5. Compiling Documents</a></li>
-<li><a href="#orgd203fed">6.6. Unlimited Sectioning in LaTeX</a></li>
-<li><a href="#org21ea914">6.7. Unlimited Lists in LaTeX</a></li>
+<li><a href="#orgfb3b398">5.6.1. Hebrew Footnote RTL Fix</a></li>
 </ul>
 </li>
-<li><a href="#org73885d2">7. Nested Footnotes in LaTeX</a>
+<li><a href="#orga80e593">5.7. Code Blocks</a></li>
+<li><a href="#org200e71c">5.8. Exporting</a></li>
+<li><a href="#org24430fa">5.9. Org to LaTeX Export Settings</a></li>
+</ul>
+</li>
+<li><a href="#org84fb78f">6. LaTeX and AUCTeX</a>
 <ul>
-<li><a href="#orgc2749b7">7.1. Overview</a></li>
-<li><a href="#orgff76ba9">7.2. Method 1: Simple Footnotes (Non-Nested)</a></li>
-<li><a href="#orgd89bbdb">7.3. Method 2: True Nesting (Footnote Within Footnote)</a></li>
-<li><a href="#org2a9d724">7.4. Footnote Levels Reference</a></li>
-<li><a href="#org81ed6e1">7.5. Keybindings</a>
+<li><a href="#orgb8e6070">6.1. Creating a New Document</a></li>
+<li><a href="#org47d012a">6.2. Basic Document Structure (Hebrew)</a></li>
+<li><a href="#orgd2e1f14">6.3. Quick Preamble Insertion</a></li>
+<li><a href="#orgf4df5da">6.4. AUCTeX Keybindings</a></li>
+<li><a href="#orgbf20322">6.5. Compiling Documents</a></li>
+<li><a href="#orgf2e9d97">6.6. Unlimited Sectioning in LaTeX</a></li>
+<li><a href="#orgf35efe7">6.7. Unlimited Lists in LaTeX</a></li>
+</ul>
+</li>
+<li><a href="#org6e47764">7. Nested Footnotes in LaTeX</a>
 <ul>
-<li><a href="#orgc03410d">7.5.1. Simple Footnotes (<code>C-c f &lt;number&gt;</code>)</a></li>
-<li><a href="#org2400481">7.5.2. Nested Footnotes (Marks and Texts)</a></li>
-<li><a href="#org9f3a685">7.5.3. Footnotes Menu</a></li>
-</ul>
-</li>
-<li><a href="#orgc308268">7.6. Adding More Levels</a></li>
-</ul>
-</li>
-<li><a href="#org725a021">8. ConTeXt</a>
+<li><a href="#orgde79e43">7.1. Overview</a></li>
+<li><a href="#orga4b5373">7.2. Method 1: Simple Footnotes (Non-Nested)</a></li>
+<li><a href="#orgc2ab91d">7.3. Method 2: True Nesting (Footnote Within Footnote)</a></li>
+<li><a href="#org7efab72">7.4. Footnote Levels Reference</a></li>
+<li><a href="#org6be6af4">7.5. Keybindings</a>
 <ul>
-<li><a href="#org7050746">8.1. What is ConTeXt?</a></li>
-<li><a href="#org38bfb3e">8.2. Creating a ConTeXt Document</a></li>
-<li><a href="#org6fa949f">8.3. Compiling ConTeXt</a></li>
-<li><a href="#orgf349800">8.4. ConTeXt Keybindings</a></li>
-<li><a href="#orgfc6b67f">8.5. ConTeXt Sectioning</a></li>
-<li><a href="#org20c1134">8.6. Local Footnotes in ConTeXt</a></li>
+<li><a href="#org3f95080">7.5.1. Simple Footnotes (<code>C-c f &lt;number&gt;</code>)</a></li>
+<li><a href="#orgea2f54e">7.5.2. Nested Footnotes (via Hydra Menu)</a></li>
 </ul>
 </li>
-<li><a href="#orgddf014c">9. Typst</a>
+<li><a href="#org7c2e9c7">7.6. Adding More Levels</a></li>
+</ul>
+</li>
+<li><a href="#org5d2f951">8. ConTeXt</a>
 <ul>
-<li><a href="#org2853cdf">9.1. What is Typst?</a></li>
-<li><a href="#org262e861">9.2. Creating a Typst Document</a></li>
-<li><a href="#org11ac8b6">9.3. Compiling Typst</a></li>
-<li><a href="#orgfb48fbe">9.4. Typst Keybindings</a></li>
-<li><a href="#orgfd96390">9.5. Typst Syntax Basics</a>
+<li><a href="#org9cf8fe7">8.1. What is ConTeXt?</a></li>
+<li><a href="#org10e2023">8.2. Creating a ConTeXt Document</a></li>
+<li><a href="#org0fca4a1">8.3. Compiling ConTeXt</a></li>
+<li><a href="#org93056ca">8.4. ConTeXt Sectioning</a></li>
+<li><a href="#orged2e785">8.5. Local Footnotes in ConTeXt</a></li>
+</ul>
+</li>
+<li><a href="#org4c96d0a">9. Typst</a>
 <ul>
-<li><a href="#org5f14714">9.5.1. Headings</a></li>
-<li><a href="#org1277197">9.5.2. Text Formatting</a></li>
-<li><a href="#org8e6f2b1">9.5.3. Lists</a></li>
-<li><a href="#orgd91f2d6">9.5.4. Links</a></li>
-</ul>
-</li>
-<li><a href="#org874eed0">9.6. Basic Footnotes in Typst</a></li>
-<li><a href="#org83031e2">9.7. Nested Footnotes in Typst</a>
+<li><a href="#org5b55390">9.1. What is Typst?</a></li>
+<li><a href="#org9424fce">9.2. Creating a Typst Document</a></li>
+<li><a href="#org8eb4781">9.3. Compiling Typst</a></li>
+<li><a href="#orgc47a430">9.4. Typst Syntax Basics</a>
 <ul>
-<li><a href="#org18554c3">9.7.1. The Problem</a></li>
-<li><a href="#org919d35f">9.7.2. The Solution</a></li>
-<li><a href="#orgaa7cf18">9.7.3. Why It Works</a></li>
-<li><a href="#orgf308e06">9.7.4. Full Working Example</a></li>
-<li><a href="#org6fcd219">9.7.5. Hebrew Example</a></li>
-<li><a href="#org845a7cd">9.7.6. Optional Styling</a></li>
-<li><a href="#org851d79b">9.7.7. Caveats</a></li>
-<li><a href="#orgf6fccb7">9.7.8. Comparison with LaTeX/ConTeXt</a></li>
+<li><a href="#org7560f69">9.4.1. Headings</a></li>
+<li><a href="#org55e82a4">9.4.2. Text Formatting</a></li>
+<li><a href="#org3745baf">9.4.3. Lists</a></li>
+<li><a href="#org442c4eb">9.4.4. Links</a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li><a href="#orgb7e147d">10. Nested Footnotes Comparison</a></li>
-<li><a href="#org1a3a305">11. Org-Roam</a>
+<li><a href="#orgf3296d0">9.5. Basic Footnotes in Typst</a></li>
+<li><a href="#org70dc7bc">9.6. Nested Footnotes in Typst</a>
 <ul>
-<li><a href="#org64e96a6">11.1. What is Org-Roam?</a></li>
-<li><a href="#org3342b08">11.2. Keybindings</a></li>
-<li><a href="#org8fb906d">11.3. Creating Notes</a></li>
-<li><a href="#orga5c9a91">11.4. Linking Notes</a></li>
-<li><a href="#orgbd35d5c">11.5. Viewing Backlinks</a></li>
-<li><a href="#org34fa7e7">11.6. Visual Graph</a></li>
+<li><a href="#org513461e">9.6.1. The Problem</a></li>
+<li><a href="#org77757e8">9.6.2. The Solution</a></li>
+<li><a href="#orgbf1e6f0">9.6.3. Why It Works</a></li>
+<li><a href="#orgbd56464">9.6.4. Full Working Example</a></li>
+<li><a href="#org570046a">9.6.5. Hebrew Example</a></li>
+<li><a href="#orgdbdb103">9.6.6. Optional Styling</a></li>
+<li><a href="#org8f7c73a">9.6.7. Caveats</a></li>
+<li><a href="#orgfcf2117">9.6.8. Comparison with LaTeX/ConTeXt</a></li>
 </ul>
 </li>
-<li><a href="#orgeec6baf">12. Bibliography</a>
+</ul>
+</li>
+<li><a href="#org8301745">10. Nested Footnotes Comparison</a></li>
+<li><a href="#org7c400a8">11. Org-Roam</a>
 <ul>
-<li><a href="#org49c9ae1">12.1. Citar Keybindings</a></li>
-<li><a href="#orgaaffca1">12.2. Bibliography File</a></li>
-<li><a href="#org3c3af45">12.3. Adding References</a></li>
-<li><a href="#org52cb6b2">12.4. Using in LaTeX</a></li>
-<li><a href="#orgb548f9c">12.5. Using in Org</a></li>
+<li><a href="#org2593180">11.1. What is Org-Roam?</a></li>
+<li><a href="#org0d61a09">11.2. Keybindings</a></li>
+<li><a href="#orge50ea51">11.3. Creating Notes</a></li>
+<li><a href="#org5e65245">11.4. Linking Notes</a></li>
+<li><a href="#org68f8681">11.5. Viewing Backlinks</a></li>
+<li><a href="#org72c0e60">11.6. Visual Graph</a></li>
+<li><a href="#org1f1a85f">11.7. Daily Notes</a></li>
 </ul>
 </li>
-<li><a href="#org6a0fe36">13. Programming</a>
+<li><a href="#orgf193f11">12. Bibliography</a>
 <ul>
-<li><a href="#orgdc72f72">13.1. Supported Languages</a></li>
-<li><a href="#org96d6aba">13.2. LSP (Eglot) Keybindings</a></li>
-<li><a href="#orgd635dfe">13.3. Running Code in Org</a></li>
+<li><a href="#org865450a">12.1. Citar Keybindings</a></li>
+<li><a href="#orgf7b793d">12.2. Bibliography File</a></li>
+<li><a href="#org6715f6f">12.3. Adding References</a></li>
+<li><a href="#org85c38ce">12.4. Using in LaTeX</a></li>
+<li><a href="#orgf0f08a8">12.5. Using in Org</a></li>
 </ul>
 </li>
-<li><a href="#orgc25a2db">14. Version Control (Magit)</a>
+<li><a href="#org72bc885">13. Programming</a>
 <ul>
-<li><a href="#orgbdfa27e">14.1. Keybindings</a></li>
-<li><a href="#org1d7ebcd">14.2. Basic Magit Workflow</a></li>
+<li><a href="#org1a8b200">13.1. Supported Languages</a></li>
+<li><a href="#orgdeefaf8">13.2. LSP (Eglot) Keybindings</a></li>
+<li><a href="#org4221fa5">13.3. Running Code in Org</a></li>
+<li><a href="#orgf87c451">13.4. Electric Pairs (Auto-closing Brackets)</a></li>
 </ul>
 </li>
-<li><a href="#orgef64783">15. Adding New Packages</a>
+<li><a href="#org7464c41">14. Version Control (Magit)</a>
 <ul>
-<li><a href="#orgdeea67b">15.1. Method 1: Edit config.org (Recommended)</a></li>
-<li><a href="#org3e06081">15.2. Method 2: Quick Install (Temporary)</a></li>
-<li><a href="#org0a68b34">15.3. Use-Package Syntax Reference</a></li>
-<li><a href="#org83ad853">15.4. Common Use-Package Keywords</a></li>
-<li><a href="#orgfdcc831">15.5. Adding System Packages (NixOS)</a></li>
+<li><a href="#orgc9e7b31">14.1. Keybindings</a></li>
+<li><a href="#orgd8e05a0">14.2. Basic Magit Workflow</a></li>
 </ul>
 </li>
-<li><a href="#orgb003c60">16. Customization</a>
+<li><a href="#orgcd67e7b">15. Undo and Redo</a></li>
+<li><a href="#orgfa8ea50">16. Adding New Packages</a>
 <ul>
-<li><a href="#org9eafc0e">16.1. Changing Theme</a></li>
-<li><a href="#org97bf540">16.2. Changing Fonts</a></li>
-<li><a href="#org51a1f9d">16.3. Changing Hebrew Fonts</a></li>
-<li><a href="#orgb05a617">16.4. Adding Custom Keybindings</a></li>
-<li><a href="#orgf737e3f">16.5. Creating Custom Functions</a></li>
+<li><a href="#org3265103">16.1. Method 1: Edit config.org (Recommended)</a></li>
+<li><a href="#orga199ebd">16.2. Method 2: Quick Install (Temporary)</a></li>
+<li><a href="#org1453af0">16.3. Use-Package Syntax Reference</a></li>
+<li><a href="#org4968334">16.4. Common Use-Package Keywords</a></li>
+<li><a href="#org079af23">16.5. Adding System Packages (NixOS)</a></li>
 </ul>
 </li>
-<li><a href="#org18fc14a">17. Keybinding Reference</a>
+<li><a href="#org3c843a2">17. Customization</a>
 <ul>
-<li><a href="#orgbac353f">17.1. Global</a></li>
-<li><a href="#orgbad5c35">17.2. Spell Checking</a></li>
-<li><a href="#orgacce188">17.3. Document Creation</a></li>
-<li><a href="#org2658666">17.4. Org Mode</a></li>
-<li><a href="#orgf7a67c0">17.5. Org-Roam</a></li>
-<li><a href="#org4ccc0cd">17.6. LaTeX</a></li>
-<li><a href="#orgc3e3b1e">17.7. ConTeXt</a></li>
-<li><a href="#org48727d1">17.8. Typst</a></li>
-<li><a href="#org8b449f5">17.9. Bibliography</a></li>
+<li><a href="#orgf09856a">17.1. Changing Theme</a></li>
+<li><a href="#orgfae6f23">17.2. Changing Fonts</a></li>
+<li><a href="#org3a4485e">17.3. Changing Hebrew Fonts</a></li>
+<li><a href="#orgcdd6374">17.4. Adding Custom Keybindings</a></li>
+<li><a href="#org7b2cba3">17.5. Creating Custom Functions</a></li>
 </ul>
 </li>
-<li><a href="#orgdcf79db">18. Troubleshooting</a>
+<li><a href="#org6851905">18. Keybinding Reference</a>
 <ul>
-<li><a href="#orga129602">18.1. Packages Not Installing</a></li>
-<li><a href="#org36edb4d">18.2. Hebrew Not Displaying</a></li>
-<li><a href="#orgb66b9bf">18.3. PDF Not Opening in Emacs</a></li>
-<li><a href="#orgb29c997">18.4. Org-Roam Database Errors</a></li>
-<li><a href="#orgf8c3702">18.5. LaTeX Compilation Fails</a></li>
-<li><a href="#org15fcf41">18.6. ConTeXt Compilation Fails</a></li>
-<li><a href="#orgfa86c9c">18.7. Typst Compilation Fails</a></li>
-<li><a href="#org88fda1f">18.8. Typst LSP Not Working</a></li>
-<li><a href="#org27d920c">18.9. Spell Check Not Working</a></li>
-<li><a href="#orgc46897a">18.10. Slow Startup</a></li>
-<li><a href="#org1719d35">18.11. Config Changes Not Taking Effect</a></li>
+<li><a href="#org9153fbf">18.1. Global</a></li>
+<li><a href="#org6511ca4">18.2. Undo / Redo</a></li>
+<li><a href="#org4f6220e">18.3. Spell Checking</a></li>
+<li><a href="#orgfb99e51">18.4. Spell Checking</a></li>
+<li><a href="#org63fa294">18.5. Document Creation</a></li>
+<li><a href="#org306a961">18.6. Org Mode</a></li>
+<li><a href="#org2e3d5d1">18.7. Org-Roam</a></li>
+<li><a href="#org583e7c4">18.8. LaTeX</a></li>
+<li><a href="#org5df110a">18.9. Typst</a></li>
+<li><a href="#orgbc92f6f">18.10. Bibliography</a></li>
 </ul>
 </li>
-<li><a href="#org5f2025a">19. Getting Help</a>
+<li><a href="#orge6fd33e">19. Troubleshooting</a>
 <ul>
-<li><a href="#org673c18b">19.1. Built-in Help</a></li>
-<li><a href="#org0e20daa">19.2. Which-Key</a></li>
-<li><a href="#org8d74df8">19.3. Online Resources</a></li>
+<li><a href="#org328641a">19.1. Packages Not Installing</a></li>
+<li><a href="#orgb1374cf">19.2. Hebrew Not Displaying</a></li>
+<li><a href="#org761f13d">19.3. Hebrew Footnotes Showing as LTR in Org</a></li>
+<li><a href="#orgce8d933">19.4. PDF Not Opening in Emacs</a></li>
+<li><a href="#orgd536b71">19.5. Org-Roam Database Errors</a></li>
+<li><a href="#org6d43d60">19.6. LaTeX Compilation Fails</a></li>
+<li><a href="#orgb901c39">19.7. ConTeXt Compilation Fails</a></li>
+<li><a href="#org3a3db82">19.8. Typst Compilation Fails</a></li>
+<li><a href="#org7da7ab9">19.9. Typst LSP Not Working</a></li>
+<li><a href="#orga367f4c">19.10. Spell Check Not Working</a></li>
+<li><a href="#org379fd39">19.11. Slow Startup</a></li>
+<li><a href="#org471ad2a">19.12. Config Changes Not Taking Effect</a></li>
 </ul>
 </li>
-<li><a href="#org44c1652">20. File Locations Summary</a></li>
-<li><a href="#org024e233">21. Quick Start Summary</a></li>
+<li><a href="#orgd863b38">20. Getting Help</a>
+<ul>
+<li><a href="#orgf64b730">20.1. Built-in Help</a></li>
+<li><a href="#org699fa01">20.2. Which-Key</a></li>
+<li><a href="#org8ca8b83">20.3. Online Resources</a></li>
+</ul>
+</li>
+<li><a href="#org8179141">21. File Locations Summary</a></li>
+<li><a href="#org7d32a89">22. Quick Start Summary</a></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgafccc57" class="outline-2">
-<h2 id="orgafccc57"><span class="section-number-2">1.</span> Installation</h2>
+<div id="outline-container-orgeb9d370" class="outline-2">
+<h2 id="orgeb9d370"><span class="section-number-2">1.</span> Installation</h2>
 <div class="outline-text-2" id="text-1">
 </div>
-<div id="outline-container-orgf052117" class="outline-3">
-<h3 id="orgf052117"><span class="section-number-3">1.1.</span> NixOS Configuration</h3>
+<div id="outline-container-org6ddb944" class="outline-3">
+<h3 id="org6ddb944"><span class="section-number-3">1.1.</span> NixOS Configuration</h3>
 <div class="outline-text-3" id="text-1-1">
 <ol class="org-ol">
 <li>Copy <code>emacs-packages.nix</code> to <code>/etc/nixos/</code></li>
@@ -441,8 +448,8 @@ Rebuild:
 </ol>
 </div>
 </div>
-<div id="outline-container-org4440b03" class="outline-3">
-<h3 id="org4440b03"><span class="section-number-3">1.2.</span> Emacs Configuration</h3>
+<div id="outline-container-org094e405" class="outline-3">
+<h3 id="org094e405"><span class="section-number-3">1.2.</span> Emacs Configuration</h3>
 <div class="outline-text-3" id="text-1-2">
 <ol class="org-ol">
 <li><p>
@@ -479,8 +486,8 @@ touch ~/Documents/bibliography.bib
 </ol>
 </div>
 </div>
-<div id="outline-container-org59c10f1" class="outline-3">
-<h3 id="org59c10f1"><span class="section-number-3">1.3.</span> First Run Tasks</h3>
+<div id="outline-container-org36cb9eb" class="outline-3">
+<h3 id="org36cb9eb"><span class="section-number-3">1.3.</span> First Run Tasks</h3>
 <div class="outline-text-3" id="text-1-3">
 <p>
 After first launch:
@@ -504,12 +511,12 @@ M-x org-roam-db-sync RET
 </div>
 </div>
 </div>
-<div id="outline-container-org47e7cc5" class="outline-2">
-<h2 id="org47e7cc5"><span class="section-number-2">2.</span> Basic Emacs Usage</h2>
+<div id="outline-container-org207ea45" class="outline-2">
+<h2 id="org207ea45"><span class="section-number-2">2.</span> Basic Emacs Usage</h2>
 <div class="outline-text-2" id="text-2">
 </div>
-<div id="outline-container-org8928a49" class="outline-3">
-<h3 id="org8928a49"><span class="section-number-3">2.1.</span> Key Notation</h3>
+<div id="outline-container-orgf8107b4" class="outline-3">
+<h3 id="orgf8107b4"><span class="section-number-3">2.1.</span> Key Notation</h3>
 <div class="outline-text-3" id="text-2-1">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -554,8 +561,8 @@ M-x org-roam-db-sync RET
 </table>
 </div>
 </div>
-<div id="outline-container-orgcb2c4a1" class="outline-3">
-<h3 id="orgcb2c4a1"><span class="section-number-3">2.2.</span> Essential Commands</h3>
+<div id="outline-container-org380ecf5" class="outline-3">
+<h3 id="org380ecf5"><span class="section-number-3">2.2.</span> Essential Commands</h3>
 <div class="outline-text-3" id="text-2-2">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -625,8 +632,8 @@ M-x org-roam-db-sync RET
 </table>
 </div>
 </div>
-<div id="outline-container-orge9ab8ef" class="outline-3">
-<h3 id="orge9ab8ef"><span class="section-number-3">2.3.</span> Navigation</h3>
+<div id="outline-container-org1e65b6b" class="outline-3">
+<h3 id="org1e65b6b"><span class="section-number-3">2.3.</span> Navigation</h3>
 <div class="outline-text-3" id="text-2-3">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -686,8 +693,8 @@ M-x org-roam-db-sync RET
 </table>
 </div>
 </div>
-<div id="outline-container-org16a49eb" class="outline-3">
-<h3 id="org16a49eb"><span class="section-number-3">2.4.</span> Editing</h3>
+<div id="outline-container-org81dd27c" class="outline-3">
+<h3 id="org81dd27c"><span class="section-number-3">2.4.</span> Editing</h3>
 <div class="outline-text-3" id="text-2-4">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -743,12 +750,22 @@ M-x org-roam-db-sync RET
 <td class="org-left"><code>C-/</code></td>
 <td class="org-left">Undo</td>
 </tr>
+
+<tr>
+<td class="org-left"><code>C-?</code></td>
+<td class="org-left">Redo</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-x u</code></td>
+<td class="org-left">Visual undo tree</td>
+</tr>
 </tbody>
 </table>
 </div>
 </div>
-<div id="outline-container-orga809d62" class="outline-3">
-<h3 id="orga809d62"><span class="section-number-3">2.5.</span> Windows</h3>
+<div id="outline-container-org9d003af" class="outline-3">
+<h3 id="org9d003af"><span class="section-number-3">2.5.</span> Windows</h3>
 <div class="outline-text-3" id="text-2-5">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -767,12 +784,12 @@ M-x org-roam-db-sync RET
 <tbody>
 <tr>
 <td class="org-left"><code>C-x 2</code></td>
-<td class="org-left">Split horizontally</td>
+<td class="org-left">Split horizontally (and follow)</td>
 </tr>
 
 <tr>
 <td class="org-left"><code>C-x 3</code></td>
-<td class="org-left">Split vertically</td>
+<td class="org-left">Split vertically (and follow)</td>
 </tr>
 
 <tr>
@@ -786,21 +803,16 @@ M-x org-roam-db-sync RET
 </tr>
 
 <tr>
-<td class="org-left"><code>C-x o</code></td>
-<td class="org-left">Switch to other window</td>
+<td class="org-left"><code>M-o</code></td>
+<td class="org-left">Switch window (ace-window)</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
-</div>
-<div id="outline-container-org334b044" class="outline-2">
-<h2 id="org334b044"><span class="section-number-2">3.</span> Hebrew and RTL Support</h2>
-<div class="outline-text-2" id="text-3">
-</div>
-<div id="outline-container-orgbaa8cdd" class="outline-3">
-<h3 id="orgbaa8cdd"><span class="section-number-3">3.1.</span> Switching Languages</h3>
-<div class="outline-text-3" id="text-3-1">
+<div id="outline-container-org99ac1be" class="outline-3">
+<h3 id="org99ac1be"><span class="section-number-3">2.6.</span> Focused Writing Mode</h3>
+<div class="outline-text-3" id="text-2-6">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -817,7 +829,91 @@ M-x org-roam-db-sync RET
 </thead>
 <tbody>
 <tr>
-<td class="org-left"><code>C-\</code></td>
+<td class="org-left"><code>C-c w</code></td>
+<td class="org-left">Toggle focused writing (80-col centered)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c W</code></td>
+<td class="org-left">Set column width</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+When enabled, text is soft-wrapped at 80 columns and visually centered in the window. No actual line breaks are inserted.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org25b70e3" class="outline-2">
+<h2 id="org25b70e3"><span class="section-number-2">3.</span> Hebrew and RTL Support</h2>
+<div class="outline-text-2" id="text-3">
+</div>
+<div id="outline-container-org0f68327" class="outline-3">
+<h3 id="org0f68327"><span class="section-number-3">3.1.</span> How Direction Works</h3>
+<div class="outline-text-3" id="text-3-1">
+<p>
+The config automatically sets direction per major mode:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Mode Type</th>
+<th scope="col" class="org-left">Default Direction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Org, LaTeX, text modes</td>
+<td class="org-left">RTL (Hebrew)</td>
+</tr>
+
+<tr>
+<td class="org-left">Programming modes</td>
+<td class="org-left">LTR (English)</td>
+</tr>
+
+<tr>
+<td class="org-left">Other modes</td>
+<td class="org-left">Auto-detect</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+You can always override manually with the keybindings below.
+</p>
+</div>
+</div>
+<div id="outline-container-orga93dffb" class="outline-3">
+<h3 id="orga93dffb"><span class="section-number-3">3.2.</span> Switching Languages</h3>
+<div class="outline-text-3" id="text-3-2">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>F9</code></td>
 <td class="org-left">Toggle input method (Hebrew ↔ English)</td>
 </tr>
 
@@ -835,13 +931,18 @@ M-x org-roam-db-sync RET
 <td class="org-left"><code>C-c l</code></td>
 <td class="org-left">Force LTR direction</td>
 </tr>
+
+<tr>
+<td class="org-left"><code>C-c D</code></td>
+<td class="org-left">Direction controls menu (hydra)</td>
+</tr>
 </tbody>
 </table>
 </div>
 </div>
-<div id="outline-container-org3e06107" class="outline-3">
-<h3 id="org3e06107"><span class="section-number-3">3.2.</span> Visual Indicators</h3>
-<div class="outline-text-3" id="text-3-2">
+<div id="outline-container-org929ce01" class="outline-3">
+<h3 id="org929ce01"><span class="section-number-3">3.3.</span> Visual Indicators</h3>
+<div class="outline-text-3" id="text-3-3">
 <p>
 The modeline shows current state:
 </p>
@@ -851,38 +952,24 @@ The modeline shows current state:
 </ul>
 </div>
 </div>
-<div id="outline-container-org14f8f2a" class="outline-3">
-<h3 id="org14f8f2a"><span class="section-number-3">3.3.</span> How Direction Works</h3>
-<div class="outline-text-3" id="text-3-3">
-<ul class="org-ul">
-<li><b>RTL (Right-to-Left)</b>: Default. Text flows right to left.</li>
-<li><b>LTR (Left-to-Right)</b>: For English/code. Text flows left to right.</li>
-</ul>
-
-<p>
-For mixed text:
-</p>
-<ul class="org-ul">
-<li>Paragraph direction determines base direction</li>
-<li>Opposite-direction runs handled automatically</li>
-<li>Use <code>C-c d</code> to switch if display looks wrong</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-orgcbf3045" class="outline-3">
-<h3 id="orgcbf3045"><span class="section-number-3">3.4.</span> Best Practices</h3>
+<div id="outline-container-orgc44e2de" class="outline-3">
+<h3 id="orgc44e2de"><span class="section-number-3">3.4.</span> Best Practices</h3>
 <div class="outline-text-3" id="text-3-4">
 <ol class="org-ol">
-<li><b>Hebrew documents</b>: Keep default RTL</li>
-<li><b>English documents</b>: Use <code>C-c l</code> for LTR</li>
-<li><b>Mixed documents</b>: Set direction based on majority language</li>
-<li><b>Code</b>: Always use LTR (<code>C-c l</code>)</li>
+<li><b>Hebrew documents</b>: Automatically RTL (Org, LaTeX, text modes)</li>
+<li><b>English documents</b>: Use <code>C-c l</code> for LTR, or it auto-detects</li>
+<li><b>Mixed documents</b>: Use <code>C-c d</code> to toggle as needed</li>
+<li><b>Code</b>: Automatically LTR (prog-mode)</li>
 </ol>
 </div>
 </div>
-<div id="outline-container-orgedde432" class="outline-3">
-<h3 id="orgedde432"><span class="section-number-3">3.5.</span> Spell Checking</h3>
+<div id="outline-container-org2360e65" class="outline-3">
+<h3 id="org2360e65"><span class="section-number-3">3.5.</span> Spell Checking</h3>
 <div class="outline-text-3" id="text-3-5">
+<p>
+Spell checking uses Flyspell with Hunspell. Switch between languages manually:
+</p>
+
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -907,13 +994,35 @@ For mixed text:
 <td class="org-left"><code>C-c s h</code></td>
 <td class="org-left">Switch to Hebrew</td>
 </tr>
+
+<tr>
+<td class="org-left"><code>M-$</code></td>
+<td class="org-left">Correct word at point</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>i</code></td>
+<td class="org-left">Add word to personal dict</td>
+</tr>
 </tbody>
 </table>
+
+<p>
+When a correctly-spelled word is flagged (e.g., Hebrew word while in English mode), press <code>i</code> to add it to your personal dictionary (<code>~/.hunspell_personal</code>).
+</p>
+
+<p>
+Spell checking is active in:
+</p>
+<ul class="org-ul">
+<li>All text/prose modes (Org, LaTeX, Markdown, etc.)</li>
+<li>Comments and strings in programming modes</li>
+</ul>
 </div>
 </div>
 </div>
-<div id="outline-container-org476061c" class="outline-2">
-<h2 id="org476061c"><span class="section-number-2">4.</span> Document Systems Overview</h2>
+<div id="outline-container-orge34eb09" class="outline-2">
+<h2 id="orge34eb09"><span class="section-number-2">4.</span> Document Systems Overview</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 This configuration supports three document systems:
@@ -963,8 +1072,8 @@ This configuration supports three document systems:
 </tbody>
 </table>
 </div>
-<div id="outline-container-org6af4f39" class="outline-3">
-<h3 id="org6af4f39"><span class="section-number-3">4.1.</span> Quick Document Creation</h3>
+<div id="outline-container-org615c64e" class="outline-3">
+<h3 id="org615c64e"><span class="section-number-3">4.1.</span> Quick Document Creation</h3>
 <div class="outline-text-3" id="text-4-1">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -1004,8 +1113,8 @@ This configuration supports three document systems:
 </table>
 </div>
 </div>
-<div id="outline-container-org6a3ee67" class="outline-3">
-<h3 id="org6a3ee67"><span class="section-number-3">4.2.</span> Document Systems Menu</h3>
+<div id="outline-container-org923ac33" class="outline-3">
+<h3 id="org923ac33"><span class="section-number-3">4.2.</span> Document Systems Menu</h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
 Press <code>C-c P</code> to open the document systems hydra menu with all preamble insertion options.
@@ -1013,14 +1122,14 @@ Press <code>C-c P</code> to open the document systems hydra menu with all preamb
 </div>
 </div>
 </div>
-<div id="outline-container-org7e71fad" class="outline-2">
-<h2 id="org7e71fad"><span class="section-number-2">5.</span> Org Mode</h2>
+<div id="outline-container-org73efac0" class="outline-2">
+<h2 id="org73efac0"><span class="section-number-2">5.</span> Org Mode</h2>
 <div class="outline-text-2" id="text-5">
 </div>
-<div id="outline-container-org3d6ceaf" class="outline-3">
-<h3 id="org3d6ceaf"><span class="section-number-3">5.1.</span> Basic Structure</h3>
+<div id="outline-container-orgcd44004" class="outline-3">
+<h3 id="orgcd44004"><span class="section-number-3">5.1.</span> Basic Structure</h3>
 <div class="outline-text-3" id="text-5-1">
-<pre class="example" id="orgc6bb9fa">
+<pre class="example" id="org519acfa">
 * Heading Level 1
 ** Heading Level 2
 *** Heading Level 3 (unlimited levels)
@@ -1042,8 +1151,8 @@ Regular paragraph text.
 </pre>
 </div>
 </div>
-<div id="outline-container-org38b216b" class="outline-3">
-<h3 id="org38b216b"><span class="section-number-3">5.2.</span> Headings (Unlimited Levels)</h3>
+<div id="outline-container-org0a426cf" class="outline-3">
+<h3 id="org0a426cf"><span class="section-number-3">5.2.</span> Headings (Unlimited Levels)</h3>
 <div class="outline-text-3" id="text-5-2">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -1088,8 +1197,8 @@ Regular paragraph text.
 </table>
 </div>
 </div>
-<div id="outline-container-org285cfe8" class="outline-3">
-<h3 id="org285cfe8"><span class="section-number-3">5.3.</span> Heading Keybindings</h3>
+<div id="outline-container-org86e7a71" class="outline-3">
+<h3 id="org86e7a71"><span class="section-number-3">5.3.</span> Heading Keybindings</h3>
 <div class="outline-text-3" id="text-5-3">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -1139,14 +1248,14 @@ Regular paragraph text.
 </table>
 </div>
 </div>
-<div id="outline-container-orgbbd6b5b" class="outline-3">
-<h3 id="orgbbd6b5b"><span class="section-number-3">5.4.</span> Lists (Unlimited Levels)</h3>
+<div id="outline-container-org15c843f" class="outline-3">
+<h3 id="org15c843f"><span class="section-number-3">5.4.</span> Lists (Unlimited Levels)</h3>
 <div class="outline-text-3" id="text-5-4">
 </div>
-<div id="outline-container-orga2a99ac" class="outline-4">
-<h4 id="orga2a99ac"><span class="section-number-4">5.4.1.</span> Unordered Lists</h4>
+<div id="outline-container-orgc1b0565" class="outline-4">
+<h4 id="orgc1b0565"><span class="section-number-4">5.4.1.</span> Unordered Lists</h4>
 <div class="outline-text-4" id="text-5-4-1">
-<pre class="example" id="org695bdfa">
+<pre class="example" id="org590e9b8">
 - Item 1
   - Sub-item (indent 2 spaces)
     - Sub-sub-item
@@ -1156,10 +1265,10 @@ Regular paragraph text.
 </pre>
 </div>
 </div>
-<div id="outline-container-org63fe81c" class="outline-4">
-<h4 id="org63fe81c"><span class="section-number-4">5.4.2.</span> Ordered Lists</h4>
+<div id="outline-container-orgf8c0aaa" class="outline-4">
+<h4 id="orgf8c0aaa"><span class="section-number-4">5.4.2.</span> Ordered Lists</h4>
 <div class="outline-text-4" id="text-5-4-2">
-<pre class="example" id="org2085f50">
+<pre class="example" id="org2502b46">
 1. First item
    1. Sub-item
       1. Sub-sub-item
@@ -1168,8 +1277,8 @@ Regular paragraph text.
 </pre>
 </div>
 </div>
-<div id="outline-container-org315c734" class="outline-4">
-<h4 id="org315c734"><span class="section-number-4">5.4.3.</span> List Keybindings</h4>
+<div id="outline-container-orga1e293f" class="outline-4">
+<h4 id="orga1e293f"><span class="section-number-4">5.4.3.</span> List Keybindings</h4>
 <div class="outline-text-4" id="text-5-4-3">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -1215,20 +1324,20 @@ Regular paragraph text.
 </div>
 </div>
 </div>
-<div id="outline-container-org8ebd4c7" class="outline-3">
-<h3 id="org8ebd4c7"><span class="section-number-3">5.5.</span> Checkboxes</h3>
+<div id="outline-container-org336eec6" class="outline-3">
+<h3 id="org336eec6"><span class="section-number-3">5.5.</span> Checkboxes</h3>
 <div class="outline-text-3" id="text-5-5">
-<pre class="example" id="orgf960eba">
+<pre class="example" id="org02dd113">
 - [ ] Unchecked item
 - [X] Checked item
 - [-] Partially done
 </pre>
 </div>
 </div>
-<div id="outline-container-org02efd6a" class="outline-3">
-<h3 id="org02efd6a"><span class="section-number-3">5.6.</span> Links</h3>
+<div id="outline-container-org7f78aee" class="outline-3">
+<h3 id="org7f78aee"><span class="section-number-3">5.6.</span> Links</h3>
 <div class="outline-text-3" id="text-5-6">
-<pre class="example" id="orgafe4cee">
+<pre class="example" id="org414ac4b">
 [[https://example.com][Link text]]
 [[file:./other-file.org][Internal link]]
 [[#custom-id][Link to heading]]
@@ -1262,10 +1371,10 @@ Regular paragraph text.
 </table>
 </div>
 </div>
-<div id="outline-container-org3af1b19" class="outline-3">
-<h3 id="org3af1b19"><span class="section-number-3">5.7.</span> Code Blocks</h3>
+<div id="outline-container-orga80e593" class="outline-3">
+<h3 id="orga80e593"><span class="section-number-3">5.7.</span> Code Blocks</h3>
 <div class="outline-text-3" id="text-5-7">
-<pre class="example" id="orgd405c66">
+<pre class="example" id="orgf1e1570">
 #+begin_src python
   print("Hello, World!")
 #+end_src
@@ -1301,10 +1410,14 @@ Regular paragraph text.
 </tr>
 </tbody>
 </table>
+
+<p>
+Note: Electric pairs (auto-closing brackets) are active when editing code blocks via <code>C-c '</code>.
+</p>
 </div>
 </div>
-<div id="outline-container-orgd6a5df3" class="outline-3">
-<h3 id="orgd6a5df3"><span class="section-number-3">5.8.</span> Exporting</h3>
+<div id="outline-container-org200e71c" class="outline-3">
+<h3 id="org200e71c"><span class="section-number-3">5.8.</span> Exporting</h3>
 <div class="outline-text-3" id="text-5-8">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -1344,14 +1457,14 @@ Regular paragraph text.
 </table>
 </div>
 </div>
-<div id="outline-container-org1298c25" class="outline-3">
-<h3 id="org1298c25"><span class="section-number-3">5.9.</span> Org to LaTeX Export Settings</h3>
+<div id="outline-container-org24430fa" class="outline-3">
+<h3 id="org24430fa"><span class="section-number-3">5.9.</span> Org to LaTeX Export Settings</h3>
 <div class="outline-text-3" id="text-5-9">
 <p>
 Add to the top of your org file:
 </p>
 
-<pre class="example" id="org64b0127">
+<pre class="example" id="org31e3e6b">
 #+TITLE: Document Title
 #+AUTHOR: Your Name
 #+LANGUAGE: he
@@ -1370,12 +1483,12 @@ Available classes:
 </div>
 </div>
 </div>
-<div id="outline-container-org6df66cc" class="outline-2">
-<h2 id="org6df66cc"><span class="section-number-2">6.</span> LaTeX and AUCTeX</h2>
+<div id="outline-container-org84fb78f" class="outline-2">
+<h2 id="org84fb78f"><span class="section-number-2">6.</span> LaTeX and AUCTeX</h2>
 <div class="outline-text-2" id="text-6">
 </div>
-<div id="outline-container-orgf31fc94" class="outline-3">
-<h3 id="orgf31fc94"><span class="section-number-3">6.1.</span> Creating a New Document</h3>
+<div id="outline-container-orgb8e6070" class="outline-3">
+<h3 id="orgb8e6070"><span class="section-number-3">6.1.</span> Creating a New Document</h3>
 <div class="outline-text-3" id="text-6-1">
 <ol class="org-ol">
 <li>Create file: <code>C-x C-f myfile.tex RET</code></li>
@@ -1387,34 +1500,13 @@ Or use: <code>C-c h l</code> to create a Hebrew LaTeX document with full preambl
 </p>
 </div>
 </div>
-<div id="outline-container-orgd736603" class="outline-3">
-<h3 id="orgd736603"><span class="section-number-3">6.2.</span> Basic Document Structure (Hebrew)</h3>
+<div id="outline-container-org47d012a" class="outline-3">
+<h3 id="org47d012a"><span class="section-number-3">6.2.</span> Basic Document Structure (Hebrew)</h3>
 <div class="outline-text-3" id="text-6-2">
-<div class="org-src-container">
-<pre class="src src-latex">\documentclass{article}
-\usepackage{fontspec}
-\usepackage[bidi=basic]{babel}
-\babelprovide[main, import]{hebrew}
-\babelprovide[import]{english}
-\babelfont{rm}{David CLM}
-
-\begin{document}
-
-\section{כותרת}
-
-טקסט בעברית.
-
-\begin{english}
-English text here.
-\end{english}
-
-\end{document}
-</pre>
 </div>
 </div>
-</div>
-<div id="outline-container-orgab70007" class="outline-3">
-<h3 id="orgab70007"><span class="section-number-3">6.3.</span> Quick Preamble Insertion</h3>
+<div id="outline-container-orgd2e1f14" class="outline-3">
+<h3 id="orgd2e1f14"><span class="section-number-3">6.3.</span> Quick Preamble Insertion</h3>
 <div class="outline-text-3" id="text-6-3">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -1453,8 +1545,8 @@ Or use <code>C-c P</code> for the document systems menu.
 </p>
 </div>
 </div>
-<div id="outline-container-org6463784" class="outline-3">
-<h3 id="org6463784"><span class="section-number-3">6.4.</span> AUCTeX Keybindings</h3>
+<div id="outline-container-orgf4df5da" class="outline-3">
+<h3 id="orgf4df5da"><span class="section-number-3">6.4.</span> AUCTeX Keybindings</h3>
 <div class="outline-text-3" id="text-6-4">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -1519,8 +1611,8 @@ Or use <code>C-c P</code> for the document systems menu.
 </table>
 </div>
 </div>
-<div id="outline-container-org547739e" class="outline-3">
-<h3 id="org547739e"><span class="section-number-3">6.5.</span> Compiling Documents</h3>
+<div id="outline-container-orgbf20322" class="outline-3">
+<h3 id="orgbf20322"><span class="section-number-3">6.5.</span> Compiling Documents</h3>
 <div class="outline-text-3" id="text-6-5">
 <ol class="org-ol">
 <li>Press <code>C-c C-c</code></li>
@@ -1533,8 +1625,8 @@ Documents compile with LuaLaTeX automatically.
 </p>
 </div>
 </div>
-<div id="outline-container-orgd203fed" class="outline-3">
-<h3 id="orgd203fed"><span class="section-number-3">6.6.</span> Unlimited Sectioning in LaTeX</h3>
+<div id="outline-container-orgf2e9d97" class="outline-3">
+<h3 id="orgf2e9d97"><span class="section-number-3">6.6.</span> Unlimited Sectioning in LaTeX</h3>
 <div class="outline-text-3" id="text-6-6">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -1604,59 +1696,38 @@ Documents compile with LuaLaTeX automatically.
 </table>
 </div>
 </div>
-<div id="outline-container-org21ea914" class="outline-3">
-<h3 id="org21ea914"><span class="section-number-3">6.7.</span> Unlimited Lists in LaTeX</h3>
+<div id="outline-container-orgf35efe7" class="outline-3">
+<h3 id="orgf35efe7"><span class="section-number-3">6.7.</span> Unlimited Lists in LaTeX</h3>
 <div class="outline-text-3" id="text-6-7">
 <p>
 Standard LaTeX limits lists to 4 levels. With our config, you can nest up to 20 levels:
 </p>
-
-<div class="org-src-container">
-<pre class="src src-latex">\begin{itemize}
-  \item Level 1
-  \begin{itemize}
-    \item Level 2
-    \begin{itemize}
-      \item Level 3
-      % ... continue to level 20
-    \end{itemize}
-  \end{itemize}
-\end{itemize}
-</pre>
 </div>
 </div>
 </div>
-</div>
-<div id="outline-container-org73885d2" class="outline-2">
-<h2 id="org73885d2"><span class="section-number-2">7.</span> Nested Footnotes in LaTeX</h2>
+<div id="outline-container-org6e47764" class="outline-2">
+<h2 id="org6e47764"><span class="section-number-2">7.</span> Nested Footnotes in LaTeX</h2>
 <div class="outline-text-2" id="text-7">
 </div>
-<div id="outline-container-orgc2749b7" class="outline-3">
-<h3 id="orgc2749b7"><span class="section-number-3">7.1.</span> Overview</h3>
+<div id="outline-container-orgde79e43" class="outline-3">
+<h3 id="orgde79e43"><span class="section-number-3">7.1.</span> Overview</h3>
 <div class="outline-text-3" id="text-7-1">
 <p>
 The <code>bigfoot</code> package provides multiple footnote levels. Each level appears in its own <b>separate block</b> at the bottom of the page.
 </p>
 </div>
 </div>
-<div id="outline-container-orgff76ba9" class="outline-3">
-<h3 id="orgff76ba9"><span class="section-number-3">7.2.</span> Method 1: Simple Footnotes (Non-Nested)</h3>
+<div id="outline-container-orga4b5373" class="outline-3">
+<h3 id="orga4b5373"><span class="section-number-3">7.2.</span> Method 1: Simple Footnotes (Non-Nested)</h3>
 <div class="outline-text-3" id="text-7-2">
 <p>
 Use <code>\footnoteB{}</code>, <code>\footnoteC{}</code>, etc. directly from body text. Each level gets its own block:
 </p>
 
-<div class="org-src-container">
-<pre class="src src-latex">Main text.\footnote{First level footnote.}
-
-More text.\footnoteB{Second level, appears in separate block.}
-</pre>
-</div>
-
 <p>
 <b>Result at page bottom:</b>
 </p>
-<pre class="example" id="orga36a9ac">
+<pre class="example" id="org91a26ea">
 ─────────────────────────────
 ¹ First level footnote.
 
@@ -1665,40 +1736,17 @@ More text.\footnoteB{Second level, appears in separate block.}
 </pre>
 </div>
 </div>
-<div id="outline-container-orgd89bbdb" class="outline-3">
-<h3 id="orgd89bbdb"><span class="section-number-3">7.3.</span> Method 2: True Nesting (Footnote Within Footnote)</h3>
+<div id="outline-container-orgc2ab91d" class="outline-3">
+<h3 id="orgc2ab91d"><span class="section-number-3">7.3.</span> Method 2: True Nesting (Footnote Within Footnote)</h3>
 <div class="outline-text-3" id="text-7-3">
 <p>
 To place a footnote <b>inside</b> another footnote, use <code>\footnotemarkX</code> + <code>\footnotetextX{}</code>:
 </p>
 
-<div class="org-src-container">
-<pre class="src src-latex">\usepackage{bigfoot}
-\DeclareNewFootnote{default}
-\DeclareNewFootnote{B}
-\DeclareNewFootnote{C}
-
-\begin{document}
-
-Main text.\footnote{%
-  This is the first-level footnote. It discusses a concept\footnotemarkB{}
-  that needs further explanation.
-  \footnotetextB{%
-    This second-level footnote appears in its own separate block
-    at the bottom of the page, below the first-level footnotes.
-    It can even contain another level\footnotemarkC{}.
-    \footnotetextC{Third level footnote, in its own block.}%
-  }%
-}
-
-\end{document}
-</pre>
-</div>
-
 <p>
 <b>Result at page bottom:</b>
 </p>
-<pre class="example" id="orgd78fff8">
+<pre class="example" id="orgddf99f3">
 ─────────────────────────────
 ¹ This is the first-level footnote. It discusses a concept¹
   that needs further explanation.
@@ -1713,8 +1761,8 @@ Main text.\footnote{%
 </pre>
 </div>
 </div>
-<div id="outline-container-org2a9d724" class="outline-3">
-<h3 id="org2a9d724"><span class="section-number-3">7.4.</span> Footnote Levels Reference</h3>
+<div id="outline-container-org7efab72" class="outline-3">
+<h3 id="org7efab72"><span class="section-number-3">7.4.</span> Footnote Levels Reference</h3>
 <div class="outline-text-3" id="text-7-4">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -1805,12 +1853,12 @@ For nesting, use:
 </ul>
 </div>
 </div>
-<div id="outline-container-org81ed6e1" class="outline-3">
-<h3 id="org81ed6e1"><span class="section-number-3">7.5.</span> Keybindings</h3>
+<div id="outline-container-org6be6af4" class="outline-3">
+<h3 id="org6be6af4"><span class="section-number-3">7.5.</span> Keybindings</h3>
 <div class="outline-text-3" id="text-7-5">
 </div>
-<div id="outline-container-orgc03410d" class="outline-4">
-<h4 id="orgc03410d"><span class="section-number-4">7.5.1.</span> Simple Footnotes (<code>C-c f &lt;number&gt;</code>)</h4>
+<div id="outline-container-org3f95080" class="outline-4">
+<h4 id="org3f95080"><span class="section-number-4">7.5.1.</span> Simple Footnotes (<code>C-c f &lt;number&gt;</code>)</h4>
 <div class="outline-text-4" id="text-7-5-1">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -1880,9 +1928,13 @@ For nesting, use:
 </table>
 </div>
 </div>
-<div id="outline-container-org2400481" class="outline-4">
-<h4 id="org2400481"><span class="section-number-4">7.5.2.</span> Nested Footnotes (Marks and Texts)</h4>
+<div id="outline-container-orgea2f54e" class="outline-4">
+<h4 id="orgea2f54e"><span class="section-number-4">7.5.2.</span> Nested Footnotes (via Hydra Menu)</h4>
 <div class="outline-text-4" id="text-7-5-2">
+<p>
+Press <code>C-c F</code> to open the footnotes hydra, then:
+</p>
+
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -1893,80 +1945,128 @@ For nesting, use:
 </colgroup>
 <thead>
 <tr>
-<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Key</th>
 <th scope="col" class="org-left">Action</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td class="org-left"><code>C-c f m 2</code></td>
+<td class="org-left"><code>m</code></td>
+<td class="org-left">→ Footnote marks sub-menu</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>t</code></td>
+<td class="org-left">→ Footnote texts sub-menu</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>n</code></td>
+<td class="org-left">Insert nested template</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+In the <b>marks</b> sub-menu:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Key</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>2</code></td>
 <td class="org-left">Insert <code>\footnotemarkB</code></td>
 </tr>
 
 <tr>
-<td class="org-left"><code>C-c f m 3</code></td>
+<td class="org-left"><code>3</code></td>
 <td class="org-left">Insert <code>\footnotemarkC</code></td>
 </tr>
 
 <tr>
-<td class="org-left"><code>C-c f m 4</code></td>
+<td class="org-left"><code>4</code></td>
 <td class="org-left">Insert <code>\footnotemarkD</code></td>
 </tr>
 
 <tr>
-<td class="org-left"><code>C-c f m 5</code></td>
+<td class="org-left"><code>5</code></td>
 <td class="org-left">Insert <code>\footnotemarkE</code></td>
 </tr>
 
 <tr>
-<td class="org-left"><code>C-c f t 2</code></td>
+<td class="org-left"><code>b</code></td>
+<td class="org-left">← Back to main menu</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+In the <b>texts</b> sub-menu:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Key</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>2</code></td>
 <td class="org-left">Insert <code>\footnotetextB{}</code></td>
 </tr>
 
 <tr>
-<td class="org-left"><code>C-c f t 3</code></td>
+<td class="org-left"><code>3</code></td>
 <td class="org-left">Insert <code>\footnotetextC{}</code></td>
 </tr>
 
 <tr>
-<td class="org-left"><code>C-c f t 4</code></td>
+<td class="org-left"><code>4</code></td>
 <td class="org-left">Insert <code>\footnotetextD{}</code></td>
 </tr>
 
 <tr>
-<td class="org-left"><code>C-c f t 5</code></td>
+<td class="org-left"><code>5</code></td>
 <td class="org-left">Insert <code>\footnotetextE{}</code></td>
 </tr>
 
 <tr>
-<td class="org-left"><code>C-c f n</code></td>
-<td class="org-left">Insert nested template</td>
+<td class="org-left"><code>b</code></td>
+<td class="org-left">← Back to main menu</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
-<div id="outline-container-org9f3a685" class="outline-4">
-<h4 id="org9f3a685"><span class="section-number-4">7.5.3.</span> Footnotes Menu</h4>
-<div class="outline-text-4" id="text-7-5-3">
-<p>
-Press <code>C-c F</code> to open the LaTeX footnotes hydra menu with all options.
-</p>
 </div>
-</div>
-</div>
-<div id="outline-container-orgc308268" class="outline-3">
-<h3 id="orgc308268"><span class="section-number-3">7.6.</span> Adding More Levels</h3>
+<div id="outline-container-org7c2e9c7" class="outline-3">
+<h3 id="org7c2e9c7"><span class="section-number-3">7.6.</span> Adding More Levels</h3>
 <div class="outline-text-3" id="text-7-6">
 <p>
 If you need more than 10 levels, add to your preamble:
 </p>
-
-<div class="org-src-container">
-<pre class="src src-latex">\DeclareNewFootnote{K}
-\DeclareNewFootnote{L}
-</pre>
-</div>
 
 <p>
 Then use <code>\footnoteK{}</code>, <code>\footnotemarkK</code>, <code>\footnotetextK{}</code>, etc.
@@ -1974,12 +2074,12 @@ Then use <code>\footnoteK{}</code>, <code>\footnotemarkK</code>, <code>\footnote
 </div>
 </div>
 </div>
-<div id="outline-container-org725a021" class="outline-2">
-<h2 id="org725a021"><span class="section-number-2">8.</span> ConTeXt</h2>
+<div id="outline-container-org5d2f951" class="outline-2">
+<h2 id="org5d2f951"><span class="section-number-2">8.</span> ConTeXt</h2>
 <div class="outline-text-2" id="text-8">
 </div>
-<div id="outline-container-org7050746" class="outline-3">
-<h3 id="org7050746"><span class="section-number-3">8.1.</span> What is ConTeXt?</h3>
+<div id="outline-container-org9cf8fe7" class="outline-3">
+<h3 id="org9cf8fe7"><span class="section-number-3">8.1.</span> What is ConTeXt?</h3>
 <div class="outline-text-3" id="text-8-1">
 <p>
 ConTeXt is a TeX-based document system with:
@@ -1992,8 +2092,8 @@ ConTeXt is a TeX-based document system with:
 </ul>
 </div>
 </div>
-<div id="outline-container-org38bfb3e" class="outline-3">
-<h3 id="org38bfb3e"><span class="section-number-3">8.2.</span> Creating a ConTeXt Document</h3>
+<div id="outline-container-org10e2023" class="outline-3">
+<h3 id="org10e2023"><span class="section-number-3">8.2.</span> Creating a ConTeXt Document</h3>
 <div class="outline-text-3" id="text-8-2">
 <p>
 Use <code>C-c h x</code> to create a Hebrew ConTeXt document, or create manually:
@@ -2020,8 +2120,8 @@ Use <code>C-c h x</code> to create a Hebrew ConTeXt document, or create manually
 </div>
 </div>
 </div>
-<div id="outline-container-org6fa949f" class="outline-3">
-<h3 id="org6fa949f"><span class="section-number-3">8.3.</span> Compiling ConTeXt</h3>
+<div id="outline-container-org0fca4a1" class="outline-3">
+<h3 id="org0fca4a1"><span class="section-number-3">8.3.</span> Compiling ConTeXt</h3>
 <div class="outline-text-3" id="text-8-3">
 <p>
 In Emacs:
@@ -2041,45 +2141,9 @@ Or from command line:
 </div>
 </div>
 </div>
-<div id="outline-container-orgf349800" class="outline-3">
-<h3 id="orgf349800"><span class="section-number-3">8.4.</span> ConTeXt Keybindings</h3>
+<div id="outline-container-org93056ca" class="outline-3">
+<h3 id="org93056ca"><span class="section-number-3">8.4.</span> ConTeXt Sectioning</h3>
 <div class="outline-text-3" id="text-8-4">
-<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
-
-
-<colgroup>
-<col  class="org-left" />
-
-<col  class="org-left" />
-</colgroup>
-<thead>
-<tr>
-<th scope="col" class="org-left">Keybinding</th>
-<th scope="col" class="org-left">Action</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="org-left"><code>C-c C-c</code></td>
-<td class="org-left">Compile (type "ConTeXt")</td>
-</tr>
-
-<tr>
-<td class="org-left"><code>C-c C-v</code></td>
-<td class="org-left">View PDF</td>
-</tr>
-
-<tr>
-<td class="org-left"><code>C-c C-p h</code></td>
-<td class="org-left">Insert Hebrew preamble</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<div id="outline-container-orgfc6b67f" class="outline-3">
-<h3 id="orgfc6b67f"><span class="section-number-3">8.5.</span> ConTeXt Sectioning</h3>
-<div class="outline-text-3" id="text-8-5">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -2127,9 +2191,9 @@ Each must be closed with <code>\stop...</code>
 </p>
 </div>
 </div>
-<div id="outline-container-org20c1134" class="outline-3">
-<h3 id="org20c1134"><span class="section-number-3">8.6.</span> Local Footnotes in ConTeXt</h3>
-<div class="outline-text-3" id="text-8-6">
+<div id="outline-container-orged2e785" class="outline-3">
+<h3 id="orged2e785"><span class="section-number-3">8.5.</span> Local Footnotes in ConTeXt</h3>
+<div class="outline-text-3" id="text-8-5">
 <p>
 ConTeXt's killer feature: footnotes that appear at the bottom of their <b>parent footnote</b>, not at the bottom of the page.
 </p>
@@ -2163,17 +2227,17 @@ ConTeXt's killer feature: footnotes that appear at the bottom of their <b>parent
 </ul>
 
 <p>
-Use <code>C-c P</code> then <code>cf</code> to insert a local footnote structure.
+Use <code>C-c P</code> then <code>f</code> to insert a local footnote structure.
 </p>
 </div>
 </div>
 </div>
-<div id="outline-container-orgddf014c" class="outline-2">
-<h2 id="orgddf014c"><span class="section-number-2">9.</span> Typst</h2>
+<div id="outline-container-org4c96d0a" class="outline-2">
+<h2 id="org4c96d0a"><span class="section-number-2">9.</span> Typst</h2>
 <div class="outline-text-2" id="text-9">
 </div>
-<div id="outline-container-org2853cdf" class="outline-3">
-<h3 id="org2853cdf"><span class="section-number-3">9.1.</span> What is Typst?</h3>
+<div id="outline-container-org5b55390" class="outline-3">
+<h3 id="org5b55390"><span class="section-number-3">9.1.</span> What is Typst?</h3>
 <div class="outline-text-3" id="text-9-1">
 <p>
 Typst is a modern document system with:
@@ -2187,8 +2251,8 @@ Typst is a modern document system with:
 </ul>
 </div>
 </div>
-<div id="outline-container-org262e861" class="outline-3">
-<h3 id="org262e861"><span class="section-number-3">9.2.</span> Creating a Typst Document</h3>
+<div id="outline-container-org9424fce" class="outline-3">
+<h3 id="org9424fce"><span class="section-number-3">9.2.</span> Creating a Typst Document</h3>
 <div class="outline-text-3" id="text-9-2">
 <p>
 Use <code>C-c h t</code> to create a Hebrew Typst document, or create manually:
@@ -2210,8 +2274,8 @@ Use <code>C-c h t</code> to create a Hebrew Typst document, or create manually:
 </div>
 </div>
 </div>
-<div id="outline-container-org11ac8b6" class="outline-3">
-<h3 id="org11ac8b6"><span class="section-number-3">9.3.</span> Compiling Typst</h3>
+<div id="outline-container-org8eb4781" class="outline-3">
+<h3 id="org8eb4781"><span class="section-number-3">9.3.</span> Compiling Typst</h3>
 <div class="outline-text-3" id="text-9-3">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -2242,6 +2306,16 @@ Use <code>C-c h t</code> to create a Hebrew Typst document, or create manually:
 <td class="org-left"><code>C-c C-v</code></td>
 <td class="org-left">View PDF</td>
 </tr>
+
+<tr>
+<td class="org-left"><code>C-c t h</code></td>
+<td class="org-left">Insert Hebrew preamble</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c t f</code></td>
+<td class="org-left">Insert nested footnote helper</td>
+</tr>
 </tbody>
 </table>
 
@@ -2256,59 +2330,13 @@ typst watch myfile.typ        # Watch mode
 </div>
 </div>
 </div>
-<div id="outline-container-orgfb48fbe" class="outline-3">
-<h3 id="orgfb48fbe"><span class="section-number-3">9.4.</span> Typst Keybindings</h3>
+<div id="outline-container-orgc47a430" class="outline-3">
+<h3 id="orgc47a430"><span class="section-number-3">9.4.</span> Typst Syntax Basics</h3>
 <div class="outline-text-3" id="text-9-4">
-<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
-
-
-<colgroup>
-<col  class="org-left" />
-
-<col  class="org-left" />
-</colgroup>
-<thead>
-<tr>
-<th scope="col" class="org-left">Keybinding</th>
-<th scope="col" class="org-left">Action</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="org-left"><code>C-c C-c</code></td>
-<td class="org-left">Compile</td>
-</tr>
-
-<tr>
-<td class="org-left"><code>C-c C-w</code></td>
-<td class="org-left">Watch (live preview)</td>
-</tr>
-
-<tr>
-<td class="org-left"><code>C-c C-v</code></td>
-<td class="org-left">View PDF</td>
-</tr>
-
-<tr>
-<td class="org-left"><code>C-c C-p h</code></td>
-<td class="org-left">Insert Hebrew preamble</td>
-</tr>
-
-<tr>
-<td class="org-left"><code>C-c C-p f</code></td>
-<td class="org-left">Insert nested footnote helper</td>
-</tr>
-</tbody>
-</table>
 </div>
-</div>
-<div id="outline-container-orgfd96390" class="outline-3">
-<h3 id="orgfd96390"><span class="section-number-3">9.5.</span> Typst Syntax Basics</h3>
-<div class="outline-text-3" id="text-9-5">
-</div>
-<div id="outline-container-org5f14714" class="outline-4">
-<h4 id="org5f14714"><span class="section-number-4">9.5.1.</span> Headings</h4>
-<div class="outline-text-4" id="text-9-5-1">
+<div id="outline-container-org7560f69" class="outline-4">
+<h4 id="org7560f69"><span class="section-number-4">9.4.1.</span> Headings</h4>
+<div class="outline-text-4" id="text-9-4-1">
 <div class="org-src-container">
 <pre class="src src-typst">= Level 1
 == Level 2
@@ -2318,9 +2346,9 @@ typst watch myfile.typ        # Watch mode
 </div>
 </div>
 </div>
-<div id="outline-container-org1277197" class="outline-4">
-<h4 id="org1277197"><span class="section-number-4">9.5.2.</span> Text Formatting</h4>
-<div class="outline-text-4" id="text-9-5-2">
+<div id="outline-container-org55e82a4" class="outline-4">
+<h4 id="org55e82a4"><span class="section-number-4">9.4.2.</span> Text Formatting</h4>
+<div class="outline-text-4" id="text-9-4-2">
 <div class="org-src-container">
 <pre class="src src-typst">*bold*
 _italic_
@@ -2331,9 +2359,9 @@ _italic_
 </div>
 </div>
 </div>
-<div id="outline-container-org8e6f2b1" class="outline-4">
-<h4 id="org8e6f2b1"><span class="section-number-4">9.5.3.</span> Lists</h4>
-<div class="outline-text-4" id="text-9-5-3">
+<div id="outline-container-org3745baf" class="outline-4">
+<h4 id="org3745baf"><span class="section-number-4">9.4.3.</span> Lists</h4>
+<div class="outline-text-4" id="text-9-4-3">
 <div class="org-src-container">
 <pre class="src src-typst">- Unordered item
   - Nested item
@@ -2345,9 +2373,9 @@ _italic_
 </div>
 </div>
 </div>
-<div id="outline-container-orgd91f2d6" class="outline-4">
-<h4 id="orgd91f2d6"><span class="section-number-4">9.5.4.</span> Links</h4>
-<div class="outline-text-4" id="text-9-5-4">
+<div id="outline-container-org442c4eb" class="outline-4">
+<h4 id="org442c4eb"><span class="section-number-4">9.4.4.</span> Links</h4>
+<div class="outline-text-4" id="text-9-4-4">
 <div class="org-src-container">
 <pre class="src src-typst">#link("https://example.com")[Link text]
 </pre>
@@ -2355,30 +2383,30 @@ _italic_
 </div>
 </div>
 </div>
-<div id="outline-container-org874eed0" class="outline-3">
-<h3 id="org874eed0"><span class="section-number-3">9.6.</span> Basic Footnotes in Typst</h3>
-<div class="outline-text-3" id="text-9-6">
+<div id="outline-container-orgf3296d0" class="outline-3">
+<h3 id="orgf3296d0"><span class="section-number-3">9.5.</span> Basic Footnotes in Typst</h3>
+<div class="outline-text-3" id="text-9-5">
 <div class="org-src-container">
 <pre class="src src-typst">This is text#footnote[This is a footnote].
 </pre>
 </div>
 </div>
 </div>
-<div id="outline-container-org83031e2" class="outline-3">
-<h3 id="org83031e2"><span class="section-number-3">9.7.</span> Nested Footnotes in Typst</h3>
-<div class="outline-text-3" id="text-9-7">
+<div id="outline-container-org70dc7bc" class="outline-3">
+<h3 id="org70dc7bc"><span class="section-number-3">9.6.</span> Nested Footnotes in Typst</h3>
+<div class="outline-text-3" id="text-9-6">
 </div>
-<div id="outline-container-org18554c3" class="outline-4">
-<h4 id="org18554c3"><span class="section-number-4">9.7.1.</span> The Problem</h4>
-<div class="outline-text-4" id="text-9-7-1">
+<div id="outline-container-org513461e" class="outline-4">
+<h4 id="org513461e"><span class="section-number-4">9.6.1.</span> The Problem</h4>
+<div class="outline-text-4" id="text-9-6-1">
 <p>
 By default, Typst doesn't allow you to place a <code>#footnote</code> inside another <code>#footnote</code>. If you try, you'll get an error because Typst tries to render all footnote entries inline in a single flow at the bottom of the page.
 </p>
 </div>
 </div>
-<div id="outline-container-org919d35f" class="outline-4">
-<h4 id="org919d35f"><span class="section-number-4">9.7.2.</span> The Solution</h4>
-<div class="outline-text-4" id="text-9-7-2">
+<div id="outline-container-org77757e8" class="outline-4">
+<h4 id="org77757e8"><span class="section-number-4">9.6.2.</span> The Solution</h4>
+<div class="outline-text-4" id="text-9-6-2">
 <p>
 Add this show rule at the top of your document:
 </p>
@@ -2391,9 +2419,9 @@ Add this show rule at the top of your document:
 </div>
 </div>
 </div>
-<div id="outline-container-orgaa7cf18" class="outline-4">
-<h4 id="orgaa7cf18"><span class="section-number-4">9.7.3.</span> Why It Works</h4>
-<div class="outline-text-4" id="text-9-7-3">
+<div id="outline-container-orgbf1e6f0" class="outline-4">
+<h4 id="orgbf1e6f0"><span class="section-number-4">9.6.3.</span> Why It Works</h4>
+<div class="outline-text-4" id="text-9-6-3">
 <p>
 By wrapping each <code>footnote.entry</code> in a <code>block()</code>:
 </p>
@@ -2405,9 +2433,9 @@ By wrapping each <code>footnote.entry</code> in a <code>block()</code>:
 </ol>
 </div>
 </div>
-<div id="outline-container-orgf308e06" class="outline-4">
-<h4 id="orgf308e06"><span class="section-number-4">9.7.4.</span> Full Working Example</h4>
-<div class="outline-text-4" id="text-9-7-4">
+<div id="outline-container-orgbd56464" class="outline-4">
+<h4 id="orgbd56464"><span class="section-number-4">9.6.4.</span> Full Working Example</h4>
+<div class="outline-text-4" id="text-9-6-4">
 <div class="org-src-container">
 <pre class="src src-typst">// This is the critical line: wrap each footnote entry in its own block
 #show footnote.entry: it =&gt; {
@@ -2432,7 +2460,7 @@ More body text here.#footnote[A normal, non-nested footnote for comparison.]
 <b>Result at page bottom:</b>
 </p>
 
-<pre class="example" id="org902ab71">
+<pre class="example" id="org86ddc5e">
 ──────────────────────────────────────
 ¹ This is the first-level footnote, and it contains
   another footnote inside it.²
@@ -2447,9 +2475,9 @@ Each footnote gets its own numbered entry, laid out sequentially at the page bot
 </p>
 </div>
 </div>
-<div id="outline-container-org6fcd219" class="outline-4">
-<h4 id="org6fcd219"><span class="section-number-4">9.7.5.</span> Hebrew Example</h4>
-<div class="outline-text-4" id="text-9-7-5">
+<div id="outline-container-org570046a" class="outline-4">
+<h4 id="org570046a"><span class="section-number-4">9.6.5.</span> Hebrew Example</h4>
+<div class="outline-text-4" id="text-9-6-5">
 <div class="org-src-container">
 <pre class="src src-typst">#set text(lang: "he", font: "David CLM")
 #set page(flipped: true)
@@ -2472,9 +2500,9 @@ Each footnote gets its own numbered entry, laid out sequentially at the page bot
 </div>
 </div>
 </div>
-<div id="outline-container-org845a7cd" class="outline-4">
-<h4 id="org845a7cd"><span class="section-number-4">9.7.6.</span> Optional Styling</h4>
-<div class="outline-text-4" id="text-9-7-6">
+<div id="outline-container-orgdbdb103" class="outline-4">
+<h4 id="orgdbdb103"><span class="section-number-4">9.6.6.</span> Optional Styling</h4>
+<div class="outline-text-4" id="text-9-6-6">
 <p>
 You can add styling while keeping the block wrapper:
 </p>
@@ -2490,9 +2518,9 @@ You can add styling while keeping the block wrapper:
 </div>
 </div>
 </div>
-<div id="outline-container-org851d79b" class="outline-4">
-<h4 id="org851d79b"><span class="section-number-4">9.7.7.</span> Caveats</h4>
-<div class="outline-text-4" id="text-9-7-7">
+<div id="outline-container-org8f7c73a" class="outline-4">
+<h4 id="org8f7c73a"><span class="section-number-4">9.6.7.</span> Caveats</h4>
+<div class="outline-text-4" id="text-9-6-7">
 <ul class="org-ul">
 <li><b>Numbering is flat</b>: All footnotes share one sequential counter (1, 2, 3&#x2026;). Typst doesn't distinguish "levels."</li>
 <li><b>All appear at page bottom</b>: Nested footnotes don't appear indented under their parent — they're sequential entries.</li>
@@ -2500,9 +2528,9 @@ You can add styling while keeping the block wrapper:
 </ul>
 </div>
 </div>
-<div id="outline-container-orgf6fccb7" class="outline-4">
-<h4 id="orgf6fccb7"><span class="section-number-4">9.7.8.</span> Comparison with LaTeX/ConTeXt</h4>
-<div class="outline-text-4" id="text-9-7-8">
+<div id="outline-container-orgfcf2117" class="outline-4">
+<h4 id="orgfcf2117"><span class="section-number-4">9.6.8.</span> Comparison with LaTeX/ConTeXt</h4>
+<div class="outline-text-4" id="text-9-6-8">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -2564,8 +2592,8 @@ You can add styling while keeping the block wrapper:
 </div>
 </div>
 </div>
-<div id="outline-container-orgb7e147d" class="outline-2">
-<h2 id="orgb7e147d"><span class="section-number-2">10.</span> Nested Footnotes Comparison</h2>
+<div id="outline-container-org8301745" class="outline-2">
+<h2 id="org8301745"><span class="section-number-2">10.</span> Nested Footnotes Comparison</h2>
 <div class="outline-text-2" id="text-10">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -2642,20 +2670,20 @@ You can add styling while keeping the block wrapper:
 </ul>
 </div>
 </div>
-<div id="outline-container-org1a3a305" class="outline-2">
-<h2 id="org1a3a305"><span class="section-number-2">11.</span> Org-Roam</h2>
+<div id="outline-container-org7c400a8" class="outline-2">
+<h2 id="org7c400a8"><span class="section-number-2">11.</span> Org-Roam</h2>
 <div class="outline-text-2" id="text-11">
 </div>
-<div id="outline-container-org64e96a6" class="outline-3">
-<h3 id="org64e96a6"><span class="section-number-3">11.1.</span> What is Org-Roam?</h3>
+<div id="outline-container-org2593180" class="outline-3">
+<h3 id="org2593180"><span class="section-number-3">11.1.</span> What is Org-Roam?</h3>
 <div class="outline-text-3" id="text-11-1">
 <p>
 Org-roam is a note-taking system based on the Zettelkasten method. It creates a network of interconnected notes.
 </p>
 </div>
 </div>
-<div id="outline-container-org3342b08" class="outline-3">
-<h3 id="org3342b08"><span class="section-number-3">11.2.</span> Keybindings</h3>
+<div id="outline-container-org0d61a09" class="outline-3">
+<h3 id="org0d61a09"><span class="section-number-3">11.2.</span> Keybindings</h3>
 <div class="outline-text-3" id="text-11-2">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -2713,6 +2741,16 @@ Org-roam is a note-taking system based on the Zettelkasten method. It creates a 
 </tr>
 
 <tr>
+<td class="org-left"><code>C-c n d</code></td>
+<td class="org-left">Go to today's daily</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c n D</code></td>
+<td class="org-left">Go to specific date</td>
+</tr>
+
+<tr>
 <td class="org-left"><code>C-c n h</code></td>
 <td class="org-left">Find Hebrew nodes</td>
 </tr>
@@ -2721,24 +2759,43 @@ Org-roam is a note-taking system based on the Zettelkasten method. It creates a 
 <td class="org-left"><code>C-c n R</code></td>
 <td class="org-left">Find research nodes</td>
 </tr>
+
+<tr>
+<td class="org-left"><code>C-c n x</code></td>
+<td class="org-left">Open random node</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c R</code></td>
+<td class="org-left">Org-roam hydra menu</td>
+</tr>
 </tbody>
 </table>
 </div>
 </div>
-<div id="outline-container-org8fb906d" class="outline-3">
-<h3 id="org8fb906d"><span class="section-number-3">11.3.</span> Creating Notes</h3>
+<div id="outline-container-orge50ea51" class="outline-3">
+<h3 id="orge50ea51"><span class="section-number-3">11.3.</span> Creating Notes</h3>
 <div class="outline-text-3" id="text-11-3">
 <ol class="org-ol">
 <li>Press <code>C-c n f</code></li>
 <li>Type a title</li>
 <li>If it doesn't exist, press <code>RET</code> to create</li>
+<li>Choose a template:
+<ul class="org-ul">
+<li><code>d</code> Default</li>
+<li><code>h</code> Hebrew</li>
+<li><code>r</code> Research</li>
+<li><code>c</code> Concept</li>
+<li><code>l</code> Literature note</li>
+<li><code>p</code> Project</li>
+</ul></li>
 <li>Write your note</li>
 <li>Save with <code>C-x C-s</code></li>
 </ol>
 </div>
 </div>
-<div id="outline-container-orga5c9a91" class="outline-3">
-<h3 id="orga5c9a91"><span class="section-number-3">11.4.</span> Linking Notes</h3>
+<div id="outline-container-org5e65245" class="outline-3">
+<h3 id="org5e65245"><span class="section-number-3">11.4.</span> Linking Notes</h3>
 <div class="outline-text-3" id="text-11-4">
 <ol class="org-ol">
 <li>In a note, press <code>C-c n i</code></li>
@@ -2747,29 +2804,60 @@ Org-roam is a note-taking system based on the Zettelkasten method. It creates a 
 </ol>
 </div>
 </div>
-<div id="outline-container-orgbd35d5c" class="outline-3">
-<h3 id="orgbd35d5c"><span class="section-number-3">11.5.</span> Viewing Backlinks</h3>
+<div id="outline-container-org68f8681" class="outline-3">
+<h3 id="org68f8681"><span class="section-number-3">11.5.</span> Viewing Backlinks</h3>
 <div class="outline-text-3" id="text-11-5">
 <p>
 Press <code>C-c n l</code> to see all notes that link TO the current note.
 </p>
 </div>
 </div>
-<div id="outline-container-org34fa7e7" class="outline-3">
-<h3 id="org34fa7e7"><span class="section-number-3">11.6.</span> Visual Graph</h3>
+<div id="outline-container-org72c0e60" class="outline-3">
+<h3 id="org72c0e60"><span class="section-number-3">11.6.</span> Visual Graph</h3>
 <div class="outline-text-3" id="text-11-6">
 <p>
 Run <code>M-x org-roam-ui-open</code> to see your notes as an interactive graph.
 </p>
 </div>
 </div>
+<div id="outline-container-org1f1a85f" class="outline-3">
+<h3 id="org1f1a85f"><span class="section-number-3">11.7.</span> Daily Notes</h3>
+<div class="outline-text-3" id="text-11-7">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-c n d</code></td>
+<td class="org-left">Go to today's daily</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c n D</code></td>
+<td class="org-left">Go to a specific date</td>
+</tr>
+</tbody>
+</table>
 </div>
-<div id="outline-container-orgeec6baf" class="outline-2">
-<h2 id="orgeec6baf"><span class="section-number-2">12.</span> Bibliography</h2>
+</div>
+</div>
+<div id="outline-container-orgf193f11" class="outline-2">
+<h2 id="orgf193f11"><span class="section-number-2">12.</span> Bibliography</h2>
 <div class="outline-text-2" id="text-12">
 </div>
-<div id="outline-container-org49c9ae1" class="outline-3">
-<h3 id="org49c9ae1"><span class="section-number-3">12.1.</span> Citar Keybindings</h3>
+<div id="outline-container-org865450a" class="outline-3">
+<h3 id="org865450a"><span class="section-number-3">12.1.</span> Citar Keybindings</h3>
 <div class="outline-text-3" id="text-12-1">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -2809,16 +2897,16 @@ Run <code>M-x org-roam-ui-open</code> to see your notes as an interactive graph.
 </table>
 </div>
 </div>
-<div id="outline-container-orgaaffca1" class="outline-3">
-<h3 id="orgaaffca1"><span class="section-number-3">12.2.</span> Bibliography File</h3>
+<div id="outline-container-orgf7b793d" class="outline-3">
+<h3 id="orgf7b793d"><span class="section-number-3">12.2.</span> Bibliography File</h3>
 <div class="outline-text-3" id="text-12-2">
 <p>
 Location: <code>~/Documents/bibliography.bib</code>
 </p>
 </div>
 </div>
-<div id="outline-container-org3c3af45" class="outline-3">
-<h3 id="org3c3af45"><span class="section-number-3">12.3.</span> Adding References</h3>
+<div id="outline-container-org6715f6f" class="outline-3">
+<h3 id="org6715f6f"><span class="section-number-3">12.3.</span> Adding References</h3>
 <div class="outline-text-3" id="text-12-3">
 <ol class="org-ol">
 <li>Open <code>~/Documents/bibliography.bib</code></li>
@@ -2850,37 +2938,26 @@ Location: <code>~/Documents/bibliography.bib</code>
 </ol>
 </div>
 </div>
-<div id="outline-container-org52cb6b2" class="outline-3">
-<h3 id="org52cb6b2"><span class="section-number-3">12.4.</span> Using in LaTeX</h3>
+<div id="outline-container-org85c38ce" class="outline-3">
+<h3 id="org85c38ce"><span class="section-number-3">12.4.</span> Using in LaTeX</h3>
 <div class="outline-text-3" id="text-12-4">
-<div class="org-src-container">
-<pre class="src src-latex">\usepackage[backend=biber]{biblatex}
-\addbibresource{~/Documents/bibliography.bib}
-
-% In document:
-\cite{smith2024}
-
-% At end:
-\printbibliography
-</pre>
 </div>
 </div>
-</div>
-<div id="outline-container-orgb548f9c" class="outline-3">
-<h3 id="orgb548f9c"><span class="section-number-3">12.5.</span> Using in Org</h3>
+<div id="outline-container-orgf0f08a8" class="outline-3">
+<h3 id="orgf0f08a8"><span class="section-number-3">12.5.</span> Using in Org</h3>
 <div class="outline-text-3" id="text-12-5">
-<pre class="example" id="orgb0056a8">
+<pre class="example" id="orgb7fb5b7">
 See [cite:@smith2024] for details.
 </pre>
 </div>
 </div>
 </div>
-<div id="outline-container-org6a0fe36" class="outline-2">
-<h2 id="org6a0fe36"><span class="section-number-2">13.</span> Programming</h2>
+<div id="outline-container-org72bc885" class="outline-2">
+<h2 id="org72bc885"><span class="section-number-2">13.</span> Programming</h2>
 <div class="outline-text-2" id="text-13">
 </div>
-<div id="outline-container-orgdc72f72" class="outline-3">
-<h3 id="orgdc72f72"><span class="section-number-3">13.1.</span> Supported Languages</h3>
+<div id="outline-container-org1a8b200" class="outline-3">
+<h3 id="org1a8b200"><span class="section-number-3">13.1.</span> Supported Languages</h3>
 <div class="outline-text-3" id="text-13-1">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -2933,8 +3010,8 @@ See [cite:@smith2024] for details.
 </table>
 </div>
 </div>
-<div id="outline-container-org96d6aba" class="outline-3">
-<h3 id="org96d6aba"><span class="section-number-3">13.2.</span> LSP (Eglot) Keybindings</h3>
+<div id="outline-container-orgdeefaf8" class="outline-3">
+<h3 id="orgdeefaf8"><span class="section-number-3">13.2.</span> LSP (Eglot) Keybindings</h3>
 <div class="outline-text-3" id="text-13-2">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -2974,14 +3051,14 @@ See [cite:@smith2024] for details.
 </table>
 </div>
 </div>
-<div id="outline-container-orgd635dfe" class="outline-3">
-<h3 id="orgd635dfe"><span class="section-number-3">13.3.</span> Running Code in Org</h3>
+<div id="outline-container-org4221fa5" class="outline-3">
+<h3 id="org4221fa5"><span class="section-number-3">13.3.</span> Running Code in Org</h3>
 <div class="outline-text-3" id="text-13-3">
 <ol class="org-ol">
 <li>Create a code block:</li>
 </ol>
 
-<pre class="example" id="orgc0111d9">
+<pre class="example" id="orgd532020">
 #+begin_src python
 print("Hello")
 #+end_src
@@ -2994,13 +3071,32 @@ print("Hello")
 </ol>
 </div>
 </div>
+<div id="outline-container-orgf87c451" class="outline-3">
+<h3 id="orgf87c451"><span class="section-number-3">13.4.</span> Electric Pairs (Auto-closing Brackets)</h3>
+<div class="outline-text-3" id="text-13-4">
+<p>
+Electric pairs (auto-inserting matching <code>()</code>, <code>{}</code>, <code>""</code>, etc.) are enabled only in:
+</p>
+<ul class="org-ul">
+<li>Programming modes (Python, Rust, Java, etc.)</li>
+<li>LaTeX mode</li>
+<li>ConTeXt mode</li>
+<li>Typst mode</li>
+<li>Org source block editing (via <code>C-c '</code>)</li>
+</ul>
+
+<p>
+They are <b>disabled</b> in prose modes (Org, Markdown, plain text) to avoid interfering with Hebrew writing.
+</p>
 </div>
-<div id="outline-container-orgc25a2db" class="outline-2">
-<h2 id="orgc25a2db"><span class="section-number-2">14.</span> Version Control (Magit)</h2>
+</div>
+</div>
+<div id="outline-container-org7464c41" class="outline-2">
+<h2 id="org7464c41"><span class="section-number-2">14.</span> Version Control (Magit)</h2>
 <div class="outline-text-2" id="text-14">
 </div>
-<div id="outline-container-orgbdfa27e" class="outline-3">
-<h3 id="orgbdfa27e"><span class="section-number-3">14.1.</span> Keybindings</h3>
+<div id="outline-container-orgc9e7b31" class="outline-3">
+<h3 id="orgc9e7b31"><span class="section-number-3">14.1.</span> Keybindings</h3>
 <div class="outline-text-3" id="text-14-1">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -3040,8 +3136,8 @@ print("Hello")
 </table>
 </div>
 </div>
-<div id="outline-container-org1d7ebcd" class="outline-3">
-<h3 id="org1d7ebcd"><span class="section-number-3">14.2.</span> Basic Magit Workflow</h3>
+<div id="outline-container-orgd8e05a0" class="outline-3">
+<h3 id="orgd8e05a0"><span class="section-number-3">14.2.</span> Basic Magit Workflow</h3>
 <div class="outline-text-3" id="text-14-2">
 <ol class="org-ol">
 <li>Open status: <code>C-x g</code></li>
@@ -3052,13 +3148,66 @@ print("Hello")
 </div>
 </div>
 </div>
-<div id="outline-container-orgef64783" class="outline-2">
-<h2 id="orgef64783"><span class="section-number-2">15.</span> Adding New Packages</h2>
+<div id="outline-container-orgcd67e7b" class="outline-2">
+<h2 id="orgcd67e7b"><span class="section-number-2">15.</span> Undo and Redo</h2>
 <div class="outline-text-2" id="text-15">
+<p>
+This config uses <code>undo-tree</code> for visual, persistent undo/redo:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-/</code></td>
+<td class="org-left">Undo</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-?</code></td>
+<td class="org-left">Redo</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-x u</code></td>
+<td class="org-left">Visual undo tree (graphical view)</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+Undo history is saved between sessions in <code>~/.emacs.d/undo-tree-history/</code>.
+</p>
+
+<p>
+In the visual undo tree:
+</p>
+<ul class="org-ul">
+<li>Use <code>p</code> / <code>n</code> to navigate up/down</li>
+<li>Use <code>b</code> / <code>f</code> to switch branches</li>
+<li>Press <code>q</code> to quit</li>
+</ul>
 </div>
-<div id="outline-container-orgdeea67b" class="outline-3">
-<h3 id="orgdeea67b"><span class="section-number-3">15.1.</span> Method 1: Edit config.org (Recommended)</h3>
-<div class="outline-text-3" id="text-15-1">
+</div>
+<div id="outline-container-orgfa8ea50" class="outline-2">
+<h2 id="orgfa8ea50"><span class="section-number-2">16.</span> Adding New Packages</h2>
+<div class="outline-text-2" id="text-16">
+</div>
+<div id="outline-container-org3265103" class="outline-3">
+<h3 id="org3265103"><span class="section-number-3">16.1.</span> Method 1: Edit config.org (Recommended)</h3>
+<div class="outline-text-3" id="text-16-1">
 <ol class="org-ol">
 <li>Open <code>~/.emacs.d/config.org</code></li>
 
@@ -3067,7 +3216,7 @@ print("Hello")
 <li>Add a <code>use-package</code> block:</li>
 </ol>
 
-<pre class="example" id="orgc3c49e6">
+<pre class="example" id="org0f026af">
 ** My New Package
 
 #+begin_src emacs-lisp
@@ -3089,9 +3238,9 @@ print("Hello")
 </ol>
 </div>
 </div>
-<div id="outline-container-org3e06081" class="outline-3">
-<h3 id="org3e06081"><span class="section-number-3">15.2.</span> Method 2: Quick Install (Temporary)</h3>
-<div class="outline-text-3" id="text-15-2">
+<div id="outline-container-orga199ebd" class="outline-3">
+<h3 id="orga199ebd"><span class="section-number-3">16.2.</span> Method 2: Quick Install (Temporary)</h3>
+<div class="outline-text-3" id="text-16-2">
 <ol class="org-ol">
 <li><code>M-x package-install RET</code></li>
 <li>Type package name</li>
@@ -3103,9 +3252,9 @@ Note: This won't persist after restart unless added to config.org.
 </p>
 </div>
 </div>
-<div id="outline-container-org0a68b34" class="outline-3">
-<h3 id="org0a68b34"><span class="section-number-3">15.3.</span> Use-Package Syntax Reference</h3>
-<div class="outline-text-3" id="text-15-3">
+<div id="outline-container-org1453af0" class="outline-3">
+<h3 id="org1453af0"><span class="section-number-3">16.3.</span> Use-Package Syntax Reference</h3>
+<div class="outline-text-3" id="text-16-3">
 <div class="org-src-container">
 <pre class="src src-emacs-lisp">(use-package package-name
   :ensure t                      ; Install if not present
@@ -3121,9 +3270,9 @@ Note: This won't persist after restart unless added to config.org.
 </div>
 </div>
 </div>
-<div id="outline-container-org83ad853" class="outline-3">
-<h3 id="org83ad853"><span class="section-number-3">15.4.</span> Common Use-Package Keywords</h3>
-<div class="outline-text-3" id="text-15-4">
+<div id="outline-container-org4968334" class="outline-3">
+<h3 id="org4968334"><span class="section-number-3">16.4.</span> Common Use-Package Keywords</h3>
+<div class="outline-text-3" id="text-16-4">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -3187,9 +3336,9 @@ Note: This won't persist after restart unless added to config.org.
 </table>
 </div>
 </div>
-<div id="outline-container-orgfdcc831" class="outline-3">
-<h3 id="orgfdcc831"><span class="section-number-3">15.5.</span> Adding System Packages (NixOS)</h3>
-<div class="outline-text-3" id="text-15-5">
+<div id="outline-container-org079af23" class="outline-3">
+<h3 id="org079af23"><span class="section-number-3">16.5.</span> Adding System Packages (NixOS)</h3>
+<div class="outline-text-3" id="text-16-5">
 <ol class="org-ol">
 <li>Edit <code>/etc/nixos/emacs-packages.nix</code></li>
 
@@ -3215,13 +3364,13 @@ Note: This won't persist after restart unless added to config.org.
 </div>
 </div>
 </div>
-<div id="outline-container-orgb003c60" class="outline-2">
-<h2 id="orgb003c60"><span class="section-number-2">16.</span> Customization</h2>
-<div class="outline-text-2" id="text-16">
+<div id="outline-container-org3c843a2" class="outline-2">
+<h2 id="org3c843a2"><span class="section-number-2">17.</span> Customization</h2>
+<div class="outline-text-2" id="text-17">
 </div>
-<div id="outline-container-org9eafc0e" class="outline-3">
-<h3 id="org9eafc0e"><span class="section-number-3">16.1.</span> Changing Theme</h3>
-<div class="outline-text-3" id="text-16-1">
+<div id="outline-container-orgf09856a" class="outline-3">
+<h3 id="orgf09856a"><span class="section-number-3">17.1.</span> Changing Theme</h3>
+<div class="outline-text-3" id="text-17-1">
 <p>
 In <code>config.org</code>, find the doom-themes section and change:
 </p>
@@ -3248,11 +3397,53 @@ Available themes:
 </ul>
 </div>
 </div>
-<div id="outline-container-org97bf540" class="outline-3">
-<h3 id="org97bf540"><span class="section-number-3">16.2.</span> Changing Fonts</h3>
-<div class="outline-text-3" id="text-16-2">
+<div id="outline-container-orgfae6f23" class="outline-3">
+<h3 id="orgfae6f23"><span class="section-number-3">17.2.</span> Changing Fonts</h3>
+<div class="outline-text-3" id="text-17-2">
 <p>
-Add to config.org:
+In <code>config.org</code>, find the Font Configuration section. Default sizes:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-right" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Element</th>
+<th scope="col" class="org-right">Height</th>
+<th scope="col" class="org-left">Approx Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Editor text</td>
+<td class="org-right">100</td>
+<td class="org-left">~10pt</td>
+</tr>
+
+<tr>
+<td class="org-left">Modeline</td>
+<td class="org-right">80</td>
+<td class="org-left">~8pt</td>
+</tr>
+
+<tr>
+<td class="org-left">Minibuffer</td>
+<td class="org-right">80</td>
+<td class="org-left">~8pt</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+To change the editor font:
 </p>
 
 <div class="org-src-container">
@@ -3263,9 +3454,9 @@ Add to config.org:
 </div>
 </div>
 </div>
-<div id="outline-container-org51a1f9d" class="outline-3">
-<h3 id="org51a1f9d"><span class="section-number-3">16.3.</span> Changing Hebrew Fonts</h3>
-<div class="outline-text-3" id="text-16-3">
+<div id="outline-container-org3a4485e" class="outline-3">
+<h3 id="org3a4485e"><span class="section-number-3">17.3.</span> Changing Hebrew Fonts</h3>
+<div class="outline-text-3" id="text-17-3">
 <p>
 Edit the <code>my/latex-hebrew-preamble</code> variable in config.org.
 </p>
@@ -3283,9 +3474,9 @@ Available Hebrew fonts (from culmus):
 </ul>
 </div>
 </div>
-<div id="outline-container-orgb05a617" class="outline-3">
-<h3 id="orgb05a617"><span class="section-number-3">16.4.</span> Adding Custom Keybindings</h3>
-<div class="outline-text-3" id="text-16-4">
+<div id="outline-container-orgcdd6374" class="outline-3">
+<h3 id="orgcdd6374"><span class="section-number-3">17.4.</span> Adding Custom Keybindings</h3>
+<div class="outline-text-3" id="text-17-4">
 <p>
 Global keybinding:
 </p>
@@ -3305,9 +3496,9 @@ Mode-specific:
 </div>
 </div>
 </div>
-<div id="outline-container-orgf737e3f" class="outline-3">
-<h3 id="orgf737e3f"><span class="section-number-3">16.5.</span> Creating Custom Functions</h3>
-<div class="outline-text-3" id="text-16-5">
+<div id="outline-container-org7b2cba3" class="outline-3">
+<h3 id="org7b2cba3"><span class="section-number-3">17.5.</span> Creating Custom Functions</h3>
+<div class="outline-text-3" id="text-17-5">
 <div class="org-src-container">
 <pre class="src src-emacs-lisp">(defun my/custom-function ()
   "Description of what this function does."
@@ -3322,13 +3513,13 @@ Mode-specific:
 </div>
 </div>
 </div>
-<div id="outline-container-org18fc14a" class="outline-2">
-<h2 id="org18fc14a"><span class="section-number-2">17.</span> Keybinding Reference</h2>
-<div class="outline-text-2" id="text-17">
+<div id="outline-container-org6851905" class="outline-2">
+<h2 id="org6851905"><span class="section-number-2">18.</span> Keybinding Reference</h2>
+<div class="outline-text-2" id="text-18">
 </div>
-<div id="outline-container-orgbac353f" class="outline-3">
-<h3 id="orgbac353f"><span class="section-number-3">17.1.</span> Global</h3>
-<div class="outline-text-3" id="text-17-1">
+<div id="outline-container-org9153fbf" class="outline-3">
+<h3 id="org9153fbf"><span class="section-number-3">18.1.</span> Global</h3>
+<div class="outline-text-3" id="text-18-1">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -3345,8 +3536,8 @@ Mode-specific:
 </thead>
 <tbody>
 <tr>
-<td class="org-left"><code>C-\</code></td>
-<td class="org-left">Toggle Hebrew/English</td>
+<td class="org-left"><code>F9</code></td>
+<td class="org-left">Toggle Hebrew/English input</td>
 </tr>
 
 <tr>
@@ -3365,6 +3556,11 @@ Mode-specific:
 </tr>
 
 <tr>
+<td class="org-left"><code>C-c B</code></td>
+<td class="org-left">Toggle bidi reordering</td>
+</tr>
+
+<tr>
 <td class="org-left"><code>C-c D</code></td>
 <td class="org-left">Direction menu (hydra)</td>
 </tr>
@@ -3372,6 +3568,16 @@ Mode-specific:
 <tr>
 <td class="org-left"><code>C-c P</code></td>
 <td class="org-left">Document systems menu</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c w</code></td>
+<td class="org-left">Toggle focused writing</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c W</code></td>
+<td class="org-left">Set focused writing width</td>
 </tr>
 
 <tr>
@@ -3388,13 +3594,68 @@ Mode-specific:
 <td class="org-left"><code>C-x b</code></td>
 <td class="org-left">Switch buffer</td>
 </tr>
+
+<tr>
+<td class="org-left"><code>M-o</code></td>
+<td class="org-left">Switch window (ace-window)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c e i</code></td>
+<td class="org-left">Open config file</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c e r</code></td>
+<td class="org-left">Reload config</td>
+</tr>
 </tbody>
 </table>
 </div>
 </div>
-<div id="outline-container-orgbad5c35" class="outline-3">
-<h3 id="orgbad5c35"><span class="section-number-3">17.2.</span> Spell Checking</h3>
-<div class="outline-text-3" id="text-17-2">
+<div id="outline-container-org6511ca4" class="outline-3">
+<h3 id="org6511ca4"><span class="section-number-3">18.2.</span> Undo / Redo</h3>
+<div class="outline-text-3" id="text-18-2">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Keybinding</th>
+<th scope="col" class="org-left">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>C-/</code></td>
+<td class="org-left">Undo</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-?</code></td>
+<td class="org-left">Redo</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-x u</code></td>
+<td class="org-left">Visual undo tree</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org4f6220e" class="outline-3">
+<h3 id="org4f6220e"><span class="section-number-3">18.3.</span> Spell Checking</h3>
+</div>
+
+<div id="outline-container-orgfb99e51" class="outline-3">
+<h3 id="orgfb99e51"><span class="section-number-3">18.4.</span> Spell Checking</h3>
+<div class="outline-text-3" id="text-18-4">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -3419,13 +3680,23 @@ Mode-specific:
 <td class="org-left"><code>C-c s h</code></td>
 <td class="org-left">Hebrew dictionary</td>
 </tr>
+
+<tr>
+<td class="org-left"><code>M-$</code></td>
+<td class="org-left">Correct word at point</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>i</code></td>
+<td class="org-left">Add word to personal dict (when correcting)</td>
+</tr>
 </tbody>
 </table>
 </div>
 </div>
-<div id="outline-container-orgacce188" class="outline-3">
-<h3 id="orgacce188"><span class="section-number-3">17.3.</span> Document Creation</h3>
-<div class="outline-text-3" id="text-17-3">
+<div id="outline-container-org63fa294" class="outline-3">
+<h3 id="org63fa294"><span class="section-number-3">18.5.</span> Document Creation</h3>
+<div class="outline-text-3" id="text-18-5">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -3475,13 +3746,18 @@ Mode-specific:
 <td class="org-left"><code>C-c h c</code></td>
 <td class="org-left">Count Hebrew words</td>
 </tr>
+
+<tr>
+<td class="org-left"><code>C-c h f</code></td>
+<td class="org-left">Fix RTL in all footnotes</td>
+</tr>
 </tbody>
 </table>
 </div>
 </div>
-<div id="outline-container-org2658666" class="outline-3">
-<h3 id="org2658666"><span class="section-number-3">17.4.</span> Org Mode</h3>
-<div class="outline-text-3" id="text-17-4">
+<div id="outline-container-org306a961" class="outline-3">
+<h3 id="org306a961"><span class="section-number-3">18.6.</span> Org Mode</h3>
+<div class="outline-text-3" id="text-18-6">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -3530,9 +3806,9 @@ Mode-specific:
 </table>
 </div>
 </div>
-<div id="outline-container-orgf7a67c0" class="outline-3">
-<h3 id="orgf7a67c0"><span class="section-number-3">17.5.</span> Org-Roam</h3>
-<div class="outline-text-3" id="text-17-5">
+<div id="outline-container-org2e3d5d1" class="outline-3">
+<h3 id="org2e3d5d1"><span class="section-number-3">18.7.</span> Org-Roam</h3>
+<div class="outline-text-3" id="text-18-7">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -3569,6 +3845,16 @@ Mode-specific:
 </tr>
 
 <tr>
+<td class="org-left"><code>C-c n d</code></td>
+<td class="org-left">Today's daily</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>C-c n D</code></td>
+<td class="org-left">Specific date</td>
+</tr>
+
+<tr>
 <td class="org-left"><code>C-c n h</code></td>
 <td class="org-left">Find Hebrew</td>
 </tr>
@@ -3579,6 +3865,11 @@ Mode-specific:
 </tr>
 
 <tr>
+<td class="org-left"><code>C-c n x</code></td>
+<td class="org-left">Random node</td>
+</tr>
+
+<tr>
 <td class="org-left"><code>C-c R</code></td>
 <td class="org-left">Org-roam menu</td>
 </tr>
@@ -3586,9 +3877,9 @@ Mode-specific:
 </table>
 </div>
 </div>
-<div id="outline-container-org4ccc0cd" class="outline-3">
-<h3 id="org4ccc0cd"><span class="section-number-3">17.6.</span> LaTeX</h3>
-<div class="outline-text-3" id="text-17-6">
+<div id="outline-container-org583e7c4" class="outline-3">
+<h3 id="org583e7c4"><span class="section-number-3">18.8.</span> LaTeX</h3>
+<div class="outline-text-3" id="text-18-8">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -3625,21 +3916,6 @@ Mode-specific:
 </tr>
 
 <tr>
-<td class="org-left"><code>C-c f m 2</code></td>
-<td class="org-left">Insert <code>\footnotemarkB</code></td>
-</tr>
-
-<tr>
-<td class="org-left"><code>C-c f t 2</code></td>
-<td class="org-left">Insert <code>\footnotetextB{}</code></td>
-</tr>
-
-<tr>
-<td class="org-left"><code>C-c f n</code></td>
-<td class="org-left">Insert nested footnote template</td>
-</tr>
-
-<tr>
 <td class="org-left"><code>C-c F</code></td>
 <td class="org-left">Footnotes menu (hydra)</td>
 </tr>
@@ -3647,45 +3923,9 @@ Mode-specific:
 </table>
 </div>
 </div>
-<div id="outline-container-orgc3e3b1e" class="outline-3">
-<h3 id="orgc3e3b1e"><span class="section-number-3">17.7.</span> ConTeXt</h3>
-<div class="outline-text-3" id="text-17-7">
-<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
-
-
-<colgroup>
-<col  class="org-left" />
-
-<col  class="org-left" />
-</colgroup>
-<thead>
-<tr>
-<th scope="col" class="org-left">Keybinding</th>
-<th scope="col" class="org-left">Action</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="org-left"><code>C-c C-c</code></td>
-<td class="org-left">Compile (type "ConTeXt")</td>
-</tr>
-
-<tr>
-<td class="org-left"><code>C-c C-v</code></td>
-<td class="org-left">View PDF</td>
-</tr>
-
-<tr>
-<td class="org-left"><code>C-c C-p h</code></td>
-<td class="org-left">Insert Hebrew preamble</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<div id="outline-container-org48727d1" class="outline-3">
-<h3 id="org48727d1"><span class="section-number-3">17.8.</span> Typst</h3>
-<div class="outline-text-3" id="text-17-8">
+<div id="outline-container-org5df110a" class="outline-3">
+<h3 id="org5df110a"><span class="section-number-3">18.9.</span> Typst</h3>
+<div class="outline-text-3" id="text-18-9">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -3717,21 +3957,21 @@ Mode-specific:
 </tr>
 
 <tr>
-<td class="org-left"><code>C-c C-p h</code></td>
+<td class="org-left"><code>C-c t h</code></td>
 <td class="org-left">Insert Hebrew preamble</td>
 </tr>
 
 <tr>
-<td class="org-left"><code>C-c C-p f</code></td>
+<td class="org-left"><code>C-c t f</code></td>
 <td class="org-left">Insert nested footnote helper</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
-<div id="outline-container-org8b449f5" class="outline-3">
-<h3 id="org8b449f5"><span class="section-number-3">17.9.</span> Bibliography</h3>
-<div class="outline-text-3" id="text-17-9">
+<div id="outline-container-orgbc92f6f" class="outline-3">
+<h3 id="orgbc92f6f"><span class="section-number-3">18.10.</span> Bibliography</h3>
+<div class="outline-text-3" id="text-18-10">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -3771,13 +4011,13 @@ Mode-specific:
 </div>
 </div>
 </div>
-<div id="outline-container-orgdcf79db" class="outline-2">
-<h2 id="orgdcf79db"><span class="section-number-2">18.</span> Troubleshooting</h2>
-<div class="outline-text-2" id="text-18">
+<div id="outline-container-orge6fd33e" class="outline-2">
+<h2 id="orge6fd33e"><span class="section-number-2">19.</span> Troubleshooting</h2>
+<div class="outline-text-2" id="text-19">
 </div>
-<div id="outline-container-orga129602" class="outline-3">
-<h3 id="orga129602"><span class="section-number-3">18.1.</span> Packages Not Installing</h3>
-<div class="outline-text-3" id="text-18-1">
+<div id="outline-container-org328641a" class="outline-3">
+<h3 id="org328641a"><span class="section-number-3">19.1.</span> Packages Not Installing</h3>
+<div class="outline-text-3" id="text-19-1">
 <div class="org-src-container">
 <pre class="src src-emacs-lisp">M-x package-refresh-contents RET
 </pre>
@@ -3788,9 +4028,9 @@ Then restart Emacs.
 </p>
 </div>
 </div>
-<div id="outline-container-org36edb4d" class="outline-3">
-<h3 id="org36edb4d"><span class="section-number-3">18.2.</span> Hebrew Not Displaying</h3>
-<div class="outline-text-3" id="text-18-2">
+<div id="outline-container-orgb1374cf" class="outline-3">
+<h3 id="orgb1374cf"><span class="section-number-3">19.2.</span> Hebrew Not Displaying</h3>
+<div class="outline-text-3" id="text-19-2">
 <ol class="org-ol">
 <li><p>
 Check fonts installed:
@@ -3816,9 +4056,17 @@ C-h v bidi-paragraph-direction RET
 </ol>
 </div>
 </div>
-<div id="outline-container-orgb66b9bf" class="outline-3">
-<h3 id="orgb66b9bf"><span class="section-number-3">18.3.</span> PDF Not Opening in Emacs</h3>
-<div class="outline-text-3" id="text-18-3">
+<div id="outline-container-org761f13d" class="outline-3">
+<h3 id="org761f13d"><span class="section-number-3">19.3.</span> Hebrew Footnotes Showing as LTR in Org</h3>
+<div class="outline-text-3" id="text-19-3">
+<p>
+Use <code>C-c h f</code> to fix all existing footnotes in the buffer. New footnotes are fixed automatically.
+</p>
+</div>
+</div>
+<div id="outline-container-orgce8d933" class="outline-3">
+<h3 id="orgce8d933"><span class="section-number-3">19.4.</span> PDF Not Opening in Emacs</h3>
+<div class="outline-text-3" id="text-19-4">
 <p>
 Run once:
 </p>
@@ -3827,17 +4075,17 @@ M-x pdf-tools-install RET
 </pre>
 </div>
 </div>
-<div id="outline-container-orgb29c997" class="outline-3">
-<h3 id="orgb29c997"><span class="section-number-3">18.4.</span> Org-Roam Database Errors</h3>
-<div class="outline-text-3" id="text-18-4">
+<div id="outline-container-orgd536b71" class="outline-3">
+<h3 id="orgd536b71"><span class="section-number-3">19.5.</span> Org-Roam Database Errors</h3>
+<div class="outline-text-3" id="text-19-5">
 <pre class="example">
 M-x org-roam-db-sync RET
 </pre>
 </div>
 </div>
-<div id="outline-container-orgf8c3702" class="outline-3">
-<h3 id="orgf8c3702"><span class="section-number-3">18.5.</span> LaTeX Compilation Fails</h3>
-<div class="outline-text-3" id="text-18-5">
+<div id="outline-container-org6d43d60" class="outline-3">
+<h3 id="org6d43d60"><span class="section-number-3">19.6.</span> LaTeX Compilation Fails</h3>
+<div class="outline-text-3" id="text-19-6">
 <ol class="org-ol">
 <li>Check <code>*TeX Help*</code> buffer for errors</li>
 <li><p>
@@ -3851,9 +4099,9 @@ Ensure LuaLaTeX installed:
 </ol>
 </div>
 </div>
-<div id="outline-container-org15fcf41" class="outline-3">
-<h3 id="org15fcf41"><span class="section-number-3">18.6.</span> ConTeXt Compilation Fails</h3>
-<div class="outline-text-3" id="text-18-6">
+<div id="outline-container-orgb901c39" class="outline-3">
+<h3 id="orgb901c39"><span class="section-number-3">19.7.</span> ConTeXt Compilation Fails</h3>
+<div class="outline-text-3" id="text-19-7">
 <ol class="org-ol">
 <li><p>
 Ensure ConTeXt installed:
@@ -3872,9 +4120,9 @@ Check font access:
 </ol>
 </div>
 </div>
-<div id="outline-container-orgfa86c9c" class="outline-3">
-<h3 id="orgfa86c9c"><span class="section-number-3">18.7.</span> Typst Compilation Fails</h3>
-<div class="outline-text-3" id="text-18-7">
+<div id="outline-container-org3a3db82" class="outline-3">
+<h3 id="org3a3db82"><span class="section-number-3">19.8.</span> Typst Compilation Fails</h3>
+<div class="outline-text-3" id="text-19-8">
 <ol class="org-ol">
 <li><p>
 Ensure Typst installed:
@@ -3887,9 +4135,9 @@ Ensure Typst installed:
 </ol>
 </div>
 </div>
-<div id="outline-container-org88fda1f" class="outline-3">
-<h3 id="org88fda1f"><span class="section-number-3">18.8.</span> Typst LSP Not Working</h3>
-<div class="outline-text-3" id="text-18-8">
+<div id="outline-container-org7da7ab9" class="outline-3">
+<h3 id="org7da7ab9"><span class="section-number-3">19.9.</span> Typst LSP Not Working</h3>
+<div class="outline-text-3" id="text-19-9">
 <ol class="org-ol">
 <li><p>
 Ensure tinymist installed:
@@ -3902,9 +4150,9 @@ Ensure tinymist installed:
 </ol>
 </div>
 </div>
-<div id="outline-container-org27d920c" class="outline-3">
-<h3 id="org27d920c"><span class="section-number-3">18.9.</span> Spell Check Not Working</h3>
-<div class="outline-text-3" id="text-18-9">
+<div id="outline-container-orga367f4c" class="outline-3">
+<h3 id="orga367f4c"><span class="section-number-3">19.10.</span> Spell Check Not Working</h3>
+<div class="outline-text-3" id="text-19-10">
 <ol class="org-ol">
 <li><p>
 Check hunspell:
@@ -3922,13 +4170,25 @@ Check dictionaries:
 </pre>
 </div></li>
 
-<li>Verify DICPATH environment variable</li>
+<li>Verify both <code>en_US</code> and <code>he_IL</code> appear in available dictionaries</li>
+
+<li><p>
+Check DICPATH environment variable:
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">echo $DICPATH
+</pre>
+</div></li>
+
+<li>Switch to correct language: <code>C-c s e</code> for English, <code>C-c s h</code> for Hebrew</li>
+
+<li>If a word is incorrectly flagged, press <code>i</code> to add it to personal dictionary</li>
 </ol>
 </div>
 </div>
-<div id="outline-container-orgc46897a" class="outline-3">
-<h3 id="orgc46897a"><span class="section-number-3">18.10.</span> Slow Startup</h3>
-<div class="outline-text-3" id="text-18-10">
+<div id="outline-container-org379fd39" class="outline-3">
+<h3 id="org379fd39"><span class="section-number-3">19.11.</span> Slow Startup</h3>
+<div class="outline-text-3" id="text-19-11">
 <p>
 First startup is slow due to package installation. If still slow:
 </p>
@@ -3939,9 +4199,9 @@ First startup is slow due to package installation. If still slow:
 </ol>
 </div>
 </div>
-<div id="outline-container-org1719d35" class="outline-3">
-<h3 id="org1719d35"><span class="section-number-3">18.11.</span> Config Changes Not Taking Effect</h3>
-<div class="outline-text-3" id="text-18-11">
+<div id="outline-container-org471ad2a" class="outline-3">
+<h3 id="org471ad2a"><span class="section-number-3">19.12.</span> Config Changes Not Taking Effect</h3>
+<div class="outline-text-3" id="text-19-12">
 <p>
 After editing <code>config.org</code>:
 </p>
@@ -3960,13 +4220,13 @@ M-x org-babel-tangle RET
 </div>
 </div>
 </div>
-<div id="outline-container-org5f2025a" class="outline-2">
-<h2 id="org5f2025a"><span class="section-number-2">19.</span> Getting Help</h2>
-<div class="outline-text-2" id="text-19">
+<div id="outline-container-orgd863b38" class="outline-2">
+<h2 id="orgd863b38"><span class="section-number-2">20.</span> Getting Help</h2>
+<div class="outline-text-2" id="text-20">
 </div>
-<div id="outline-container-org673c18b" class="outline-3">
-<h3 id="org673c18b"><span class="section-number-3">19.1.</span> Built-in Help</h3>
-<div class="outline-text-3" id="text-19-1">
+<div id="outline-container-orgf64b730" class="outline-3">
+<h3 id="orgf64b730"><span class="section-number-3">20.1.</span> Built-in Help</h3>
+<div class="outline-text-3" id="text-20-1">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -4020,17 +4280,17 @@ M-x org-babel-tangle RET
 </table>
 </div>
 </div>
-<div id="outline-container-org0e20daa" class="outline-3">
-<h3 id="org0e20daa"><span class="section-number-3">19.2.</span> Which-Key</h3>
-<div class="outline-text-3" id="text-19-2">
+<div id="outline-container-org699fa01" class="outline-3">
+<h3 id="org699fa01"><span class="section-number-3">20.2.</span> Which-Key</h3>
+<div class="outline-text-3" id="text-20-2">
 <p>
 After pressing a prefix key (like <code>C-c</code>), wait briefly to see available completions.
 </p>
 </div>
 </div>
-<div id="outline-container-org8d74df8" class="outline-3">
-<h3 id="org8d74df8"><span class="section-number-3">19.3.</span> Online Resources</h3>
-<div class="outline-text-3" id="text-19-3">
+<div id="outline-container-org8ca8b83" class="outline-3">
+<h3 id="org8ca8b83"><span class="section-number-3">20.3.</span> Online Resources</h3>
+<div class="outline-text-3" id="text-20-3">
 <ul class="org-ul">
 <li>Emacs Manual: <a href="https://www.gnu.org/software/emacs/manual/">https://www.gnu.org/software/emacs/manual/</a></li>
 <li>Org Mode Manual: <a href="https://orgmode.org/manual/">https://orgmode.org/manual/</a></li>
@@ -4042,9 +4302,9 @@ After pressing a prefix key (like <code>C-c</code>), wait briefly to see availab
 </div>
 </div>
 </div>
-<div id="outline-container-org44c1652" class="outline-2">
-<h2 id="org44c1652"><span class="section-number-2">20.</span> File Locations Summary</h2>
-<div class="outline-text-2" id="text-20">
+<div id="outline-container-org8179141" class="outline-2">
+<h2 id="org8179141"><span class="section-number-2">21.</span> File Locations Summary</h2>
+<div class="outline-text-2" id="text-21">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
@@ -4101,21 +4361,16 @@ After pressing a prefix key (like <code>C-c</code>), wait briefly to see availab
 </tr>
 
 <tr>
-<td class="org-left">Backups</td>
-<td class="org-left"><code>~/.emacs.d/backups/</code></td>
-</tr>
-
-<tr>
-<td class="org-left">Auto-saves</td>
-<td class="org-left"><code>~/.emacs.d/auto-saves/</code></td>
+<td class="org-left">Undo history</td>
+<td class="org-left"><code>~/.emacs.d/undo-tree-history/</code></td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
-<div id="outline-container-org024e233" class="outline-2">
-<h2 id="org024e233"><span class="section-number-2">21.</span> Quick Start Summary</h2>
-<div class="outline-text-2" id="text-21">
+<div id="outline-container-org7d32a89" class="outline-2">
+<h2 id="org7d32a89"><span class="section-number-2">22.</span> Quick Start Summary</h2>
+<div class="outline-text-2" id="text-22">
 <p>
 After installation:
 </p>
@@ -4137,7 +4392,7 @@ After installation:
 <tbody>
 <tr>
 <td class="org-left">Switch to Hebrew</td>
-<td class="org-left"><code>C-\</code></td>
+<td class="org-left"><code>F9</code></td>
 </tr>
 
 <tr>
@@ -4153,6 +4408,21 @@ After installation:
 <tr>
 <td class="org-left">Save</td>
 <td class="org-left"><code>C-x C-s</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Undo / Redo</td>
+<td class="org-left"><code>C-/</code> / <code>C-?</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Visual undo tree</td>
+<td class="org-left"><code>C-x u</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Focused writing</td>
+<td class="org-left"><code>C-c w</code></td>
 </tr>
 
 <tr>
@@ -4216,6 +4486,21 @@ After installation:
 </tr>
 
 <tr>
+<td class="org-left">Switch spell to English</td>
+<td class="org-left"><code>C-c s e</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Switch spell to Hebrew</td>
+<td class="org-left"><code>C-c s h</code></td>
+</tr>
+
+<tr>
+<td class="org-left">Fix footnotes RTL</td>
+<td class="org-left"><code>C-c h f</code></td>
+</tr>
+
+<tr>
 <td class="org-left">Help on key</td>
 <td class="org-left"><code>C-h k</code> then key</td>
 </tr>
@@ -4226,7 +4511,7 @@ After installation:
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: User</p>
-<p class="date">Created: 2026-03-03 Tue 20:28</p>
+<p class="date">Created: 2026-03-09 Mon 13:13</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

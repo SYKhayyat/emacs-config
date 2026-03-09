@@ -1,7 +1,7 @@
 # -*- mode: snippet -*-
-name: Hebrew document
-key: hebdoc
---
+# name: Hebrew document
+# key: hebdoc
+# --
 #+TITLE: ${1:כותרת}
 #+AUTHOR: ${2:Author}
 #+DATE: `(format-time-string "%Y-%m-%d")`

@@ -1,7 +1,11 @@
 ;;; -*- coding: utf-8; mode: lisp-data -*-
-(("/home/shaul/Scripts/rust_plan/Nexus/nexus/src/main.rs" . 90)
- ("/home/shaul/Downloads/temp/temp/finance.org" . 31703)
- ("/home/shaul/Scripts/rust_plan/rustPlan0.org" . 66178)
- ("/home/shaul/Scripts/rust_plan/additional.org" . 6867)
+(("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/e_kodshim/b_menachos/six_menachos.org"
+  . 23984)
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/e_sichsa_deshai/b_moed_sichsa_deshai/i_taanis/taanis_yerushalmi.org"
+  . 11463)
  ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/b_moed/b_eiruvin/six_eiruvin.org"
-  . 39192))
+  . 39482)
+ ("/home/shaul/Documents/siach_shai/b_typed/b_shiur/d_halacha/a_semicha/udder.org"
+  . 1072)
+ ("/home/shaul/Scripts/rust_plan/Nexus/nexus/src/main.rs" . 90)
+ ("/home/shaul/Downloads/temp/temp/finance.org" . 31703))

@@ -181,8 +181,8 @@ To add new configurations, create a new heading and add an emacs-lisp source blo
 ** Bidirectional Text Settings
 
 #+begin_src emacs-lisp
-  ;; Set default to RTL
-  (setq-default bidi-paragraph-direction 'right-to-left)
+  ;; Default to automatic bidi detection
+  (setq-default bidi-paragraph-direction nil)
 
   ;; Enable bidirectional reordering
   (setq-default bidi-display-reordering t)
@@ -196,6 +196,28 @@ To add new configurations, create a new heading and add an emacs-lisp source blo
   ;; Bidi paragraph settings
   (setq bidi-paragraph-start-re "^")
   (setq bidi-paragraph-separate-re "^[ \t\f]*$")
+
+  ;; RTL for prose modes
+  (defun my/set-rtl-mode ()
+    "Set buffer to RTL direction."
+    (setq bidi-paragraph-direction 'right-to-left))
+
+  ;; LTR for code modes
+  (defun my/set-ltr-mode ()
+    "Set buffer to LTR direction."
+    (setq bidi-paragraph-direction 'left-to-right))
+
+  ;; Prose modes: RTL by default
+  (add-hook 'org-mode-hook 'my/set-rtl-mode)
+  (add-hook 'LaTeX-mode-hook 'my/set-rtl-mode)
+  (add-hook 'context-mode-hook 'my/set-rtl-mode)
+  (add-hook 'typst-ts-mode-hook 'my/set-rtl-mode)
+  (add-hook 'typst-mode-hook 'my/set-rtl-mode)
+  (add-hook 'text-mode-hook 'my/set-rtl-mode)
+  (add-hook 'markdown-mode-hook 'my/set-rtl-mode)
+
+  ;; Code modes: LTR by default
+  (add-hook 'prog-mode-hook 'my/set-ltr-mode)
 #+end_src
 
 ** Direction Toggle Functions
@@ -263,45 +285,66 @@ To add new configurations, create a new heading and add an emacs-lisp source blo
   (global-set-key (kbd "C-c B") 'my/toggle-bidi-reordering)
 #+end_src
 
-* Spell Checking with Hunspell
+* Spell Checking
 
 #+begin_src emacs-lisp
+  ;; Use hunspell for spell checking
   (use-package ispell
     :ensure nil
     :config
     (when (executable-find "hunspell")
       (setq ispell-program-name "hunspell")
-      (setq ispell-dictionary "en_US,he_IL,he")
-      (setq ispell-personal-dictionary "~/.hunspell_personal")
       (setq ispell-really-hunspell t)
+      ;; Set default dictionary to English
+      (setq ispell-dictionary "en_US")
+      ;; Configure dictionary alist for hunspell
       (setq ispell-local-dictionary-alist
             '(("en_US" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil ("-d" "en_US") nil utf-8)
-              ("he_IL" "[[:alpha:]]" "[^[:alpha:]]" "" nil ("-d" "he_IL") nil utf-8)
-              ("he" "[[:alpha:]]" "[^[:alpha:]]" "" nil ("-d" "he") nil utf-8)))))
+              ("he_IL" "[[:alpha:]]" "[^[:alpha:]]" "" nil ("-d" "he_IL") nil utf-8)))))
 
+  ;; Flyspell for on-the-fly spell checking
   (use-package flyspell
     :ensure nil
     :hook ((text-mode . flyspell-mode)
+           (org-mode . flyspell-mode)
+           (LaTeX-mode . flyspell-mode)
+           (markdown-mode . flyspell-mode)
            (prog-mode . flyspell-prog-mode))
     :config
     (setq flyspell-issue-message-flag nil))
 
+  ;; Manual dictionary switch
   (defun my/spell-english ()
     "Switch to English dictionary."
     (interactive)
     (ispell-change-dictionary "en_US")
+    (when flyspell-mode
+      (flyspell-buffer))
     (message "Spell checking: English"))
 
   (defun my/spell-hebrew ()
     "Switch to Hebrew dictionary."
     (interactive)
     (ispell-change-dictionary "he_IL")
+    (when flyspell-mode
+      (flyspell-buffer))
     (message "Spell checking: Hebrew"))
+
+  (defun my/spell-both ()
+    "Use both English and Hebrew dictionaries.
+  Note: This creates a personal dictionary approach - 
+  words valid in either language should be added to personal dict."
+    (interactive)
+    (ispell-change-dictionary "en_US")
+    (when flyspell-mode
+      (flyspell-buffer))
+    (message "Spell checking: English (add Hebrew words to personal dict with 'i')"))
 
   (global-set-key (kbd "C-c s e") 'my/spell-english)
   (global-set-key (kbd "C-c s h") 'my/spell-hebrew)
+  (global-set-key (kbd "C-c s b") 'my/spell-both)
+  (global-set-key (kbd "M-$") 'ispell-word)
 #+end_src
-
 * Completion Framework
 
 ** Vertico
@@ -410,7 +453,7 @@ To add new configurations, create a new heading and add an emacs-lisp source blo
              ("LaTeX" (or (mode . latex-mode)
                           (mode . LaTeX-mode)))
              ("ConTeXt" (mode . context-mode))
-             ("Typst" (mode . typst-mode))
+             ("Typst" (mode . typst-ts-mode))
              ("Roam" (directory . "~/Documents/roam/"))
              ("Dired" (mode . dired-mode))
              ("PDF" (mode . pdf-view-mode))
@@ -452,6 +495,70 @@ To add new configurations, create a new heading and add an emacs-lisp source blo
 
 * Editing Enhancements
 
+** Persistent Undo with Undo-Tree
+
+#+begin_src emacs-lisp
+  (use-package undo-tree
+    :diminish undo-tree-mode
+    :config
+    (global-undo-tree-mode)
+
+    ;; Save undo history between sessions
+    (setq undo-tree-auto-save-history t)
+    (setq undo-tree-history-directory-alist
+          '(("." . "~/.emacs.d/undo-tree-history/")))
+
+    ;; Create undo history directory
+    (make-directory "~/.emacs.d/undo-tree-history/" t)
+
+    ;; Increase undo limits
+    (setq undo-limit 80000000)          ;; 80MB
+    (setq undo-strong-limit 120000000)  ;; 120MB
+    (setq undo-outer-limit 300000000)   ;; 300MB
+
+    :bind (("C-x u" . undo-tree-visualize)
+           ("C-/" . undo-tree-undo)
+           ("C-?" . undo-tree-redo)))
+#+end_src
+
+** Focused Writing Mode
+
+#+begin_src emacs-lisp
+  (use-package visual-fill-column
+    :config
+    (setq-default visual-fill-column-width 80)
+    (setq-default visual-fill-column-center-text t))
+
+  (defvar my/focused-writing-mode nil
+    "Track whether focused writing mode is active.")
+
+  (defun my/toggle-focused-writing ()
+    "Toggle focused writing mode (80-column centered text)."
+    (interactive)
+    (if my/focused-writing-mode
+        (progn
+          (visual-fill-column-mode -1)
+          (visual-line-mode -1)
+          (setq my/focused-writing-mode nil)
+          (message "Focused writing: OFF"))
+      (progn
+        (visual-line-mode 1)
+        (visual-fill-column-mode 1)
+        (setq my/focused-writing-mode t)
+        (message "Focused writing: ON (80 columns, centered)"))))
+
+  (defun my/set-focused-writing-width (width)
+    "Set focused writing column width."
+    (interactive "nColumn width: ")
+    (setq visual-fill-column-width width)
+    (when visual-fill-column-mode
+      (visual-fill-column-adjust))
+    (message "Focused writing width: %d" width))
+
+  (global-set-key (kbd "C-c w") 'my/toggle-focused-writing)
+  (global-set-key (kbd "C-c W") 'my/set-focused-writing-width)
+#+end_src
+
 ** Multiple Cursors
 
 #+begin_src emacs-lisp
@@ -480,7 +587,19 @@ To add new configurations, create a new heading and add an emacs-lisp source blo
 ** Electric Pair and Rainbow Delimiters
 
 #+begin_src emacs-lisp
-  (electric-pair-mode 1)
+  ;; Electric pairs only in code and markup modes (not prose)
+  (electric-pair-mode -1)  ;; Disable globally
+
+  ;; Enable in programming modes
+  (add-hook 'prog-mode-hook 'electric-pair-local-mode)
+
+  ;; Enable in document markup modes
+  (add-hook 'LaTeX-mode-hook 'electric-pair-local-mode)
+  (add-hook 'context-mode-hook 'electric-pair-local-mode)
+  (add-hook 'typst-ts-mode-hook 'electric-pair-local-mode)
+
+  ;; Fallback for old typst-mode if typst-ts-mode not available
+  (add-hook 'typst-mode-hook 'electric-pair-local-mode)
 
   (use-package rainbow-delimiters
     :hook (prog-mode . rainbow-delimiters-mode))
@@ -576,11 +695,23 @@ $0"))))
 ** Dired Single
 
 #+begin_src emacs-lisp
-  (use-package dired-single
-    :after dired
-    :bind (:map dired-mode-map
-                ([remap dired-find-file] . dired-single-buffer)
-                ([remap dired-up-directory] . dired-single-up-directory)))
+  ;; Single buffer dired navigation (built-in alternative)
+  (with-eval-after-load 'dired
+    (defun my/dired-single-buffer ()
+      "Open file/directory in same buffer."
+      (interactive)
+      (let ((file (dired-get-file-for-visit)))
+        (if (file-directory-p file)
+            (find-alternate-file file)
+          (find-file file))))
+
+    (defun my/dired-single-up-directory ()
+      "Go up directory in same buffer."
+      (interactive)
+      (find-alternate-file ".."))
+
+    (define-key dired-mode-map (kbd "RET") 'my/dired-single-buffer)
+    (define-key dired-mode-map (kbd "^") 'my/dired-single-up-directory))
 #+end_src
 
 ** Dired Hide Dotfiles
@@ -594,13 +725,52 @@ $0"))))
 
 * Org Mode
 
+** Org Footnote RTL Fix
+
+#+begin_src emacs-lisp
+  ;; Fix RTL direction in Org footnotes
+  ;; Footnotes start with [fn:N] which is LTR, causing paragraph to be LTR
+  ;; This inserts a Right-to-Left Mark after footnote marker
+
+  (defun my/org-footnote-rtl-fix ()
+    "Add RTL mark after footnote definition marker for proper Hebrew display."
+    (when (and (eq bidi-paragraph-direction 'right-to-left)
+               (org-in-footnote-p))
+      (save-excursion
+        (let ((fn-start (org-footnote-at-definition-p)))
+          (when fn-start
+            (goto-char (nth 1 fn-start))  ;; End of [fn:N]
+            (unless (looking-at (char-to-string ?\x200F))  ;; RLM not already there
+              (insert ?\x200F)))))))  ;; Insert Right-to-Left Mark
+
+  ;; Run fix when entering footnotes
+  (advice-add 'org-footnote-new :after
+              (lambda (&rest _)
+                (when (eq bidi-paragraph-direction 'right-to-left)
+                  (insert ?\x200F))))
+
+  ;; Command to fix existing footnotes in buffer
+  (defun my/org-fix-all-footnotes-rtl ()
+    "Add RTL marks to all footnote definitions in buffer."
+    (interactive)
+    (save-excursion
+      (goto-char (point-min))
+      (let ((count 0))
+        (while (re-search-forward "^\\(\\[fn:[^]]+\\]\\)" nil t)
+          (unless (looking-at (char-to-string ?\x200F))
+            (insert ?\x200F)
+            (setq count (1+ count))))
+        (message "Fixed %d footnotes" count))))
+
+  (global-set-key (kbd "C-c h f") 'my/org-fix-all-footnotes-rtl)
+#+end_src
+
 ** Basic Org Configuration
 
 #+begin_src emacs-lisp
   (use-package org
     :ensure nil
-    :hook ((org-mode . visual-line-mode)
-           (org-mode . my/org-mode-rtl-setup))
+    :hook (org-mode . visual-line-mode)
     :config
     ;; Basic settings
     (setq org-startup-indented t)
@@ -627,11 +797,6 @@ $0"))))
 
     ;; Org directory
     (setq org-directory "~/Documents/org/"))
-
-  ;; RTL setup for org-mode
-  (defun my/org-mode-rtl-setup ()
-    "Setup RTL support for org-mode."
-    (setq bidi-paragraph-direction 'right-to-left))
 #+end_src
 
 ** Org List Configuration
@@ -1251,21 +1416,10 @@ $0"))))
     (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
 
     ;; Visual line mode
-    (add-hook 'LaTeX-mode-hook 'visual-line-mode)
-
-    ;; Flyspell
-    (add-hook 'LaTeX-mode-hook 'flyspell-mode))
+    (add-hook 'LaTeX-mode-hook 'visual-line-mode))
 #+end_src
 
-*** LaTeX RTL Support
-
-#+begin_src emacs-lisp
-  (add-hook 'LaTeX-mode-hook
-            (lambda ()
-              (setq bidi-paragraph-direction 'right-to-left)))
-#+end_src
-
-*** LaTeX Preview Settings
+** LaTeX Preview Settings
 
 #+begin_src emacs-lisp
   (with-eval-after-load 'latex
@@ -1273,7 +1427,7 @@ $0"))))
     (setq preview-scale-function 1.5))
 #+end_src
 
-*** LaTeX Preamble Templates
+** LaTeX Preamble Templates
 
 #+begin_src emacs-lisp
   (defvar my/latex-unlimited-structure
@@ -1440,7 +1594,7 @@ $0"))))
     (insert my/latex-unlimited-structure))
 #+end_src
 
-*** Nested Footnotes Helper Functions
+** Nested Footnotes Helper Functions
 
 #+begin_src emacs-lisp
   ;; ============================================
@@ -1632,25 +1786,38 @@ $0"))))
       (insert "\\stoplocalfootnotes")
       (search-backward "\\localfootnote{}")
       (forward-char 15)))
-
-  ;; ConTeXt RTL support
-  (add-hook 'ConTeXt-mode-hook
-            (lambda ()
-              (setq bidi-paragraph-direction 'right-to-left)))
 #+end_src
 
 ** Typst Support
 
 #+begin_src emacs-lisp
-  ;; Define Typst major mode
-  (define-derived-mode typst-mode text-mode "Typst"
-    "Major mode for editing Typst files."
-    (setq-local comment-start "// ")
-    (setq-local comment-end ""))
+  ;; typst-ts-mode should be installed via package-vc or manually
+  (when (package-installed-p 'typst-ts-mode)
+    (require 'typst-ts-mode nil t))
 
-  (add-to-list 'auto-mode-alist '("\\.typ\\'" . typst-mode))
+  ;; Fallback: define basic typst-mode if typst-ts-mode not available
+  (unless (fboundp 'typst-ts-mode)
+    (define-derived-mode typst-mode text-mode "Typst"
+      "Major mode for editing Typst files."
+      (setq-local comment-start "// ")
+      (setq-local comment-end "")))
 
-  ;; Typst compilation functions
+  ;; Set up file association
+  (add-to-list 'auto-mode-alist '("\\.typ\\'" . (lambda ()
+                                                   (if (fboundp 'typst-ts-mode)
+                                                       (typst-ts-mode)
+                                                     (typst-mode)))))
+
+  ;; RTL and electric pair setup
+  (defun my/typst-mode-setup ()
+    "Setup for Typst modes."
+    (setq bidi-paragraph-direction 'right-to-left)
+    (electric-pair-local-mode 1))
+
+  (add-hook 'typst-ts-mode-hook 'my/typst-mode-setup)
+  (add-hook 'typst-mode-hook 'my/typst-mode-setup)
+
+  ;; Compilation functions
   (defun my/typst-compile ()
     "Compile current Typst file."
     (interactive)
@@ -1681,11 +1848,9 @@ $0"))))
     (insert "#set page(flipped: true)\n")
     (insert "#set heading(numbering: \"1.1.1\")\n\n"))
 
-  ;; Visual nested footnote helper (Typst does not support true nested blocks)
+  ;; Visual nested footnote helper
   (defun my/typst-insert-nested-footnote-helper ()
-    "Insert Typst visual nested footnote helper function.
-  Note: Typst does not support true hierarchical footnote blocks.
-  This creates visual separation within a single footnote."
+    "Insert Typst visual nested footnote helper function."
     (interactive)
     (insert "#let subnote(body, notes) = footnote[\n")
     (insert "  #body\n")
@@ -1698,29 +1863,23 @@ $0"))))
     (insert "  ]\n")
     (insert "]\n\n"))
 
-  ;; Define keymap for typst-mode
-  (defvar typst-mode-map
-    (let ((map (make-sparse-keymap)))
-      (set-keymap-parent map text-mode-map)
-      (define-key map (kbd "C-c C-c") 'my/typst-compile)
-      (define-key map (kbd "C-c C-w") 'my/typst-watch)
-      (define-key map (kbd "C-c C-v") 'my/typst-view)
-      (define-key map (kbd "C-c C-p h") 'my/insert-typst-hebrew-preamble)
-      (define-key map (kbd "C-c C-p f") 'my/typst-insert-nested-footnote-helper)
-      map)
-    "Keymap for `typst-mode'.")
+  ;; Keybindings via hook (using C-c t prefix to avoid conflicts)
+  (defun my/typst-keybindings ()
+    "Set Typst keybindings."
+    (local-set-key (kbd "C-c C-c") 'my/typst-compile)
+    (local-set-key (kbd "C-c C-w") 'my/typst-watch)
+    (local-set-key (kbd "C-c C-v") 'my/typst-view)
+    (local-set-key (kbd "C-c t h") 'my/insert-typst-hebrew-preamble)
+    (local-set-key (kbd "C-c t f") 'my/typst-insert-nested-footnote-helper))
 
-  ;; Typst LSP via Eglot
+  (add-hook 'typst-ts-mode-hook 'my/typst-keybindings)
+  (add-hook 'typst-mode-hook 'my/typst-keybindings)
+
+  ;; Eglot LSP support
   (with-eval-after-load 'eglot
     (when (executable-find "tinymist")
+      (add-to-list 'eglot-server-programs '(typst-ts-mode . ("tinymist")))
       (add-to-list 'eglot-server-programs '(typst-mode . ("tinymist")))))
-
-  ;; Typst RTL support
-  (add-hook 'typst-mode-hook
-            (lambda ()
-              (setq bidi-paragraph-direction 'right-to-left)))
-#+end_src
-
 ** PDF Tools
 
 #+begin_src emacs-lisp
@@ -1799,17 +1958,21 @@ $0"))))
     :ensure nil
     :hook ((python-mode . eglot-ensure)
            (rust-mode . eglot-ensure)
-           (java-mode . eglot-ensure)
-           (typst-mode . eglot-ensure))
+           (java-mode . eglot-ensure))
     :config
-    (setq eglot-autoshutdown t))
+    (setq eglot-autoshutdown t)
+    ;; Add typst support if tinymist is available
+    (when (executable-find "tinymist")
+      (add-to-list 'eglot-server-programs '(typst-ts-mode . ("tinymist")))
+      (add-to-list 'eglot-server-programs '(typst-mode . ("tinymist")))))
 #+end_src
 
 ** Python
 
 #+begin_src emacs-lisp
-  (use-package python-mode
+  (use-package python
     :ensure nil
+    :mode ("\\.py\\'" . python-mode)
     :config
     (setq python-indent-offset 4))
 #+end_src
@@ -1889,16 +2052,19 @@ $0"))))
   Direction Controls
 
   _r_: RTL (Hebrew)    _l_: LTR (English)    _t_: Toggle direction
-  _h_: Hebrew spell    _e_: English spell    _i_: Toggle input method
-  _B_: Toggle bidi     _q_: quit
+  _h_: Hebrew spell    _e_: English spell    _b_: Both languages
+  _B_: Toggle bidi     _w_: Focus writing    _W_: Set width
+  _q_: quit
   "
       ("r" my/set-rtl)
       ("l" my/set-ltr)
       ("t" my/toggle-direction)
       ("h" my/spell-hebrew)
       ("e" my/spell-english)
-      ("i" toggle-input-method)
+      ("b" my/spell-both)
       ("B" my/toggle-bidi-reordering)
+      ("w" my/toggle-focused-writing)
+      ("W" my/set-focused-writing-width)
       ("q" nil))
 
     (global-set-key (kbd "C-c D") 'hydra-direction/body)
@@ -1931,37 +2097,33 @@ $0"))))
       "
   Document Systems
 
-  LaTeX:   _lp_: Babel preamble  _lg_: Polyglossia  _lu_: Unlimited struct
-           _ln_: Nested footnote template
-  ConTeXt: _ch_: Hebrew preamble _cf_: Local footnote
-  Typst:   _th_: Hebrew preamble _tf_: Nested footnote helper
+  LaTeX:   _p_: Babel preamble  _g_: Polyglossia  _u_: Unlimited struct
+           _n_: Nested footnote template
+  ConTeXt: _c_: Hebrew preamble _f_: Local footnote
+  Typst:   _h_: Hebrew preamble _s_: Nested footnote helper
   _q_: quit
   "
-      ("lp" my/insert-hebrew-preamble)
-      ("lg" my/insert-polyglossia-preamble)
-      ("lu" my/insert-unlimited-structure)
-      ("ln" my/insert-nested-footnote-template)
-      ("ch" my/insert-context-hebrew-preamble)
-      ("cf" my/insert-context-local-footnote)
-      ("th" my/insert-typst-hebrew-preamble)
-      ("tf" my/typst-insert-nested-footnote-helper)
+      ("p" my/insert-hebrew-preamble)
+      ("g" my/insert-polyglossia-preamble)
+      ("u" my/insert-unlimited-structure)
+      ("n" my/insert-nested-footnote-template)
+      ("c" my/insert-context-hebrew-preamble)
+      ("f" my/insert-context-local-footnote)
+      ("h" my/insert-typst-hebrew-preamble)
+      ("s" my/typst-insert-nested-footnote-helper)
       ("q" nil))
 
     (global-set-key (kbd "C-c P") 'hydra-document/body)
 
-    ;; LaTeX footnotes hydra
+    ;; LaTeX footnotes hydra - simple levels
     (defhydra hydra-latex-footnotes (:color blue :hint nil)
       "
-  LaTeX Footnotes
+  LaTeX Footnotes (Simple)
 
-  Simple (non-nested):
-  _1_-_0_: Insert \\footnote, \\footnoteB, ... \\footnoteJ
+  _1_: \\footnote    _2_: \\footnoteB   _3_: \\footnoteC   _4_: \\footnoteD   _5_: \\footnoteE
+  _6_: \\footnoteF   _7_: \\footnoteG   _8_: \\footnoteH   _9_: \\footnoteI   _0_: \\footnoteJ
 
-  Nested (mark + text, use inside another footnote):
-  _m_: Insert mark  _t_: Insert text  _n_: Insert template
-
-  Marks: _m 2_: \\footnotemarkB  _m 3_: \\footnotemarkC  _m 4_: \\footnotemarkD
-  Texts: _t 2_: \\footnotetextB  _t 3_: \\footnotetextC  _t 4_: \\footnotetextD
+  _n_: Nested template   _m_: → Marks menu   _t_: → Texts menu
   _q_: quit
   "
       ("1" my/insert-footnote-level-1)
@@ -1974,15 +2136,39 @@ $0"))))
       ("8" my/insert-footnote-level-8)
       ("9" my/insert-footnote-level-9)
       ("0" my/insert-footnote-level-10)
-      ("m 2" my/insert-footnotemark-level-2)
-      ("m 3" my/insert-footnotemark-level-3)
-      ("m 4" my/insert-footnotemark-level-4)
-      ("m 5" my/insert-footnotemark-level-5)
-      ("t 2" my/insert-footnotetext-level-2)
-      ("t 3" my/insert-footnotetext-level-3)
-      ("t 4" my/insert-footnotetext-level-4)
-      ("t 5" my/insert-footnotetext-level-5)
       ("n" my/insert-nested-footnote-template)
+      ("m" hydra-latex-footnote-marks/body)
+      ("t" hydra-latex-footnote-texts/body)
+      ("q" nil))
+
+    ;; Sub-hydra for footnote marks
+    (defhydra hydra-latex-footnote-marks (:color blue :hint nil)
+      "
+  Footnote Marks (for nesting)
+
+  _2_: \\footnotemarkB   _3_: \\footnotemarkC   _4_: \\footnotemarkD   _5_: \\footnotemarkE
+  _b_: ← Back   _q_: quit
+  "
+      ("2" my/insert-footnotemark-level-2)
+      ("3" my/insert-footnotemark-level-3)
+      ("4" my/insert-footnotemark-level-4)
+      ("5" my/insert-footnotemark-level-5)
+      ("b" hydra-latex-footnotes/body)
+      ("q" nil))
+
+    ;; Sub-hydra for footnote texts
+    (defhydra hydra-latex-footnote-texts (:color blue :hint nil)
+      "
+  Footnote Texts (for nesting)
+
+  _2_: \\footnotetextB   _3_: \\footnotetextC   _4_: \\footnotetextD   _5_: \\footnotetextE
+  _b_: ← Back   _q_: quit
+  "
+      ("2" my/insert-footnotetext-level-2)
+      ("3" my/insert-footnotetext-level-3)
+      ("4" my/insert-footnotetext-level-4)
+      ("5" my/insert-footnotetext-level-5)
+      ("b" hydra-latex-footnotes/body)
       ("q" nil))
 
     (with-eval-after-load 'latex
@@ -2217,11 +2403,11 @@ $0"))))
 #+begin_src emacs-lisp
   ;; Set default fonts (with existence checks)
   (when (display-graphic-p)
-    ;; Default font for Latin text
+    ;; Default font for Latin text (size 10)
     (when (find-font (font-spec :family "JetBrains Mono"))
       (set-face-attribute 'default nil
                           :family "JetBrains Mono"
-                          :height 110
+                          :height 100
                           :weight 'normal))
 
     ;; Fallback to DejaVu Sans Mono if JetBrains Mono not found
@@ -2229,20 +2415,29 @@ $0"))))
       (when (find-font (font-spec :family "DejaVu Sans Mono"))
         (set-face-attribute 'default nil
                             :family "DejaVu Sans Mono"
-                            :height 110
+                            :height 100
                             :weight 'normal)))
 
     ;; Hebrew font
     (when (find-font (font-spec :family "David CLM"))
-      (set-fontset-font t 'hebrew (font-spec :family "David CLM" :size 14)))
+      (set-fontset-font t 'hebrew (font-spec :family "David CLM" :size 12)))
 
-   ;; Fallback Hebrew fonts
-(unless (find-font (font-spec :family "David CLM"))
-  (catch 'font-found
-    (dolist (font '("Noto Sans Hebrew" "DejaVu Sans" "Arial Hebrew"))
-      (when (find-font (font-spec :family font))
-        (set-fontset-font t 'hebrew (font-spec :family font :size 14))
-        (throw 'font-found t)))))
+    ;; Fallback Hebrew fonts
+    (unless (find-font (font-spec :family "David CLM"))
+      (catch 'font-found
+        (dolist (font '("Noto Sans Hebrew" "DejaVu Sans" "Arial Hebrew"))
+          (when (find-font (font-spec :family font))
+            (set-fontset-font t 'hebrew (font-spec :family font :size 12))
+            (throw 'font-found t)))))
+
+    ;; Modeline font (size 8)
+    (set-face-attribute 'mode-line nil :height 80)
+    (set-face-attribute 'mode-line-inactive nil :height 80)
+
+    ;; Minibuffer font (size 8)
+    (add-hook 'minibuffer-setup-hook
+              (lambda ()
+                (face-remap-add-relative 'default :height 80))))
 #+end_src
 
 * Directory Setup
@@ -2354,6 +2549,15 @@ $0"))))
 | F9              | toggle-input-method                 | Toggle Hebrew/English input        |
 | C-c s e         | my/spell-english                    | English spell check                |
 | C-c s h         | my/spell-hebrew                     | Hebrew spell check                 |
+| C-c s b         | my/spell-both                       | Both EN+HE spell checking          |
+| M-$             | ispell-word                         | Correct word at point              |
+|-----------------+-------------------------------------+------------------------------------|
+| C-c w           | my/toggle-focused-writing           | Toggle 80-col centered mode        |
+| C-c W           | my/set-focused-writing-width        | Set focused writing width          |
+|-----------------+-------------------------------------+------------------------------------|
+| C-x u           | undo-tree-visualize                 | Visual undo tree                   |
+| C-/             | undo-tree-undo                      | Undo                               |
+| C-?             | undo-tree-redo                      | Redo                               |
 |-----------------+-------------------------------------+------------------------------------|
 | C-c n f         | org-roam-node-find                  | Find roam node                     |
 | C-c n i         | org-roam-node-insert                | Insert roam node link              |
@@ -2372,10 +2576,11 @@ $0"))))
 |-----------------+-------------------------------------+------------------------------------|
 | C-c a           | org-agenda                          | Org agenda                         |
 | C-c c           | org-capture                         | Org capture                        |
+| C-c h f         | my/org-fix-all-footnotes-rtl        | Fix RTL in all footnotes           |
 |-----------------+-------------------------------------+------------------------------------|
 | C-c f 1-0       | my/insert-footnote-level-N          | Insert simple footnote             |
-| C-c f m 2-5     | my/insert-footnotemark-level-N      | Insert footnote mark (for nesting) |
-| C-c f t 2-5     | my/insert-footnotetext-level-N      | Insert footnote text (for nesting) |
+| C-c f m         | hydra-latex-footnote-marks/body     | Footnote marks menu                |
+| C-c f t         | hydra-latex-footnote-texts/body     | Footnote texts menu                |
 | C-c f n         | my/insert-nested-footnote-template  | Insert nested footnote template    |
 |-----------------+-------------------------------------+------------------------------------|
 | C-c h l         | my/create-hebrew-latex-document     | Create Hebrew LaTeX doc            |
@@ -2399,5 +2604,10 @@ $0"))))
 | C-c C-c         | (Typst) my/typst-compile            | Compile Typst                      |
 | C-c C-w         | (Typst) my/typst-watch              | Watch Typst (live preview)         |
 | C-c C-v         | (Typst) my/typst-view               | View Typst PDF                     |
-| C-c C-p h       | (Typst) insert Hebrew preamble      | Insert Typst Hebrew setup          |
-| C-c C-p f       | (Typst) insert nested footnote      | Insert Typst footnote helper       |
+| C-c t h         | (Typst) insert Hebrew preamble      | Insert Typst Hebrew setup          |
+| C-c t f         | (Typst) insert nested footnote      | Insert Typst footnote helper       |
+|-----------------+-------------------------------------+------------------------------------|
+| C-c e i         | my/open-init-file                   | Open config file                   |
+| C-c e r         | my/reload-init-file                 | Reload config                      |
+| C-x 2           | my/split-and-follow-horizontally    | Split horizontal and follow        |
+| C-x 3           | my/split-and-follow-vertically      | Split vertical and follow          |
