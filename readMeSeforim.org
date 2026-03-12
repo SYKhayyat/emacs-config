@@ -1,0 +1,122 @@
+#+title: Seforim Library Integration for Emacs
+#+author: Shaul
+#+date: 2025
+#+options: toc:t num:nil
+
+* Overview
+
+This configuration adds a complete Jewish text (Seforim) library management system to Emacs, leveraging the existing =vertico=, =consult=, =orderless=, and =hydra= infrastructure. It provides fast fuzzy finding, full-text search, and hierarchical browsing of Hebrew texts with full RTL (right-to-left) support.
+
+* Prerequisites
+
+** NixOS Requirements
+
+Since Emacs cannot install system binaries on NixOS, you must explicitly install the search tools:
+
+#+begin_src nix
+  environment.systemPackages = with pkgs; [
+    ripgrep  # For full-text content search
+    fd       # For fast fuzzy file finding
+  ];
+#+end_src
+
+Run =sudo nixos-rebuild switch= (or your home-manager equivalent) before proceeding.
+
+** Emacs Dependencies
+
+The following packages are required (assumed already present in your config):
+- =vertico= (vertical completion)
+- =consult= (search and navigation commands)
+- =orderless= (fuzzy matching)
+- =marginalia= (annotations in minibuffer)
+- =hydra= (keybinding menus)
+- =dired-sidebar= (tree view)
+- =all-the-icons= (optional, for pretty sidebar icons)
+
+* Installation
+
+1. Ensure your seforim directory exists:
+   #+begin_src shell
+     mkdir -p ~/Documents/seforim/
+   #+end_src
+
+2. Add the configuration block from your =config.org= under the =* Seforim Library= heading (or tangle this file).
+
+3. The compiler warnings for =dired-subtree= (regarding optional =dired-filter= and =dired-details= dependencies) are silenced by the =declare-function= block included in the configuration. These are soft dependencies checked at runtime; the warnings are cosmetic.
+
+* Keybindings
+
+All Seforim commands are accessible via the =C-c S= (Shift+S) Hydra menu, chosen to avoid conflict with your existing =C-c s= spell-check binding.
+
+| Key | Command | Description |
+|-----|---------|-------------|
+| =C-c S= | =hydra-seforim/body= | Open Seforim menu |
+| =C-c S f= | =my/seforim-find-sefer= | Fuzzy find file by path |
+| =C-c S s= | =my/seforim-search-all= | Search text across entire library |
+| =C-c S d= | =my/seforim-search-current-dir= | Search within current sefer's directory |
+| =C-c S o= | =my/seforim-outline= | Jump to chapter/perek (via =consult-outline=) |
+| =C-c S t= | =dired-sidebar-toggle-sidebar= | Toggle tree sidebar |
+| =C-c S b= | =my/seforim-browse-tree= | Open dired + sidebar at library root |
+| =C-x C-n= | =dired-sidebar-toggle-sidebar= | Global toggle for sidebar (alternative) |
+
+* Usage Workflow
+
+** Finding a Sefer
+Press =C-c S f=. With =orderless= completion, type fragments like =bav shab= to match =Bavli/Moed/Shabbat.org= instantly.
+
+** Searching Content
+Press =C-c S s= to search across all files. Type Hebrew terms (e.g., =אברהם=) or English. =ripgrep= scans the entire library instantly; =vertico= displays results with context via =marginalia=.
+
+** Navigating Within a Sefer
+Open any =.org= file. Press =C-c S o= to invoke =consult-outline=. Jump directly to:
+- Perakim (chapters)
+- Daf numbers (e.g., type =2a= to jump to Daf 2a)
+- Specific simanim or halachot
+
+** Browsing the Hierarchy
+Press =C-c S b= to open =dired= at =~/Documents/seforim/= with the =dired-sidebar= tree view. Use =TAB= to expand/collapse directories (Torah, Nevi'im, Rambam, etc.). Toggle the sidebar anytime with =C-x C-n= or =C-c S t=.
+
+* RTL Configuration
+
+Any file opened from =my/seforim-directory= automatically triggers your existing =org-mode-hook= RTL configuration:
+- Buffer direction set to right-to-left
+- Hebrew text displays correctly
+- Proper alignment of margins and indentation
+
+* Customization
+
+** Changing the Library Path
+#+begin_src emacs-lisp
+  (setq my/seforim-directory "~/path/to/your/seforim/")
+#+end_src
+
+** Integrating with Bibliography
+If you use =org-roam= or =citar= for academic sources, you can extend =my/seforim-search-all= to include your bibliography directory by modifying the =consult-ripgrep= arguments.
+
+** Sidebar Appearance
+Customize the sidebar theme in the =dired-sidebar= =use-package= block:
+#+begin_src emacs-lisp
+  (setq dired-sidebar-theme 'vscode)  ; alternatives: 'ascii, 'icons, 'nerd
+  (setq dired-sidebar-width 35)
+#+end_src
+
+* Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| "Command not found: fd" | Ensure =fd= is in your =$PATH= via NixOS configuration and restart Emacs daemon. |
+| Sidebar shows no icons | Install =all-the-icons= fonts: =M-x all-the-icons-install-fonts=. |
+| Slow search performance | Ensure =.org= files are not being tracked by =git= in a huge repo; add a =.ignore= file with =*.org= if needed, or use =fd='s =--no-ignore= flag carefully. |
+| Hebrew search returns no results | Check that files are UTF-8 encoded. If using older texts, run =iconv= or =recode= on the files. |
+
+* Architecture Notes
+
+This setup respects your existing configuration philosophy:
+- *Non-intrusive*: Uses your established =vertico/consult= stack without shadowing bindings.
+- *Fast*: Leverages =fd= and =ripgrep= (written in Rust) rather than Emacs' native =find= or =grep=.
+- *Consistent*: The =hydra= menu follows the same color-coding and structure as your other =C-c= menus.
+- *Maintainable*: Soft dependencies (dired-filter, dired-details) are declared but not required, keeping the closure small.
+
+* License
+
+This configuration is released into the public domain. Use it freely for Torah study and scholarship.

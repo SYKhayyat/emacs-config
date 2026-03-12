@@ -1,10 +1,39 @@
 ;;; -*- coding: utf-8; mode: lisp-data -*-
-(("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/e_kodshim/b_menachos/six_menachos.org"
+(("/home/shaul/.emacs.d/readMeSeforim.org" . 5424)
+ ("/home/shaul/.emacs.d/readMe.org" . 41709)
+ ("/home/shaul/.emacs.d/config.org" . 100986)
+ ("/home/shaul/Downloads/temp/threads.org" . 8574)
+ ("/home/shaul/Downloads/temp/threads2.org" . 9274)
+ ("/home/shaul/Downloads/badbm/lcmbadbm/src/edu/touro/mco152/bm/ui/package-info.java"
+  . 271)
+ ("/home/shaul/Documents/org/inbox.org" . 34)
+ ("/home/shaul/config/configuration.nix" . 613)
+ ("/home/shaul/config/seforim.nix" . 1493)
+ ("/home/shaul/Documents/seforim/תלמוד בבלי/סדר זרעים/"
+  (dired-filename
+   . "/home/shaul/Documents/seforim/תלמוד בבלי/סדר זרעים/ברכות.org"))
+ ("/home/shaul/Documents/seforim/תלמוד בבלי/"
+  (dired-filename
+   . "/home/shaul/Documents/seforim/תלמוד בבלי/סדר זרעים"))
+ ("/home/shaul/Documents/otzarias/html2org.py" . 8496)
+ ("/home/shaul/Documents/otzarias/html2org_combined.py" . 9319)
+ ("/home/shaul/Documents/recents/bekius.org" . 2122)
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/b_moed/b_eiruvin/six_eiruvin.org"
+  . 42798)
+ ("/home/shaul/.config/libreoffice/4/user/backup/six_eiruvin.docx.bak"
+  . 154)
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/e_kodshim/b_menachos/six_menachos.org"
   . 23984)
  ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/e_sichsa_deshai/b_moed_sichsa_deshai/i_taanis/taanis_yerushalmi.org"
-  . 11463)
- ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/b_moed/b_eiruvin/six_eiruvin.org"
-  . 39482)
+  . 11658)
+ ("/home/shaul/Downloads/badbm/lcmbadbm/src/edu/touro/mco152/bm/Util.java"
+  . 330)
+ ("/home/shaul/Downloads/badbm/lcmbadbm/src/edu/touro/mco152/bm/DiskMark.java"
+  . 1391)
+ ("/home/shaul/Downloads/badbm/lcmbadbm/src/edu/touro/mco152/bm/App.java"
+  . 8315)
+ ("/home/shaul/Documents/siach_shai/b_typed/b_shiur/d_halacha/a_semicha/semicha_shiurim.org"
+  . 30444)
  ("/home/shaul/Documents/siach_shai/b_typed/b_shiur/d_halacha/a_semicha/udder.org"
   . 1072)
  ("/home/shaul/Scripts/rust_plan/Nexus/nexus/src/main.rs" . 90)

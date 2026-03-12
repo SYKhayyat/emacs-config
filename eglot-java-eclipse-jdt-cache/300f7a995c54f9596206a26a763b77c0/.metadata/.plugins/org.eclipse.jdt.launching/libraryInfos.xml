@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<libraryInfos>
+    <libraryInfo home="/nix/store/wrf2p3qb5sycka2y4nnl7pdm8h6zpcin-openjdk-21.0.10+7/lib/openjdk" version="21.0.10"/>
+    <libraryInfo home="/nix/store/wrf2p3qb5sycka2y4nnl7pdm8h6zpcin-openjdk-21.0.10+7" version="21.0.10">
+        <bootpath>
+            <entry path="null"/>
+        </bootpath>
+        <extensionDirs>
+            <entry path="null"/>
+        </extensionDirs>
+        <endorsedDirs>
+            <entry path="null"/>
+        </endorsedDirs>
+    </libraryInfo>
+</libraryInfos>

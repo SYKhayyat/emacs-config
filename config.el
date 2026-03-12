@@ -4,6 +4,9 @@
 ;; Disable package.el in favor of use-package (built-in Emacs 29+)
 (setq package-enable-at-startup t)
 
+;; Silence harmless async native-compilation warnings
+(setq native-comp-async-report-warnings-errors nil)
+
 (require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                          ("melpa-stable" . "https://stable.melpa.org/packages/")
@@ -288,7 +291,10 @@ words valid in either language should be added to personal dict."
          ("M-s r" . consult-ripgrep)
          ("M-s f" . consult-find)
          ("C-x r b" . consult-bookmark)
-         ("M-y" . consult-yank-pop)))
+         ("M-y" . consult-yank-pop))
+  :config
+  ;; Use `fd` for faster consult-find
+  (setq consult-find-command "fd --color=never --full-path ARG OPTS"))
 
 (use-package corfu
   :custom
@@ -298,24 +304,6 @@ words valid in either language should be added to personal dict."
   (corfu-auto-prefix 2)
   :init
   (global-corfu-mode))
-
-(use-package embark
-  :bind
-  (("C-." . embark-act)
-   ("C-;" . embark-dwim)
-   ("C-h B" . embark-bindings))
-  :init
-  (setq prefix-help-command #'embark-prefix-help-command))
-
-(use-package embark-consult
-  :after (embark consult)
-  :hook
-  (embark-collect-mode . consult-preview-at-point-mode))
-
-(use-package ace-window
-  :bind ("M-o" . ace-window)
-  :config
-  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
 
 (use-package winner
   :ensure nil
@@ -359,8 +347,10 @@ words valid in either language should be added to personal dict."
 
 (use-package consult-projectile
   :after (consult projectile)
-  :bind (("C-c p f" . consult-projectile-find-file)
-         ("C-c p s" . consult-projectile-switch-project)))
+  :bind (:map projectile-command-map
+              ("f" . consult-projectile-find-file)
+              ("p" . consult-projectile-switch-project)
+              ("s" . consult-projectile-switch-project)))
 
 (use-package undo-tree
   :diminish undo-tree-mode
@@ -509,34 +499,62 @@ $0"))))
   :commands (dired dired-jump)
   :bind (("C-x C-j" . dired-jump))
   :config
-  (setq dired-listing-switches "-agho --group-directories-first")
+  (setq dired-listing-switches "-alh --group-directories-first")
   (setq dired-dwim-target t)
   (setq dired-recursive-copies 'always)
   (setq dired-recursive-deletes 'always)
-  (setq delete-by-moving-to-trash t))
+  (setq delete-by-moving-to-trash t)
+  (put 'dired-find-alternate-file 'disabled nil))
 
-;; Single buffer dired navigation (built-in alternative)
-(with-eval-after-load 'dired
-  (defun my/dired-single-buffer ()
-    "Open file/directory in same buffer."
+(use-package dirvish
+  :ensure t
+  :init
+  (dirvish-override-dired-mode)
+
+  :config
+  ;; Shared defaults
+  (setq dirvish-reuse-session t)
+  (setq dirvish-show-hidden-files nil)
+  (setq dirvish-preview-dispatchers nil)
+
+  ;; Track mode
+  (defvar my/dirvish-current-mode 'pretty)
+
+  ;; Pretty mode
+  (defun my/dirvish-apply-pretty ()
+    (setq dirvish-attributes
+          '(vc-state subtree-state collapse file-time file-size)))
+
+  ;; Ultra mode
+  (defun my/dirvish-apply-ultra ()
+    (setq dirvish-attributes
+          '(subtree-state)))
+
+  ;; Toggle
+  (defun my/dirvish-toggle-mode ()
     (interactive)
-    (let ((file (dired-get-file-for-visit)))
-      (if (file-directory-p file)
-          (find-alternate-file file)
-        (find-file file))))
+    (setq my/dirvish-current-mode
+          (if (eq my/dirvish-current-mode 'pretty)
+              'ultra
+            'pretty))
+    (if (eq my/dirvish-current-mode 'pretty)
+        (progn
+          (my/dirvish-apply-pretty)
+          (message "Dirvish: Pretty mode"))
+      (my/dirvish-apply-ultra)
+      (message "Dirvish: ULTRA mode"))
+    (revert-buffer))
 
-  (defun my/dired-single-up-directory ()
-    "Go up directory in same buffer."
-    (interactive)
-    (find-alternate-file ".."))
+  ;; Apply default when entering Dirvish
+  (add-hook 'dirvish-mode-hook
+            (lambda ()
+              (if (eq my/dirvish-current-mode 'pretty)
+                  (my/dirvish-apply-pretty)
+                (my/dirvish-apply-ultra))))
 
-  (define-key dired-mode-map (kbd "RET") 'my/dired-single-buffer)
-  (define-key dired-mode-map (kbd "^") 'my/dired-single-up-directory))
-
-(use-package dired-hide-dotfiles
-  :hook (dired-mode . dired-hide-dotfiles-mode)
-  :bind (:map dired-mode-map
-              ("." . dired-hide-dotfiles-mode)))
+  ;; Toggle key
+  (define-key dirvish-mode-map (kbd "C-c d m")
+    #'my/dirvish-toggle-mode))
 
 ;; Fix RTL direction in Org footnotes
 ;; Footnotes start with [fn:N] which is LTR, causing paragraph to be LTR
@@ -1521,6 +1539,104 @@ $0"))))
     (search-backward "\\localfootnote{}")
     (forward-char 15)))
 
+;; typst-ts-mode should be installed via package-vc or manually
+(when (package-installed-p 'typst-ts-mode)
+  (require 'typst-ts-mode nil t))
+
+;; Fallback: define basic typst-mode if typst-ts-mode not available
+(unless (fboundp 'typst-ts-mode)
+  (define-derived-mode typst-mode text-mode "Typst"
+    "Major mode for editing Typst files."
+    (setq-local comment-start "// ")
+    (setq-local comment-end "")))
+
+;; Set up file association
+(add-to-list 'auto-mode-alist '("\\.typ\\'" . (lambda ()
+                                                 (if (fboundp 'typst-ts-mode)
+                                                     (typst-ts-mode)
+                                                   (typst-mode)))))
+
+;; RTL and electric pair setup
+(defun my/typst-mode-setup ()
+  "Setup for Typst modes."
+  (setq bidi-paragraph-direction 'right-to-left)
+  (electric-pair-local-mode 1))
+
+(add-hook 'typst-ts-mode-hook 'my/typst-mode-setup)
+(add-hook 'typst-mode-hook 'my/typst-mode-setup)
+
+;; Compilation functions
+(defun my/typst-compile ()
+  "Compile current Typst file."
+  (interactive)
+  (let ((file (buffer-file-name)))
+    (compile (format "typst compile %s" (shell-quote-argument file)))))
+
+(defun my/typst-watch ()
+  "Start Typst watch mode for live preview."
+  (interactive)
+  (let ((file (buffer-file-name)))
+    (async-shell-command
+     (format "typst watch %s" (shell-quote-argument file)))))
+
+(defun my/typst-view ()
+  "View compiled PDF."
+  (interactive)
+  (let* ((file (buffer-file-name))
+         (pdf (concat (file-name-sans-extension file) ".pdf")))
+    (if (file-exists-p pdf)
+        (find-file-other-window pdf)
+      (message "PDF not found. Compile first."))))
+
+;; Hebrew setup helper
+(defun my/insert-typst-hebrew-preamble ()
+  "Insert Typst Hebrew preamble."
+  (interactive)
+  (insert "#set text(lang: \"he\", font: \"David CLM\")\n")
+  (insert "#set page(flipped: true)\n")
+  (insert "#set heading(numbering: \"1.1.1\")\n\n"))
+
+;; Visual nested footnote helper
+(defun my/typst-insert-nested-footnote-helper ()
+  "Insert Typst visual nested footnote helper function."
+  (interactive)
+  (insert "#let subnote(body, notes) = footnote[\n")
+  (insert "  #body\n")
+  (insert "  #if notes != none [\n")
+  (insert "    #v(0.5em)\n")
+  (insert "    #line(length: 50%, stroke: 0.5pt)\n")
+  (insert "    #v(0.3em)\n")
+  (insert "    #set text(size: 0.85em)\n")
+  (insert "    #notes\n")
+  (insert "  ]\n")
+  (insert "]\n\n"))
+
+;; Keybindings via hook (using C-c t prefix to avoid conflicts)
+(defun my/typst-keybindings ()
+  "Set Typst keybindings."
+  (local-set-key (kbd "C-c C-c") 'my/typst-compile)
+  (local-set-key (kbd "C-c C-w") 'my/typst-watch)
+  (local-set-key (kbd "C-c C-v") 'my/typst-view)
+  (local-set-key (kbd "C-c t h") 'my/insert-typst-hebrew-preamble)
+  (local-set-key (kbd "C-c t f") 'my/typst-insert-nested-footnote-helper))
+
+(add-hook 'typst-ts-mode-hook 'my/typst-keybindings)
+(add-hook 'typst-mode-hook 'my/typst-keybindings)
+
+;; Eglot LSP support
+(with-eval-after-load 'eglot
+  (when (executable-find "tinymist")
+    (add-to-list 'eglot-server-programs '(typst-ts-mode . ("tinymist")))
+    (add-to-list 'eglot-server-programs '(typst-mode . ("tinymist")))))
+
+(use-package pdf-tools
+  :mode ("\\.pdf\\'" . pdf-view-mode)
+  :config
+  (pdf-tools-install)
+  (setq pdf-view-display-size 'fit-page)
+  (setq pdf-view-continuous t)
+  (add-hook 'pdf-view-mode-hook (lambda () (pdf-view-midnight-minor-mode 1))))
+
 (use-package citar
   :custom
   (citar-bibliography '("~/Documents/bibliography.bib"))
@@ -2012,6 +2128,286 @@ _b_: ← Back   _q_: quit
 (add-hook 'org-mode-hook
           (lambda ()
             (add-hook 'after-save-hook #'my/org-babel-tangle-config nil t)))
+
+(defgroup seforim nil
+  "Seforim library configuration."
+  :group 'applications
+  :prefix "seforim-")
+
+(defcustom seforim-directory (expand-file-name "~/Documents/seforim/")
+  "Root directory of the seforim library."
+  :type 'directory
+  :group 'seforim)
+
+(defcustom seforim-file-extensions '("org" "txt" "md")
+  "File extensions to include in searches."
+  :type '(repeat string)
+  :group 'seforim)
+
+;; Ensure the seforim directory exists to avoid startup errors
+(unless (file-exists-p seforim-directory)
+  (make-directory seforim-directory t))
+
+(require 'cl-lib)
+
+(use-package consult
+  :ensure t)
+
+(use-package hydra
+  :ensure t)
+
+(defun seforim--executable-p (name)
+  "Return t if NAME is an executable in PATH."
+  (executable-find name))
+
+(defun seforim--check-tools ()
+  "Return alist of available tools."
+  `((plocate . ,(seforim--executable-p "plocate"))
+    (recoll . ,(seforim--executable-p "recoll"))
+    (recollindex . ,(seforim--executable-p "recollindex"))
+    (ripgrep . ,(seforim--executable-p "rg"))
+    (fd . ,(seforim--executable-p "fd"))))
+
+(defun seforim-find ()
+  "Find a sefer by filename. Uses plocate (indexed) with fd fallback."
+  (interactive)
+  (if (seforim--executable-p "plocate")
+      (seforim--find-plocate)
+    (seforim--find-fd)))
+
+(defun seforim--find-plocate ()
+  "Find sefer using plocate index."
+  (let* ((pattern (read-string "Find sefer: "))
+         (regex (format "%s.*\\.org$" (regexp-quote seforim-directory)))
+         (cmd (format "plocate -i -r '%s' 2>/dev/null" regex))
+         (output (shell-command-to-string cmd))
+         (all-files (cl-remove-if #'string-empty-p (split-string output "\n")))
+         (matches (cl-remove-if-not
+                   (lambda (f) (string-match-p (regexp-quote pattern) f))
+                   all-files)))
+    (if matches
+        (find-file (completing-read "Select: " matches nil t))
+      (if all-files
+          (find-file (completing-read "All seforim: " all-files nil t))
+        (user-error "No seforim found")))))
+
+(defun seforim--find-fd ()
+  "Find sefer using fd."
+  (let* ((pattern (read-string "Find sefer: "))
+         (cmd (format "fd -t f -e org -i '%s' '%s' 2>/dev/null"
+                      pattern seforim-directory))
+         (output (shell-command-to-string cmd))
+         (files (cl-remove-if #'string-empty-p (split-string output "\n"))))
+    (if files
+        (find-file (completing-read "Select: " files nil t))
+      (user-error "No seforim found matching '%s'" pattern))))
+
+(defun seforim-find-fuzzy ()
+  "Find sefer using consult-fd for interactive fuzzy matching."
+  (interactive)
+  (let ((default-directory seforim-directory)
+        (consult-fd-args '("fd" "--color=never" "-i" "-t" "f" "-e" "org")))
+    (call-interactively #'consult-fd)))
+
+(defun seforim-search ()
+  "Search contents of all seforim. Uses recoll (indexed) with ripgrep fallback."
+  (interactive)
+  (if (seforim--executable-p "recoll")
+      (seforim--search-recoll seforim-directory)
+    (seforim--search-ripgrep seforim-directory)))
+
+(defun seforim--search-recoll (directory)
+  "Search DIRECTORY using recoll."
+  (let* ((query (read-string "Search: "))
+         (dir-filter (format "dir:\"%s\"" (expand-file-name directory)))
+         (cmd (format "recoll -t -q '%s %s' 2>/dev/null" query dir-filter))
+         (output (shell-command-to-string cmd))
+         (results (seforim--parse-recoll output)))
+    (if results
+        (let* ((selection (completing-read
+                           (format "「%s」 " query) results nil t))
+               (file (get-text-property 0 'file selection)))
+          (find-file file)
+          (goto-char (point-min))
+          (when (search-forward query nil t)
+            (when (derived-mode-p 'org-mode) (org-reveal))
+            (recenter)))
+      (user-error "No results for '%s'" query))))
+
+(defun seforim--parse-recoll (output)
+  "Parse recoll OUTPUT into candidates."
+  (let ((lines (split-string output "\n" t))
+        (results '())
+        (seen (make-hash-table :test 'equal)))
+    (dolist (line lines)
+      (when (string-match "^/\\([^ ]+\\)" line)
+        (let ((file (concat "/" (match-string 1 line))))
+          (when (and (string-suffix-p ".org" file)
+                     (file-exists-p file)
+                     (string-prefix-p (expand-file-name seforim-directory)
+                                      (expand-file-name file))
+                     (not (gethash file seen)))
+            (puthash file t seen)
+            (let ((display (file-relative-name file seforim-directory)))
+              (push (propertize display 'file file) results))))))
+    (nreverse results)))
+
+(defun seforim--search-ripgrep (directory)
+  "Search DIRECTORY using ripgrep."
+  (let ((consult-ripgrep-args
+         (concat "rg "
+                 "--null --line-buffered --color=never "
+                 "--line-number --smart-case --no-heading "
+                 "--max-columns=1000 --max-columns-preview "
+                 "--type=org "
+                 "--threads=" (number-to-string (num-processors)) " "
+                 "-- ")))
+    (consult-ripgrep directory)))
+
+(defun seforim-search-ripgrep ()
+  "Search all seforim using ripgrep directly."
+  (interactive)
+  (seforim--search-ripgrep seforim-directory))
+
+(defun seforim-search-current-dir ()
+  "Search in current file's directory."
+  (interactive)
+  (unless buffer-file-name
+    (user-error "Not visiting a file"))
+  (let ((dir (file-name-directory buffer-file-name)))
+    (if (seforim--executable-p "recoll")
+        (seforim--search-recoll dir)
+      (seforim--search-ripgrep dir))))
+
+(defun seforim-search-choose-dir ()
+  "Choose a directory then search in it."
+  (interactive)
+  (let ((dir (read-directory-name "Search in: " seforim-directory)))
+    (if (seforim--executable-p "recoll")
+        (seforim--search-recoll dir)
+      (seforim--search-ripgrep dir))))
+
+(defun seforim-outline ()
+  "Jump to heading in current file."
+  (interactive)
+  (consult-outline))
+
+(defun seforim-browse ()
+  "Open Dirvish at the seforim root."
+  (interactive)
+  (dirvish seforim-directory))
+
+(defun seforim-browse-current ()
+  "Open Dirvish in current file's directory."
+  (interactive)
+  (dirvish (if buffer-file-name
+               (file-name-directory buffer-file-name)
+             seforim-directory)))
+
+(defun seforim-toggle-sidebar ()
+  "Toggle Dirvish sidebar scoped to the Seforim directory."
+  (interactive)
+  (dirvish-side seforim-directory))
+
+(defun seforim-reindex ()
+  "Rebuild all indexes."
+  (interactive)
+  (when (seforim--executable-p "recollindex")
+    (message "Starting recoll indexing...")
+    (start-process "recollindex" "*seforim-index*" "recollindex"))
+  (message "Updating plocate index (may need sudo)...")
+  (start-process-shell-command "updatedb" "*seforim-index*" "sudo updatedb")
+  (display-buffer "*seforim-index*"))
+
+(defun seforim-reindex-recoll ()
+  "Rebuild recoll index only."
+  (interactive)
+  (if (seforim--executable-p "recollindex")
+      (progn
+        (start-process "recollindex" "*seforim-index*" "recollindex")
+        (display-buffer "*seforim-index*"))
+    (user-error "recollindex not found")))
+
+(defun seforim-status ()
+  "Show status of tools and indexes."
+  (interactive)
+  (with-current-buffer (get-buffer-create "*Seforim Status*")
+    (erase-buffer)
+    (insert "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+    (insert "           📚 SEFORIM STATUS\n")
+    (insert "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n")
+
+    (insert "TOOLS:\n")
+    (dolist (tool (seforim--check-tools))
+      (insert (format "  %-12s %s\n"
+                      (car tool)
+                      (if (cdr tool) "✓" "✗"))))
+
+    (insert "\nINDEXES:\n")
+    (let ((recoll-db (expand-file-name "~/.recoll/xapiandb")))
+      (insert (format "  recoll:      %s\n"
+                      (if (file-directory-p recoll-db) "✓ exists" "✗ missing"))))
+    (insert (format "  plocate:     %s\n"
+                    (if (file-exists-p "/var/lib/plocate/plocate.db")
+                        "✓ exists" "✗ missing")))
+
+    (insert "\nLIBRARY:\n")
+    (insert (format "  path:        %s\n" seforim-directory))
+    (insert (format "  exists:      %s\n"
+                    (if (file-directory-p seforim-directory) "✓" "✗")))
+    (when (file-directory-p seforim-directory)
+      (insert (format "  org files:   %s\n"
+                      (string-trim
+                       (shell-command-to-string
+                        (format "find '%s' -name '*.org' 2>/dev/null | wc -l"
+                                seforim-directory)))))
+      (insert (format "  total size:  %s\n"
+                      (string-trim
+                       (shell-command-to-string
+                        (format "du -sh '%s' 2>/dev/null | cut -f1"
+                                seforim-directory))))))
+
+    (insert "\n[q] close\n")
+    (goto-char (point-min))
+    (local-set-key (kbd "q") #'quit-window)
+    (display-buffer (current-buffer))))
+
+(defhydra seforim-hydra (:color blue :hint nil)
+  "
+┌─────────────────────────────────────────────────────┐
+│                 📚 SEFORIM                          │
+├─────────────────────────────────────────────────────┤
+│ FIND FILE          │ SEARCH TEXT                   │
+│  _f_ find (indexed) │  _s_ search all (indexed)     │
+│  _F_ find (fuzzy)   │  _r_ search all (ripgrep)     │
+│                    │  _c_ search current dir       │
+│                    │  _S_ search choose dir        │
+├─────────────────────────────────────────────────────┤
+│ NAVIGATE           │ MANAGE                        │
+│  _o_ outline        │  _I_ reindex all              │
+│  _t_ toggle sidebar │  _?_ status                   │
+│  _b_ browse root    │                              │
+│  _B_ browse current │                              │
+└─────────────────────────────────────────────────────┘
+                     _q_ quit
+"
+  ("f" seforim-find)
+  ("F" seforim-find-fuzzy)
+  ("s" seforim-search)
+  ("r" seforim-search-ripgrep)
+  ("c" seforim-search-current-dir)
+  ("S" seforim-search-choose-dir)
+  ("o" seforim-outline)
+  ("t" seforim-toggle-sidebar)
+  ("b" seforim-browse)
+  ("B" seforim-browse-current)
+  ("I" seforim-reindex)
+  ("?" seforim-status)
+  ("q" nil))
+
+(global-set-key (kbd "C-c S") #'seforim-hydra/body)
+
+(provide 'seforim)
 
 ;; Speed up rendering
 (setq auto-window-vscroll nil)

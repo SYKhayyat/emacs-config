@@ -1,0 +1,916 @@
+1:
+## The Nix Way: Two Files
+
+```
+~/.config/nixos/
+├── seforim.nix          # System configuration
+└── ...
+
+~/.emacs.d/
+├── seforim.org          # Emacs configuration
+└── ...
+```
+
+---
+
+## File 1: `seforim.nix`
+
+Add to your NixOS configuration (import it in `configuration.nix` or flake):
+
+```nix
+# seforim.nix
+# NixOS module for seforim library infrastructure
+#
+# Usage in configuration.nix:
+#   imports = [ ./seforim.nix ];
+#
+# Usage in flake.nix:
+#   modules = [ ./seforim.nix ];
+
+{ config, pkgs, lib, ... }:
+
+let
+  # Change this to your username
+  username = "shaul";
+
+  # Change this to your seforim path
+  seforimPath = "/home/${username}/Documents/seforim";
+
+  # Recoll configuration
+  recollConf = pkgs.writeText "recoll.conf" ''
+    # Seforim library indexing configuration
+    topdirs = ${seforimPath}
+
+    # Follow symlinks
+    followLinks = 1
+
+    # Index these MIME types
+    indexedmimetypes = text/x-org text/org text/plain text/markdown application/pdf
+
+    # Treat .org as org-mode
+    [ext]
+    org = text/x-org
+
+    # Skip junk directories
+    skippedNames = .git .svn node_modules .cache __pycache__ *.elc *.pyc *.gz *.zip
+
+    # Hebrew + English stemming
+    indexstemminglanguages = hebrew english
+
+    # More context in snippets
+    snippetMaxPosWalk = 1000000
+    maxTermExpand = 10000
+
+    # Handle Hebrew characters properly
+    unac_except_stripping = true
+  '';
+
+  recollMimeview = pkgs.writeText "mimeview" ''
+    [view]
+    text/x-org = emacsclient -n %f
+    text/org = emacsclient -n %f
+    text/plain = emacsclient -n %f
+    application/pdf = emacsclient -n %f
+  '';
+
+in
+{
+  # ===========================================================================
+  # PACKAGES
+  # ===========================================================================
+  environment.systemPackages = with pkgs; [
+    # Core search tools
+    ripgrep
+    fd
+    plocate
+
+    # Full-text indexing
+    recoll
+    xapian
+
+    # For recoll to index various file types
+    poppler_utils    # pdftotext
+    antiword         # .doc
+    catdoc           # .xls
+    unzip            # .docx, .odt
+  ];
+
+  # ===========================================================================
+  # PLOCATE SERVICE (file path indexing)
+  # ===========================================================================
+  services.locate = {
+    enable = true;
+    package = pkgs.plocate;
+    localuser = null;
+    interval = "hourly";
+    pruneBindMounts = true;
+    prunePaths = [
+      "/tmp"
+      "/var/tmp"
+      "/var/cache"
+      "/var/lock"
+      "/var/run"
+      "/var/spool"
+      "/nix/store"
+      "/nix/var"
+      "/home/*/.cache"
+      "/home/*/.local/share/Trash"
+    ];
+  };
+
+  # ===========================================================================
+  # RECOLL SETUP (full-text indexing)
+  # ===========================================================================
+
+  # Create recoll config directory and files for user
+  system.activationScripts.recollConfig = ''
+    mkdir -p /home/${username}/.recoll
+    cp -f ${recollConf} /home/${username}/.recoll/recoll.conf
+    cp -f ${recollMimeview} /home/${username}/.recoll/mimeview
+    chown -R ${username}:users /home/${username}/.recoll
+    chmod 644 /home/${username}/.recoll/recoll.conf
+    chmod 644 /home/${username}/.recoll/mimeview
+  '';
+
+  # Create seforim directory if it doesn't exist
+  system.activationScripts.seforimDir = ''
+    mkdir -p ${seforimPath}
+    chown ${username}:users ${seforimPath}
+  '';
+
+  # ===========================================================================
+  # SYSTEMD USER SERVICE (recoll indexing timer)
+  # ===========================================================================
+  systemd.user.services.recoll-index = {
+    description = "Recoll full-text indexer";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.recoll}/bin/recollindex";
+      Nice = 19;
+      IOSchedulingClass = "idle";
+    };
+  };
+
+  systemd.user.timers.recoll-index = {
+    description = "Run recoll indexing periodically";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnBootSec = "5min";
+      OnUnitActiveSec = "4h";
+      Persistent = true;
+    };
+  };
+}
+```
+
+---
+
+## File 2: `seforim.org`
+
+Put this in `~/.emacs.d/seforim.org` and add to your `init.el`:
+
+```elisp
+;; In init.el, add:
+(org-babel-load-file (expand-file-name "seforim.org" user-emacs-directory))
+```
+
+Or if you use a `config.org` that tangles, just paste the contents there.
+
+```org
+#+TITLE: Seforim Library
+#+AUTHOR: Shaul
+#+PROPERTY: header-args:emacs-lisp :lexical t
+
+* Seforim Library
+
+Complete indexed search system for a 12GB+ Hebrew text library.
+
+| Tool     | Purpose              | Speed    |
+|----------|----------------------|----------|
+| plocate  | Find by filename     | instant  |
+| recoll   | Full-text search     | instant  |
+| ripgrep  | Fallback search      | fast     |
+| fd       | Fallback file find   | fast     |
+
+** Configuration
+
+#+begin_src emacs-lisp
+(defgroup seforim nil
+  "Seforim library configuration."
+  :group 'applications
+  :prefix "seforim-")
+
+(defcustom seforim-directory (expand-file-name "~/Documents/seforim/")
+  "Root directory of the seforim library."
+  :type 'directory
+  :group 'seforim)
+
+(defcustom seforim-file-extensions '("org" "txt" "md")
+  "File extensions to include in searches."
+  :type '(repeat string)
+  :group 'seforim)
+#+end_src
+
+** Dependencies
+
+#+begin_src emacs-lisp
+(require 'cl-lib)
+
+(use-package consult
+  :ensure t)
+
+(use-package dired-subtree
+  :ensure t)
+
+(use-package dired-sidebar
+  :ensure t
+  :after dired-subtree
+  :config
+  (setq dired-sidebar-theme 'nerd)
+  (setq dired-sidebar-use-term-integration t)
+  (add-hook 'dired-sidebar-mode-hook
+            (lambda () (display-line-numbers-mode -1))))
+
+(use-package hydra
+  :ensure t)
+#+end_src
+
+** Core Functions
+*** Executable Checks
+
+#+begin_src emacs-lisp
+(defun seforim--executable-p (name)
+  "Return t if NAME is an executable in PATH."
+  (executable-find name))
+
+(defun seforim--check-tools ()
+  "Return alist of available tools."
+  `((plocate . ,(seforim--executable-p "plocate"))
+    (recoll . ,(seforim--executable-p "recoll"))
+    (recollindex . ,(seforim--executable-p "recollindex"))
+    (ripgrep . ,(seforim--executable-p "rg"))
+    (fd . ,(seforim--executable-p "fd"))))
+#+end_src
+
+*** Find by Filename
+
+#+begin_src emacs-lisp
+(defun seforim-find ()
+  "Find a sefer by filename. Uses plocate (indexed) with fd fallback."
+  (interactive)
+  (if (seforim--executable-p "plocate")
+      (seforim--find-plocate)
+    (seforim--find-fd)))
+
+(defun seforim--find-plocate ()
+  "Find sefer using plocate index."
+  (let* ((pattern (read-string "Find sefer: "))
+         (regex (format "%s.*\\.org$" (regexp-quote seforim-directory)))
+         (cmd (format "plocate -i -r '%s' 2>/dev/null" regex))
+         (output (shell-command-to-string cmd))
+         (all-files (cl-remove-if #'string-empty-p (split-string output "\n")))
+         (matches (cl-remove-if-not
+                   (lambda (f) (string-match-p (regexp-quote pattern) f))
+                   all-files)))
+    (if matches
+        (find-file (completing-read "Select: " matches nil t))
+      (if all-files
+          (find-file (completing-read "All seforim: " all-files nil t))
+        (user-error "No seforim found")))))
+
+(defun seforim--find-fd ()
+  "Find sefer using fd."
+  (let* ((pattern (read-string "Find sefer: "))
+         (cmd (format "fd -t f -e org -i '%s' '%s' 2>/dev/null"
+                      pattern seforim-directory))
+         (output (shell-command-to-string cmd))
+         (files (cl-remove-if #'string-empty-p (split-string output "\n"))))
+    (if files
+        (find-file (completing-read "Select: " files nil t))
+      (user-error "No seforim found matching '%s'" pattern))))
+
+(defun seforim-find-fuzzy ()
+  "Find sefer using consult-fd for interactive fuzzy matching."
+  (interactive)
+  (let ((default-directory seforim-directory)
+        (consult-fd-args '("fd" "--color=never" "-i" "-t" "f" "-e" "org")))
+    (call-interactively #'consult-fd)))
+#+end_src
+
+*** Full-Text Search
+
+#+begin_src emacs-lisp
+(defun seforim-search ()
+  "Search contents of all seforim. Uses recoll (indexed) with ripgrep fallback."
+  (interactive)
+  (if (seforim--executable-p "recoll")
+      (seforim--search-recoll seforim-directory)
+    (seforim--search-ripgrep seforim-directory)))
+
+(defun seforim--search-recoll (directory)
+  "Search DIRECTORY using recoll."
+  (let* ((query (read-string "Search: "))
+         (dir-filter (format "dir:\"%s\"" (expand-file-name directory)))
+         (cmd (format "recoll -t -q '%s %s' 2>/dev/null" query dir-filter))
+         (output (shell-command-to-string cmd))
+         (results (seforim--parse-recoll output)))
+    (if results
+        (let* ((selection (completing-read
+                           (format "「%s」 " query) results nil t))
+               (file (get-text-property 0 'file selection)))
+          (find-file file)
+          (goto-char (point-min))
+          (when (search-forward query nil t)
+            (when (derived-mode-p 'org-mode) (org-reveal))
+            (recenter)))
+      (user-error "No results for '%s'" query))))
+
+(defun seforim--parse-recoll (output)
+  "Parse recoll OUTPUT into candidates."
+  (let ((lines (split-string output "\n" t))
+        (results '())
+        (seen (make-hash-table :test 'equal)))
+    (dolist (line lines)
+      (when (string-match "^/\\([^ ]+\\)" line)
+        (let ((file (concat "/" (match-string 1 line))))
+          (when (and (string-suffix-p ".org" file)
+                     (file-exists-p file)
+                     (string-prefix-p (expand-file-name seforim-directory)
+                                      (expand-file-name file))
+                     (not (gethash file seen)))
+            (puthash file t seen)
+            (let ((display (file-relative-name file seforim-directory)))
+              (push (propertize display 'file file) results))))))
+    (nreverse results)))
+
+(defun seforim--search-ripgrep (directory)
+  "Search DIRECTORY using ripgrep."
+  (let ((consult-ripgrep-args
+         (concat "rg "
+                 "--null --line-buffered --color=never "
+                 "--line-number --smart-case --no-heading "
+                 "--max-columns=1000 --max-columns-preview "
+                 "--type=org "
+                 "--threads=" (number-to-string (num-processors)) " "
+                 "-- ")))
+    (consult-ripgrep directory)))
+
+(defun seforim-search-ripgrep ()
+  "Search all seforim using ripgrep directly."
+  (interactive)
+  (seforim--search-ripgrep seforim-directory))
+#+end_src
+
+*** Directory-Scoped Search
+
+#+begin_src emacs-lisp
+(defun seforim-search-current-dir ()
+  "Search in current file's directory."
+  (interactive)
+  (unless buffer-file-name
+    (user-error "Not visiting a file"))
+  (let ((dir (file-name-directory buffer-file-name)))
+    (if (seforim--executable-p "recoll")
+        (seforim--search-recoll dir)
+      (seforim--search-ripgrep dir))))
+
+(defun seforim-search-choose-dir ()
+  "Choose a directory then search in it."
+  (interactive)
+  (let ((dir (read-directory-name "Search in: " seforim-directory)))
+    (if (seforim--executable-p "recoll")
+        (seforim--search-recoll dir)
+      (seforim--search-ripgrep dir))))
+#+end_src
+
+*** Navigation
+
+#+begin_src emacs-lisp
+(defun seforim-outline ()
+  "Jump to heading in current file."
+  (interactive)
+  (consult-outline))
+
+(defun seforim-browse ()
+  "Open dired at seforim root with sidebar."
+  (interactive)
+  (dired seforim-directory)
+  (dired-hide-details-mode 1)
+  (unless (and (fboundp 'dired-sidebar-showing-sidebar-p)
+               (dired-sidebar-showing-sidebar-p))
+    (dired-sidebar-toggle-sidebar)))
+
+(defun seforim-browse-current ()
+  "Open dired in current file's directory."
+  (interactive)
+  (dired (if buffer-file-name
+             (file-name-directory buffer-file-name)
+           seforim-directory)))
+#+end_src
+
+*** Index Management
+
+#+begin_src emacs-lisp
+(defun seforim-reindex ()
+  "Rebuild all indexes."
+  (interactive)
+  (when (seforim--executable-p "recollindex")
+    (message "Starting recoll indexing...")
+    (start-process "recollindex" "*seforim-index*" "recollindex"))
+  (message "Updating plocate index (may need sudo)...")
+  (start-process-shell-command "updatedb" "*seforim-index*" "sudo updatedb")
+  (display-buffer "*seforim-index*"))
+
+(defun seforim-reindex-recoll ()
+  "Rebuild recoll index only."
+  (interactive)
+  (if (seforim--executable-p "recollindex")
+      (progn
+        (start-process "recollindex" "*seforim-index*" "recollindex")
+        (display-buffer "*seforim-index*"))
+    (user-error "recollindex not found")))
+
+(defun seforim-status ()
+  "Show status of tools and indexes."
+  (interactive)
+  (with-current-buffer (get-buffer-create "*Seforim Status*")
+    (erase-buffer)
+    (insert "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+    (insert "           📚 SEFORIM STATUS\n")
+    (insert "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n")
+
+    (insert "TOOLS:\n")
+    (dolist (tool (seforim--check-tools))
+      (insert (format "  %-12s %s\n"
+                      (car tool)
+                      (if (cdr tool) "✓" "✗"))))
+
+    (insert "\nINDEXES:\n")
+    (let ((recoll-db (expand-file-name "~/.recoll/xapiandb")))
+      (insert (format "  recoll:      %s\n"
+                      (if (file-directory-p recoll-db) "✓ exists" "✗ missing"))))
+    (insert (format "  plocate:     %s\n"
+                    (if (file-exists-p "/var/lib/plocate/plocate.db")
+                        "✓ exists" "✗ missing")))
+
+    (insert "\nLIBRARY:\n")
+    (insert (format "  path:        %s\n" seforim-directory))
+    (insert (format "  exists:      %s\n"
+                    (if (file-directory-p seforim-directory) "✓" "✗")))
+    (when (file-directory-p seforim-directory)
+      (insert (format "  org files:   %s\n"
+                      (string-trim
+                       (shell-command-to-string
+                        (format "find '%s' -name '*.org' 2>/dev/null | wc -l"
+                                seforim-directory)))))
+      (insert (format "  total size:  %s\n"
+                      (string-trim
+                       (shell-command-to-string
+                        (format "du -sh '%s' 2>/dev/null | cut -f1"
+                                seforim-directory))))))
+
+    (insert "\n[q] close\n")
+    (goto-char (point-min))
+    (local-set-key (kbd "q") #'quit-window)
+    (display-buffer (current-buffer))))
+#+end_src
+
+** Hydra Menu
+
+#+begin_src emacs-lisp
+(defhydra seforim-hydra (:color blue :hint nil)
+  "
+┌─────────────────────────────────────────────────────┐
+│                 📚 SEFORIM                          │
+├─────────────────────────────────────────────────────┤
+│ FIND FILE          │ SEARCH TEXT                   │
+│  _f_ find (indexed) │  _s_ search all (indexed)     │
+│  _F_ find (fuzzy)   │  _r_ search all (ripgrep)     │
+│                    │  _c_ search current dir       │
+│                    │  _S_ search choose dir        │
+├─────────────────────────────────────────────────────┤
+│ NAVIGATE           │ MANAGE                        │
+│  _o_ outline        │  _I_ reindex all              │
+│  _t_ toggle sidebar │  _?_ status                   │
+│  _b_ browse root    │                              │
+│  _B_ browse current │                              │
+└─────────────────────────────────────────────────────┘
+                     _q_ quit
+"
+  ("f" seforim-find)
+  ("F" seforim-find-fuzzy)
+  ("s" seforim-search)
+  ("r" seforim-search-ripgrep)
+  ("c" seforim-search-current-dir)
+  ("S" seforim-search-choose-dir)
+  ("o" seforim-outline)
+  ("t" dired-sidebar-toggle-sidebar)
+  ("b" seforim-browse)
+  ("B" seforim-browse-current)
+  ("I" seforim-reindex)
+  ("?" seforim-status)
+  ("q" nil))
+
+(global-set-key (kbd "C-c S") #'seforim-hydra/body)
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'seforim)
+#+end_src
+```
+
+---
+
+## Usage
+
+### NixOS Setup
+
+```bash
+# 1. Add seforim.nix to your config
+cd /etc/nixos  # or your flake directory
+# Copy seforim.nix there
+
+# 2. Import in configuration.nix
+#    imports = [ ./seforim.nix ];
+
+# 3. Rebuild
+sudo nixos-rebuild switch
+
+# 4. Build initial indexes
+sudo updatedb                    # plocate (instant)
+recollindex                      # recoll (few minutes first time)
+```
+
+### Emacs Setup
+
+```bash
+# Copy seforim.org to emacs directory
+cp seforim.org ~/.emacs.d/
+
+# Add to init.el:
+echo '(org-babel-load-file "~/.emacs.d/seforim.org")' >> ~/.emacs.d/init.el
+```
+
+### Keybindings
+
+| Key | Action | Index |
+|-----|--------|-------|
+| `C-c S f` | Find by filename | plocate |
+| `C-c S F` | Find fuzzy | fd |
+| `C-c S s` | Search all | recoll |
+| `C-c S r` | Search all | ripgrep |
+| `C-c S c` | Search current dir | recoll |
+| `C-c S S` | Search choose dir | recoll |
+| `C-c S o` | Outline | — |
+| `C-c S t` | Toggle sidebar | — |
+| `C-c S b` | Browse root | — |
+| `C-c S I` | Reindex | — |
+| `C-c S ?` | Status | — |
+
+---
+
+## Verify
+
+```bash
+# Check tools
+which plocate recoll rg fd
+
+# Check plocate
+locate Bereishis.org
+
+# Check recoll
+recoll -t -q "בראשית"
+```
+
+In Emacs:
+
+```
+C-c S ?    → Status panel shows all green checkmarks
+C-c S f    → Instant filename search
+C-c S s    → Instant full-text search
+```
+
+
+2:
+Below are two self‑contained files you can drop into your NixOS/Home‑Manager setup:
+
+* **`flake.nix`** – a tiny flake that pulls in the required packages, enables the Emacs distribution you already use, configures **notmuch** (via Home‑Manager’s `programs.notmuch` module), sets up a **plocate** update timer, and makes the seforim directory available as a maildir.
+* **`seforim.el`** – the Emacs‑Lisp snippet (you can also keep it as an Org‑mode block and tangle it) that gives you the *plocate*‑backed file‑path search, the *notmuch*‑backed full‑text search, the outline helper, the dired‑sidebar integration and the `C‑c S` hydra you asked for.
+
+You can keep the files wherever you like; the example assumes they live in `~/.config/seforim/flake.nix` and `~/.config/seforim/seforim.el`.
+After you have the flake, run `home-manager switch -f ~/.config/seforim/flake.nix` (or add the flake as an input to your existing flake and import the home configuration) and the whole stack will be ready.
+
+---
+
+## 1️⃣ `flake.nix`
+
+```nix
+{
+  description = "Home‑Manager configuration for the Seforim library";
+
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    home-manager.url = "github:nix-community/home-manager";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+  };
+
+  outputs = { self, nixpkgs, home-manager }:
+    let
+      system = "x86_64-linux";
+      pkgs   = import nixpkgs { inherit system; };
+    in
+    {
+      homeConfigurations."shaul@myhost" = home-manager.lib.homeManagerConfiguration {
+        pkgs = pkgs;
+        modules = [
+          # -------------------------------------------------
+          # 1. Basic Emacs setup (keep your existing config)
+          # -------------------------------------------------
+          { programs.emacs.enable = true;
+            # Use your own Emacs config – replace the path if you keep it elsewhere.
+            programs.emacs.extraPackages = epkgs: with epkgs; [
+              vertico
+              consult
+              orderless
+              marginalia              hydra
+              dired-sidebar
+              all-the-icons
+              notmuch   # Emacs interface to notmuch
+            ];
+            # If you keep a separate init.el, you can load it here:
+            programs.emacs.init = ''
+              (load-file "~/.config/seforim/seforim.el")
+            '';
+          }
+
+          # -------------------------------------------------
+          # 2. notmuch – maildir pointing at your seforim tree
+          # -------------------------------------------------
+          { programs.notmuch.enable = true;
+            programs.notmuch.maildir.seforim = "/home/shaul/Documents/seforim";
+            # Ignore the usual VCS/backup/binary cruft – feel free to extend.
+            programs.notmuch.ignore = [
+              ".git"
+              ".gitignore"
+              ".rgignore"
+              "*~"
+              "#*#"
+              "*.org~"
+              "*.tmp"
+              "*.bak"
+              "*.pdf"
+              "*.epub"
+              "*.mobi"
+            ];
+            # Optional: show the seforim tag in the summary line
+            programs.notmuch.notmuchrc.extraConfig = ''
+              [new]
+                # tag incoming mail with the maildir name (seforim)
+                # (not strictly needed for plain‑text files, but harmless)
+                tags = seforim
+            '';
+          }
+
+          # -------------------------------------------------
+          # 3. plocate – filename index (super‑fast path search)
+          # -------------------------------------------------
+          { programs.plocate.enable = true;
+            # Automatically keep the plocate db up‑to‑date (once a day)
+            programs.plocate.enableAutoUpdate = true;
+          }
+
+          # -------------------------------------------------          # 4. Systemd user timer to keep notmuch fresh
+          # -------------------------------------------------
+          { services.user.systemd.timers."notmuch-seforim.timer" = {
+                description = "Daily notmuch index update for seforim library";
+                wantedBy = [ "timers.target" ];
+                partOf = [ "notmuch-seforim.service" ];
+                timerConfig.OnCalendar = "daily";
+                timerConfig.Persistent = true;
+              };
+            services.user.systemd.services."notmuch-seforim.service" = {
+                description = "Run notmuch new on the seforim maildir";
+                serviceConfig.Type = "oneshot";
+                serviceConfig.ExecStart = "${pkgs.notmuch}/bin/notmuch new";
+              };
+          }
+
+          # -------------------------------------------------
+          # 5. Make sure the seforim directory exists (optional safety net)
+          # -------------------------------------------------
+          { home.file."/home/shaul/Documents/seforim".source = ./.;
+            home.file."/home/shaul/Documents/seforim".type = "symlink";
+            # If you already have the directory elsewhere, you can just
+            # comment this out – the timer and notmuch will work as long as
+            # the path exists.
+          }
+        ];
+      };
+    };
+}
+```
+
+### What the flake does
+
+| Section | Purpose |
+|--------|---------|
+| **Emacs** | Installs Emacs with the exact packages you already use (`vertico`, `consult`, `orderless`, `marginalia`, `hydra`, `dired-sidebar`, `all-the-icons`, `notmuch`). Your personal `init.el` (or any other loader) is invoked via `programs.emacs.init`. |
+| **notmuch** | Declares a maildir called `seforim` that points at `~/Documents/seforim`. All files under that tree are automatically tagged with `seforim`. The `ignore` list mirrors a typical `.rgignore` so wasted work is avoided. |
+| **plocate** | Installs `plocate` and enables its daily auto‑update timer (so `locate`/`plocate` stays fresh). |
+| **notmuch timer** | A `systemd --user` timer that runs `notmuch new` once a day (adjust `OnCalendar` if you prefer a different cadence). The first run builds the Xapian index; later runs are incremental. |
+| **Directory safety** | (optional) creates a symlink at `~/Documents/seforim` pointing to the flake directory – replace or delete this if you already keep the library elsewhere. |
+
+> **Tip:** If you already have a Home‑Manager configuration, you can simply copy the relevant blocks (`programs.emacs`, `programs.notmuch`, `programs.plocate`, the `services.user.systemd.*` timer/service, and the optional home.file entry) into your existing `home.nix` or flake module.
+
+---
+
+## 2️⃣ `seforim.el`
+
+Save this as `~/.config/seforim/seforim.el` (or tangle it from an Org file if you prefer).
+It assumes the packages listed in the flake are available.
+
+```elisp
+;;; seforim.el --- Seforim library integration for Emacs  -*- lexical-binding: t; -*-
+
+;; ----------------------------------------------------------------------
+;; 0.  User‑configurable variables
+;; ----------------------------------------------------------------------
+(defvar my/seforim-directory "~/Documents/seforim/"
+  "Root directory of the hierarchical seforim library.")
+;; Make sure the directory exists (no‑op if it already does)
+(unless (file-exists-p my/seforim-directory)
+  (make-directory my/seforim-directory t))
+
+;; ----------------------------------------------------------------------
+;; 1.  Tweak consult so we don’t start a search after a single keystroke
+;; ----------------------------------------------------------------------
+(with-eval-after-load 'consult
+  (setq consult-async-min-input 3)          ; wait for ≥3 chars
+  (setq consult-async-refresh-delay 0.2)   ; small debounce while typing)
+
+;; ----------------------------------------------------------------------
+;; 2.  File‑path search – plocate (fallback to fd)
+;; ----------------------------------------------------------------------
+(defun my/seforim-find-sefer ()
+  "Fuzzy‑find a sefer file anywhere in the hierarchy.
+   Uses `plocate` for instantaneous name look‑ups; falls back to `fd`."
+  (interactive)
+  (let* ((default-directory my/seforim-directory)
+         (plocate-cmd (format "plocate --regex --limit 0 --null '%s'"
+                              ;; Empty pattern → list everything under $PWD
+                              "")))
+    (cond
+     ((executable-find "plocate")
+      (consult-find :command plocate-cmd))
+     (t
+      ;; Fallback to your existing fd‑based path search
+      (consult-find)))))
+
+;; ----------------------------------------------------------------------
+;; 3.  notmuch‑based full‑text search
+;; ----------------------------------------------------------------------
+(defun my/seforim-notmuch-ensure-indexed ()
+  "Run `notmuch new` if the index looks stale.
+   Called automatically the first time you search."
+  (when (not (file-exists-p (expand-file-name "~/.notmuch/config")))
+    (error "Notmuch not configured. Run `notmuch setup` first."))
+  (let ((db-age   (nth 5 (file-attributes (expand-file-name "~/.notmuch/xapian"))))
+        (newest-age (apply 'max
+                           (mapcar (lambda (f) (nth 5 (file-attributes f)))
+                                   (directory-files-recursively
+                                    my/seforim-directory ".*\\.org\\'")))))
+    (when (or (< db-age 0) (< db-age newest-age))
+      (notmuch new)
+      (notmuch tag +seforim -- path:my/seforim-directory/*)
+      (message "Seforim re‑indexed with notmuch"))))
+
+(defun my/seforim-search-all ()
+  "Full‑text search across ALL seforim using notmuch.
+   Returns **every** match (no artificial caps)."
+  (interactive)
+  (my/seforim-notmuch-ensure-indexed)
+  (notmuch-search "tag:seforim"))
+
+(defun my/seforim-search-current-dir ()
+  "Search text limited to the directory containing the current buffer.
+   Falls back to a plain `rg` scan if the buffer is not visiting a file."
+  (interactive)
+  (if buffer-file-name
+      (let* ((dir (file-name-directory buffer-file-name))
+             ;; Make the path relative to the maildir root so we can use the
+             ;; `path:` field that notmuch understands.
+             (rel (replace-regexp-in-string
+                   (format "^%s/" my/seforim-directory) "" dir)))
+        (my/seforim-notmuch-ensure-indexed)
+        (notmuch-search (format "tag:seforim path:%s" rel)))
+    (message "Not visiting a file!")))
+
+;; ----------------------------------------------------------------------
+;; 4.  Outline navigation (uses consult-outline)
+;; ----------------------------------------------------------------------
+(defun my/seforim-outline ()
+  "Jump to a specific Perek/Pasuk/Mishnah in the current sefer."
+  (interactive)
+  (consult-outline))
+
+;; ----------------------------------------------------------------------
+;; 5.  Dired sidebar (tree view) – unchanged from your original setup
+;; ----------------------------------------------------------------------
+(use-package dired-sidebar
+  :bind (("C-x C-n" . dired-sidebar-toggle-sidebar))
+  :config  (push 'toggle-window-split dired-sidebar-toggle-hidden-commands)
+  (push 'toggle-narrow-to-defun dired-sidebar-toggle-hidden-commands)
+  (setq dired-sidebar-theme 'all-the-icons)
+  (setq dired-sidebar-use-term-integration t)
+  (setq dired-sidebar-use-custom-font t))
+
+;; Optional: make the sidebar a bit cleaner
+(with-eval-after-load 'dired-sidebar
+  (add-hook 'dired-sidebar-mode-hook
+            (lambda ()
+              (display-line-numbers-mode -1)
+              (setq-local dired-hide-details-hide-symlink-targets t))))
+
+;; ----------------------------------------------------------------------
+;; 6.  Helper to open the tree sidebar + dired at the root
+;; ----------------------------------------------------------------------
+(defun my/seforim-browse-tree ()
+  "Open standard dired at the seforim root, and pop open the tree sidebar."
+  (interactive)
+  (dired my/seforim-directory)
+  (unless (dired-sidebar-showing-sidebar-p)
+    (dired-sidebar-toggle-sidebar)))
+
+;; ----------------------------------------------------------------------
+;; 7.  Seforim Hydra (C-c S)
+;; ----------------------------------------------------------------------
+(defhydra hydra-seforim (:color blue :hint nil)
+  "   Seforim Library (RTL: %`bidi-paragraph-direction)
+   _f_: Find Sefer (plocate → fd)   _o_: Outline (Chapters/Pesukim)
+   _s_: Search Text (All Seforim)  _d_: Search Text (Current Dir)
+   _t_: Open Tree Sidebar         _b_: Browse in Dired   _q_: quit                       "
+  ("f" my/seforim-find-sefer)
+  ("s" my/seforim-search-all)
+  ("d" my/seforim-search-current-dir)
+  ("o" my/seforim-outline)
+  ("t" dired-sidebar-toggle-sidebar)
+  ("b" my/seforim-browse-tree)
+  ("q" nil))
+
+;; Bind to C-c S (Shift‑S) – leaves C-c s free for your spell‑check hydra
+(global-set-key (kbd "C-c S") 'hydra-seforim/body)
+
+;; ----------------------------------------------------------------------
+;; 8.  (Optional) Keep notmuch index near‑real‑time on save;; ----------------------------------------------------------------------
+;; Uncomment the following block if you want the index updated after
+;; every save of a seforim file.  It adds ~30‑50 ms to each save.
+;; (add-hook 'after-save-hook
+;;           (lambda ()
+;;             (when (and buffer-file-name;;                        (string-prefix-p my/seforim-directory buffer-file-name))
+;;               (notmuch insert (expand-file-name buffer-file-name))
+;;               (notmuch tag +seforim --
+;;                          --id:(notmuch-message-id (expand-file-name buffer-file-name))))))
+
+(provide 'seforim)
+;;; seforim.el ends here
+```
+
+### How to use it
+
+| Keybinding | Action |
+|------------|--------|
+| `C-c S f` | Fuzzy‑find a sefer by name/path (uses `plocate`, falls back to `fd`). |
+| `C-c S s` | Full‑text search across the whole library (notmuch). Type `אברהם`, `path:rambam/ אברהם`, `-path:Drafts/ אברהם`, etc. |
+| `C-c S d` | Search only in the directory of the currently visited file (falls back to threaded `rg` if needed). |
+| `C-c S o` | Jump to a heading/daf/siman via `consult-outline`. |
+| `C-c S b` | Open `dired` at the seforim root and show the tree sidebar. |
+| `C-c S t` / `C-x C-n` | Toggle the dired‑sidebar. |
+| `C-c S q` | Quit the hydra. |
+
+All searches respect `vertico`/`orderless`/`marginalia` (so you get live, filtered, annotated completion) and **never artificially cap** the result set – you can scroll through thousands of matches smoothly.
+
+---
+
+### What you still need to do manually (once)
+
+1. **Create the seforim directory** (if it isn’t already there):
+   ```bash
+   mkdir -p ~/Documents/seforim
+   # populate it with your .org files …
+   ```
+
+2. **Build the initial notmuch index** (the timer will do it daily, but you can jump‑start):
+   ```bash
+   notmuch new
+   ```
+
+3. **(Optional) Enable the notmuch timer** – the flake already creates a user‑level systemd timer that runs `notmuch new` once a day.
+   To start it immediately:
+   ```bash
+   systemctl --user daemon-reload
+   systemctl --user enable --now notmuch-seforim.timer
+   ```
+
+That’s it! You now have a fully Nix‑managed, lightning‑fast seforim lookup system that integrates perfectly with the Emacs editing environment you already love. Happy learning! 🚀
