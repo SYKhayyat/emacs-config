@@ -1,213 +1,333 @@
 #+TITLE: Emacs Configuration Guide
-#+AUTHOR: User
+#+AUTHOR: Shaul
 #+STARTUP: overview num
 #+OPTIONS: toc:3
 
-* Installation
-** NixOS Configuration
+* Introduction
 
-1. Copy =emacs-packages.nix= to =/etc/nixos/=
+This is a comprehensive guide to a literate Emacs configuration optimized for:
 
-2. Edit =/etc/nixos/configuration.nix= and add:
+- *Hebrew (RTL) as default*, with seamless switching to English (LTR)
+- *Academic document preparation* with LaTeX (LuaLaTeX + Babel), ConTeXt, and Typst
+- *Unlimited structure depth* in headings and lists (Org and LaTeX)
+- *Nested footnotes* across all three document systems
+- *Org-roam* for Zettelkasten-style note-taking with full Hebrew support
+- *Seforim library management* for fast searching of large Hebrew text collections
+- *PDF annotation* with org-noter integration
+- *Bibliography management* with Citar
 
-   #+begin_src nix
-     imports = [
-       ./hardware-configuration.nix
-       ./emacs-packages.nix
-     ];
-   #+end_src
+The configuration is written in literate Org format (=config.org=) and automatically tangles to =config.el= on save.
 
-3. Rebuild:
+** System Requirements
 
-   #+begin_src shell
-     sudo nixos-rebuild switch
-   #+end_src
+This configuration assumes NixOS with the following packages installed:
 
-** Emacs Configuration
+| Category | Packages |
+|----------|----------|
+| Emacs | =emacs29= (or later with native compilation) |
+| TeX | =texlive.combined.scheme-full= (includes LuaLaTeX, ConTeXt) |
+| Typst | =typst=, =tinymist= (LSP server) |
+| Fonts | =culmus= (Hebrew fonts: David CLM, Nachlieli CLM, Miriam Mono CLM) |
+| Search | =plocate=, =recoll=, =ripgrep=, =fd= |
+| Spell | =hunspell=, =hunspellDicts.en_US=, =hunspellDicts.he_IL= |
+| PDF | =poppler_utils= (for pdf-tools) |
+| Dev | =python3=, =rustc=, =cargo=, =jdk= (optional, per language) |
+| VCS | =git= |
+| Icons | Run =M-x all-the-icons-install-fonts= after first launch |
 
-1. Create directory:
+** File Locations
 
-   #+begin_src shell
-     mkdir -p ~/.emacs.d
-   #+end_src
-
-2. Copy files:
-
-   #+begin_src shell
-     cp config.org ~/.emacs.d/
-     cp init.el ~/.emacs.d/
-   #+end_src
-
-3. Create required directories:
-
-   #+begin_src shell
-     mkdir -p ~/Documents/roam
-     mkdir -p ~/Documents/org
-     touch ~/Documents/bibliography.bib
-   #+end_src
-
-4. Start Emacs and wait for packages to install
+| File | Location |
+|------|----------|
+| Emacs config (source) | =~/.emacs.d/config.org= |
+| Emacs config (tangled) | =~/.emacs.d/config.el= |
+| Init file | =~/.emacs.d/init.el= |
+| Org directory | =~/Documents/org/= |
+| Org-roam notes | =~/Documents/roam/= |
+| Roam daily notes | =~/Documents/roam/daily/= |
+| Bibliography | =~/Documents/bibliography.bib= |
+| Seforim library | =~/Documents/seforim/= |
+| Undo history | =~/.emacs.d/undo-tree-history/= |
+| Personal dictionary | =~/.hunspell_personal= |
 
 ** First Run Tasks
 
 After first launch:
 
-1. Install icon fonts:
+1. Wait for packages to install (first startup is slow)
+
+2. Install icon fonts:
    : M-x all-the-icons-install-fonts RET
 
-2. Initialize org-roam database:
+3. Initialize org-roam database:
    : M-x org-roam-db-sync RET
 
+4. Build PDF-tools (if not already compiled):
+   : M-x pdf-tools-install RET
+
+5. Build Seforim indexes (if using Seforim library):
+   : M-x seforim-reindex RET
+
 * Basic Emacs Usage
+
 ** Key Notation
 
-| Notation | Meaning              |
-|----------+----------------------|
-| =C-=     | Hold Control key     |
-| =M-=     | Hold Alt/Meta key    |
-| =S-=     | Hold Shift key       |
-| =RET=    | Press Enter          |
-| =SPC=    | Press Space          |
+| Notation | Meaning |
+|----------|---------|
+| =C-= | Hold Control key |
+| =M-= | Hold Alt/Meta key |
+| =S-= | Hold Shift key |
+| =RET= | Press Enter |
+| =SPC= | Press Space |
+| =TAB= | Press Tab |
+
+Example: =C-x C-f= means "hold Control, press x, release, hold Control, press f".
 
 ** Essential Commands
 
-| Keybinding  | Description              |
-|-------------+--------------------------|
-| =C-x C-f=   | Open/create file         |
-| =C-x C-s=   | Save file                |
-| =C-x C-c=   | Quit Emacs               |
-| =C-x b=     | Switch buffer            |
-| =C-x k=     | Close buffer             |
-| =C-g=       | Cancel command           |
-| =M-x=       | Run any command          |
-| =C-h k=     | Describe keybinding      |
-| =C-h f=     | Describe function        |
-| =C-h v=     | Describe variable        |
+| Keybinding | Description |
+|------------|-------------|
+| =C-x C-f= | Open/create file |
+| =C-x C-s= | Save file |
+| =C-x C-c= | Quit Emacs |
+| =C-x b= | Switch buffer (with consult) |
+| =C-x C-b= | List buffers (ibuffer) |
+| =C-x k= | Close buffer |
+| =C-g= | Cancel current command |
+| =M-x= | Run any command by name |
+| =C-h k= | Describe what a keybinding does |
+| =C-h f= | Describe a function |
+| =C-h v= | Describe a variable |
+| =C-h m= | Describe current mode |
 
 ** Navigation
 
-| Keybinding      | Description               |
-|-----------------+---------------------------|
-| =C-f= / =C-b=   | Forward/backward char     |
-| =M-f= / =M-b=   | Forward/backward word     |
-| =C-n= / =C-p=   | Next/previous line        |
-| =C-a= / =C-e=   | Beginning/end of line     |
-| =M-<= / =M->=   | Beginning/end of buffer   |
-| =C-v= / =M-v=   | Page down/up              |
-| =C-s=           | Search (consult-line)     |
-| =M-g g=         | Go to line number         |
+| Keybinding | Description |
+|------------|-------------|
+| =C-f= / =C-b= | Forward/backward one character |
+| =M-f= / =M-b= | Forward/backward one word |
+| =C-n= / =C-p= | Next/previous line |
+| =C-a= / =C-e= | Beginning/end of line |
+| =M-<= / =M->= | Beginning/end of buffer |
+| =C-v= / =M-v= | Page down/up |
+| =C-s= | Search in buffer (consult-line) |
+| =M-g g= | Go to line number |
 
 ** Editing
 
-| Keybinding | Description               |
-|------------+---------------------------|
-| =C-d=      | Delete character          |
-| =M-d=      | Delete word               |
-| =C-k=      | Kill to end of line       |
-| =C-w=      | Kill region (cut)         |
-| =M-w=      | Copy region               |
-| =C-y=      | Yank (paste)              |
-| =M-y=      | Cycle kill ring           |
-| =C-/=      | Undo                      |
-| =C-?=      | Redo                      |
-| =C-x u=    | Visual undo tree          |
+| Keybinding | Description |
+|------------|-------------|
+| =C-d= | Delete character forward |
+| =M-d= | Delete word forward |
+| =C-k= | Kill (cut) to end of line |
+| =C-w= | Kill (cut) region |
+| =M-w= | Copy region |
+| =C-y= | Yank (paste) |
+| =M-y= | Cycle through kill ring (after =C-y=) |
+| =C-/= | Undo |
+| =C-?= | Redo |
+| =C-x u= | Visual undo tree |
+| =C-SPC= | Set mark (start selection) |
+| =C-x h= | Select entire buffer |
 
 ** Windows
 
-| Keybinding | Description                     |
-|------------+---------------------------------|
-| =C-x 2=    | Split horizontally (and follow) |
-| =C-x 3=    | Split vertically (and follow)   |
-| =C-x 0=    | Close current window            |
-| =C-x 1=    | Close other windows             |
-| =M-o=      | Switch window (ace-window)      |
+| Keybinding | Description |
+|------------|-------------|
+| =C-x 2= | Split horizontally (and follow) |
+| =C-x 3= | Split vertically (and follow) |
+| =C-x 0= | Close current window |
+| =C-x 1= | Close all other windows |
+| =M-o= | Switch window (ace-window) |
+| =C-c <left>= | Undo window layout change |
+| =C-c <right>= | Redo window layout change |
 
-** Focused Writing Mode
+** Getting Help
 
-| Keybinding | Action                           |
-|------------+----------------------------------|
-| =C-c w=    | Toggle focused writing (80-col centered) |
-| =C-c W=    | Set column width                 |
+| Keybinding | Description |
+|------------|-------------|
+| =C-h r= | Open Emacs manual |
+| =C-h k= | Describe keybinding |
+| =C-h f= | Describe function |
+| =C-h v= | Describe variable |
+| =C-h a= | Search for command (apropos) |
+| =C-h m= | Describe current major mode |
+| =C-h b= | List all keybindings |
+| =C-h F= | Describe function (helpful) |
+| =C-h C= | Describe command (helpful) |
 
-When enabled, text is soft-wrapped at 80 columns and visually centered in the window. No actual line breaks are inserted.
+After pressing any prefix key (like =C-c= or =C-x=), wait briefly and which-key will show available completions.
+
+* Undo and Redo
+
+This configuration uses =undo-tree= for visual, persistent undo/redo that survives between sessions.
+
+** Basic Undo/Redo
+
+| Keybinding | Action |
+|------------|--------|
+| =C-/= | Undo |
+| =C-?= | Redo |
+| =C-x u= | Open visual undo tree |
+
+** Visual Undo Tree
+
+Press =C-x u= to open a graphical visualization of your undo history:
+
+#+begin_example
+                    o  (current state)
+                    |
+                    o  (last change)
+                   /|
+                  o o  (branching history)
+                  |
+                  o  (earlier state)
+#+end_example
+
+*** Navigation in Undo Tree
+
+| Key | Action |
+|-----|--------|
+| =p= / =n= | Move up/down (earlier/later) |
+| =b= / =f= | Switch branches |
+| =t= | Toggle timestamps |
+| =d= | Toggle diff display |
+| =q= | Quit undo tree |
+
+** Persistent Undo
+
+Undo history is automatically saved to =~/.emacs.d/undo-tree-history/= and restored when you reopen files. This means you can undo changes from previous sessions.
+
+The configuration maintains large undo limits:
+- 80MB undo limit
+- 120MB strong limit
+- 300MB outer limit
+
+* Focused Writing Mode
+
+Focused writing mode centers your text in an 80-column window, removing distractions.
+
+** Keybindings
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c w= | Toggle focused writing mode |
+| =C-c W= | Set custom column width |
+
+** What It Does
+
+When enabled:
+- Text is soft-wrapped at 80 columns (no hard line breaks inserted)
+- Content is visually centered in the window
+- Ideal for prose writing in Org, LaTeX, or Markdown
+
+When disabled:
+- Returns to normal full-width editing
+
+** Customizing Width
+
+Press =C-c W= and enter a number to change the column width. Common values:
+- =60= - Narrow, very focused
+- =80= - Standard (default)
+- =100= - Wider, good for code-heavy documents
+- =120= - Wide, approaching full screen
 
 * Hebrew and RTL Support
+
 ** How Direction Works
 
-The config automatically sets direction per major mode:
+The configuration automatically sets text direction based on major mode:
 
-| Mode Type              | Default Direction |
-|------------------------+-------------------|
-| Org, LaTeX, text modes | RTL (Hebrew)      |
-| Programming modes      | LTR (English)     |
-| Other modes            | Auto-detect       |
+| Mode Type | Default Direction |
+|-----------|-------------------|
+| Org, LaTeX, ConTeXt, Typst | RTL (Hebrew) |
+| Text, Markdown | RTL (Hebrew) |
+| Programming modes | LTR (English) |
 
-You can always override manually with the keybindings below.
+You can always override manually.
 
 ** Switching Languages
 
-| Keybinding | Action                                 |
-|------------+----------------------------------------|
-| =F9=       | Toggle input method (Hebrew ↔ English) |
-| =C-c d=    | Toggle text direction (RTL ↔ LTR)      |
-| =C-c r=    | Force RTL direction                    |
-| =C-c l=    | Force LTR direction                    |
-| =C-c D=    | Direction controls menu (hydra)        |
+| Keybinding | Action |
+|------------|--------|
+| =F9= | Toggle input method (Hebrew ↔ English keyboard) |
+| =C-c d= | Toggle text direction (RTL ↔ LTR) |
+| =C-c r= | Force RTL direction |
+| =C-c l= | Force LTR direction |
+| =C-c D= | Open direction controls hydra menu |
 
 ** Visual Indicators
 
 The modeline shows current state:
-- =[RTL עב]= - Hebrew mode, right-to-left
-- =[LTR EN]= - English mode, left-to-right
+- =[RTL עב]= — Hebrew mode, right-to-left
+- =[LTR EN]= — English mode, left-to-right
+
+** Direction Controls Hydra (=C-c D=)
+
+#+begin_example
+Direction Controls
+
+r: RTL (Hebrew)    l: LTR (English)    t: Toggle direction
+h: Hebrew spell    e: English spell    b: Both languages
+B: Toggle bidi     w: Focus writing    W: Set width
+q: quit
+#+end_example
+
+** Performance Toggle
+
+For very large files with complex bidirectional text, you can disable bidi reordering for better performance:
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c B= | Toggle bidi reordering on/off |
+
+Re-enable when you need proper RTL display.
 
 ** Best Practices
 
-1. *Hebrew documents*: Automatically RTL (Org, LaTeX, text modes)
-2. *English documents*: Use =C-c l= for LTR, or it auto-detects
-3. *Mixed documents*: Use =C-c d= to toggle as needed
-4. *Code*: Automatically LTR (prog-mode)
+1. *Hebrew documents*: Just start typing. Org, LaTeX, etc. default to RTL.
+2. *English documents*: Press =C-c l= to switch to LTR.
+3. *Mixed documents*: Use =C-c d= to toggle as needed, or use language environments in LaTeX.
+4. *Code*: Automatically LTR in all programming modes.
 
-** Spell Checking
+* Spell Checking
 
-Spell checking uses Flyspell with Hunspell. Switch between languages manually:
+Spell checking uses Flyspell with Hunspell backend, supporting both English and Hebrew.
 
-| Keybinding | Action                      |
-|------------+-----------------------------|
-| =C-c s e=  | Switch to English           |
-| =C-c s h=  | Switch to Hebrew            |
-| =M-$=      | Correct word at point       |
-| =i=        | Add word to personal dict   |
+** Keybindings
 
-When a correctly-spelled word is flagged (e.g., Hebrew word while in English mode), press =i= to add it to your personal dictionary (=~/.hunspell_personal=).
+| Keybinding | Action |
+|------------|--------|
+| =C-c s e= | Switch to English dictionary |
+| =C-c s h= | Switch to Hebrew dictionary |
+| =C-c s b= | Use both (add Hebrew words to personal dict) |
+| =M-$= | Correct word at point |
 
-Spell checking is active in:
-- All text/prose modes (Org, LaTeX, Markdown, etc.)
+** Where Spell Checking is Active
+
+- All prose modes: Org, LaTeX, Markdown, Text
 - Comments and strings in programming modes
 
-* Document Systems Overview
+** Adding Words to Personal Dictionary
 
-This configuration supports three document systems:
+When a word is flagged incorrectly:
+1. Place cursor on the word
+2. Press =M-$=
+3. Press =i= to add to personal dictionary
 
-| System    | Best For                          | Hebrew | Nested Footnotes          |
-|-----------+-----------------------------------+--------+---------------------------|
-| *LaTeX*   | Academic papers, journals         | ✓      | Separate blocks (bigfoot) |
-| *ConTeXt* | Complex typography, books         | ✓      | Native local footnotes    |
-| *Typst*   | Fast iteration, modern syntax     | ✓      | Sequential (with show rule) |
+Personal dictionary is saved to =~/.hunspell_personal=.
 
-** Quick Document Creation
+** Switching Languages
 
-| Keybinding | Action                    |
-|------------+---------------------------|
-| =C-c h l=  | Create Hebrew LaTeX doc   |
-| =C-c h x=  | Create Hebrew ConTeXt doc |
-| =C-c h t=  | Create Hebrew Typst doc   |
-| =C-c h o=  | Create Hebrew Org doc     |
+Since spell checking can only use one dictionary at a time:
 
-** Document Systems Menu
+1. For Hebrew documents: =C-c s h=
+2. For English documents: =C-c s e=
+3. For mixed documents: Use =C-c s e= and add Hebrew words to personal dict with =i=
 
-Press =C-c P= to open the document systems hydra menu with all preamble insertion options.
-
+After switching, the buffer is re-checked automatically.
 * Org Mode
+
 ** Basic Structure
 
 #+begin_example
@@ -231,28 +351,34 @@ Regular paragraph text.
          1. Unlimited levels
 #+end_example
 
-** Headings (Unlimited Levels)
+** Headings
 
-| Syntax   | Level      |
-|----------+------------|
-| =*=      | Level 1    |
-| =**=     | Level 2    |
-| =***=    | Level 3    |
-| =****=   | Level 4    |
-| ...      | (no limit) |
+*** Syntax
 
-** Heading Keybindings
+| Syntax | Level |
+|--------|-------|
+| =*= | Level 1 |
+| =**= | Level 2 |
+| =***= | Level 3 |
+| =****= | Level 4 |
+| ... | (no limit) |
 
-| Keybinding      | Action                       |
-|-----------------+------------------------------|
-| =M-RET=         | Insert heading at same level |
-| =M-S-RET=       | Insert TODO heading          |
-| =M-LEFT/RIGHT=  | Promote/demote heading       |
-| =M-UP/DOWN=     | Move heading up/down         |
-| =TAB=           | Cycle visibility             |
-| =S-TAB=         | Cycle global visibility      |
+This configuration supports unlimited heading depth, both in Org and when exporting to LaTeX.
 
-** Lists (Unlimited Levels)
+*** Keybindings
+
+| Keybinding | Action |
+|------------|--------|
+| =M-RET= | Insert heading at same level |
+| =M-S-RET= | Insert TODO heading |
+| =M-LEFT= / =M-RIGHT= | Promote/demote heading |
+| =M-UP= / =M-DOWN= | Move heading up/down |
+| =TAB= | Cycle visibility (folded → children → all) |
+| =S-TAB= | Cycle global visibility |
+| =C-c C-n= / =C-c C-p= | Next/previous heading |
+| =C-c C-u= | Go to parent heading |
+
+** Lists
 
 *** Unordered Lists
 
@@ -260,7 +386,7 @@ Regular paragraph text.
 - Item 1
   - Sub-item (indent 2 spaces)
     - Sub-sub-item
-      - And so on...
+      - And so on... (unlimited)
 + Alternative bullet
   + Sub-item
 #+end_example
@@ -273,103 +399,320 @@ Regular paragraph text.
       1. Sub-sub-item
          1. Unlimited nesting
 2. Second item
+   a. Alphabetical sub-item
+      i. Roman numeral sub-item
 #+end_example
 
-*** List Keybindings
-
-| Keybinding      | Action                 |
-|-----------------+------------------------|
-| =M-RET=         | Insert new list item   |
-| =M-LEFT/RIGHT=  | Change indent level    |
-| =M-UP/DOWN=     | Move item up/down      |
-| =C-c -=         | Cycle bullet style     |
-| =C-c C-c=       | Toggle checkbox        |
-
-** Checkboxes
+*** Checkboxes
 
 #+begin_example
 - [ ] Unchecked item
 - [X] Checked item
-- [-] Partially done
+- [-] Partially done (some sub-items checked)
 #+end_example
+
+*** List Keybindings
+
+| Keybinding | Action |
+|------------|--------|
+| =M-RET= | Insert new list item |
+| =M-LEFT= / =M-RIGHT= | Change indent level |
+| =M-UP= / =M-DOWN= | Move item up/down |
+| =C-c -= | Cycle bullet style (-, +, *, 1., etc.) |
+| =C-c C-c= | Toggle checkbox |
+| =S-LEFT= / =S-RIGHT= | Cycle checkbox state |
+
+** Text Formatting
+
+| Syntax | Result |
+|--------|--------|
+| =*bold*= | *bold* |
+| =/italic/= | /italic/ |
+| =_underline_= | _underline_ |
+| =~code~= | ~code~ |
+| =+strikethrough+= | +strikethrough+ |
+| ~=verbatim=~ | =verbatim= |
 
 ** Links
 
+*** Syntax
+
 #+begin_example
 [[https://example.com][Link text]]
-[[file:./other-file.org][Internal link]]
-[[#custom-id][Link to heading]]
+[[file:./other-file.org][Internal file link]]
+[[#custom-id][Link to heading with CUSTOM_ID]]
+[[*Heading Name][Link to heading by name]]
 #+end_example
 
-| Keybinding | Action           |
-|------------+------------------|
-| =C-c C-l=  | Insert/edit link |
-| =C-c C-o=  | Open link        |
+*** Keybindings
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c C-l= | Insert or edit link |
+| =C-c C-o= | Open link at point |
+| =RET= | Open link (org-return-follows-link enabled) |
 
 ** Footnotes
+
+*** Syntax
 
 #+begin_example
 This text has a footnote[fn:1].
 
+Another footnote[fn:custom-name].
+
 [fn:1] This is the footnote content.
+
+[fn:custom-name] Named footnotes work too.
 #+end_example
 
-| Keybinding  | Action                               |
-|-------------+--------------------------------------|
-| =C-c C-x f= | Insert footnote                      |
-| =C-c C-c=   | Jump between footnote and reference  |
-| =C-c h f=   | Fix RTL in all existing footnotes    |
+*** Keybindings
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c C-x f= | Insert new footnote |
+| =C-c C-c= | Jump between footnote reference and definition |
 
 *** Hebrew Footnote RTL Fix
 
-Hebrew footnotes in Org mode can display as LTR because the footnote marker =[fn:N]= starts with LTR characters. The config automatically inserts a Right-to-Left Mark when creating new footnotes. For existing footnotes, use =C-c h f= to fix them all at once.
+Hebrew footnotes can display as LTR because =[fn:N]= starts with LTR characters. The configuration automatically inserts a Right-to-Left Mark when creating new footnotes.
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c h f= | Fix RTL in all existing footnotes in buffer |
+
+** Tables
+
+*** Creating Tables
+
+#+begin_example
+| Name   | Age | City      |
+|--------+-----+-----------|
+| Alice  |  30 | Tel Aviv  |
+| Bob    |  25 | Jerusalem |
+#+end_example
+
+Type =|Name|Age|City= and press =TAB= to auto-format.
+
+*** Table Keybindings
+
+| Keybinding | Action |
+|------------|--------|
+| =TAB= | Move to next cell, auto-align |
+| =S-TAB= | Move to previous cell |
+| =RET= | Move to next row |
+| =M-LEFT= / =M-RIGHT= | Move column left/right |
+| =M-UP= / =M-DOWN= | Move row up/down |
+| =M-S-RIGHT= | Insert column |
+| =M-S-DOWN= | Insert row |
+| =C-c -= | Insert horizontal separator |
+| =C-c ^= | Sort table by column |
 
 ** Code Blocks
 
+*** Syntax
+
 #+begin_example
 ,#+begin_src python
-  print("Hello, World!")
+print("Hello, World!")
+,#+end_src
+
+,#+begin_src emacs-lisp
+(message "Hello from Emacs!")
 ,#+end_src
 
 ,#+begin_src shell
-  echo "Shell command"
+echo "Shell command"
 ,#+end_src
 #+end_example
 
-| Keybinding | Action                   |
-|------------+--------------------------|
-| =C-c C-c=  | Execute code block       |
-| =C-c '=    | Edit in dedicated buffer |
+*** Keybindings
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c C-c= | Execute code block |
+| =C-c '= | Edit in dedicated buffer (with mode support) |
 
 Note: Electric pairs (auto-closing brackets) are active when editing code blocks via =C-c '=.
 
-** Exporting
+*** Supported Languages
 
-| Keybinding    | Action                 |
-|---------------+------------------------|
-| =C-c C-e=     | Open export dispatcher |
-| =C-c C-e l l= | Export to LaTeX        |
-| =C-c C-e l p= | Export to PDF          |
-| =C-c C-e h h= | Export to HTML         |
+| Language | Execution | LSP |
+|----------|-----------|-----|
+| emacs-lisp | ✓ | — |
+| python | ✓ | ✓ |
+| shell | ✓ | — |
+| latex | ✓ | — |
+| rust | ✓ | ✓ |
 
-** Org to LaTeX Export Settings
+** Properties and Drawers
 
-Add to the top of your org file:
+*** Property Drawers
 
 #+begin_example
-,#+TITLE: Document Title
-,#+AUTHOR: Your Name
-,#+LANGUAGE: he
-,#+LATEX_COMPILER: lualatex
-,#+LATEX_CLASS: article-unlimited
+,* My Heading
+:PROPERTIES:
+:CUSTOM_ID: my-custom-id
+:LANG: hebrew
+:AUTHOR: Shaul
+:END:
+
+Content here.
 #+end_example
 
-Available classes:
-- =article-unlimited= (default)
-- =report-unlimited=
-- =book-unlimited=
+*** Keybindings
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c C-x p= | Set property |
+| =C-c C-c d= | Delete property |
+
+** Tags
+
+*** Syntax
+
+#+begin_example
+,* Heading with tags                                           :tag1:tag2:
+#+end_example
+
+*** Keybindings
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c C-q= | Set tags |
+| =C-c \= | Filter by tags in sparse tree |
+
+Predefined tags: =research=, =hebrew=, =english=, =urgent=, =writing=, =reading=
+
+** TODO States
+
+*** Syntax
+
+#+begin_example
+,* TODO Task to do
+,* IN-PROGRESS Currently working on this
+,* WAITING Blocked on something
+,* DONE Completed task
+,* CANCELLED No longer needed
+#+end_example
+
+*** Keybindings
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c C-t= | Cycle TODO state |
+| =S-LEFT= / =S-RIGHT= | Cycle TODO state |
+| =C-c C-s= | Schedule task |
+| =C-c C-d= | Set deadline |
+
+** Agenda
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c a= | Open agenda dispatcher |
+| =C-c c= | Capture (quick entry) |
+
+Agenda files are in =~/Documents/org/=.
+
+** Capture Templates
+
+Press =C-c c= then select a template:
+
+| Key | Template | Description |
+|-----|----------|-------------|
+| =t= | Todo | Quick task to inbox |
+| =n= | Note | Quick note to inbox |
+| =h= | Hebrew Note | Note with Hebrew properties |
+| =j= | Journal | Daily journal entry |
+| =r= | Research | Research note with source |
+| =b= | Book | Book to reading list |
+
+** Exporting
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c C-e= | Open export dispatcher |
+| =C-c C-e l l= | Export to LaTeX (.tex) |
+| =C-c C-e l p= | Export to PDF via LaTeX |
+| =C-c C-e h h= | Export to HTML |
+| =C-c C-e o o= | Export to ODT |
+
+*** Export Settings for Hebrew
+
+Add to the top of your Org file:
+
+#+begin_example
+,#+TITLE: כותרת המסמך
+,#+AUTHOR: שאול
+,#+LANGUAGE: he
+,#+LATEX_CLASS: article-unlimited
+,#+LATEX_HEADER: \babelprovide[main, import]{hebrew}
+,#+OPTIONS: toc:nil
+#+end_example
+
+*** Available LaTeX Classes
+
+| Class | Use Case |
+|-------|----------|
+| =article-unlimited= | Papers, short documents (default) |
+| =report-unlimited= | Longer reports with chapters |
+| =book-unlimited= | Books with parts and chapters |
+
+All classes support unlimited heading depth and list nesting.
+
+** LaTeX Preview in Org
+
+Preview LaTeX fragments inline:
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c C-x C-l= | Preview LaTeX fragment at point |
+| =C-c C-x C-v= | Toggle inline images |
+
+* Document Systems Overview
+
+This configuration supports three document systems for typesetting:
+
+| System | Best For | Hebrew | Nested Footnotes | Compilation Speed |
+|--------|----------|--------|------------------|-------------------|
+| *LaTeX* | Academic papers, journals | ✓ (Babel) | Separate blocks (bigfoot) | Slow |
+| *ConTeXt* | Complex typography, books | ✓ (native) | Hierarchical (local footnotes) | Medium |
+| *Typst* | Fast iteration, modern syntax | ✓ (native) | Sequential | Very fast |
+
+** Quick Document Creation
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c h l= | Create Hebrew LaTeX document |
+| =C-c h x= | Create Hebrew ConTeXt document |
+| =C-c h t= | Create Hebrew Typst document |
+| =C-c h o= | Create Hebrew Org document |
+
+** Document Systems Hydra (=C-c P=)
+
+#+begin_example
+Document Systems
+
+LaTeX:   p: Babel preamble  g: Polyglossia  u: Unlimited struct
+         n: Nested footnote template
+ConTeXt: c: Hebrew preamble f: Local footnote
+Typst:   h: Hebrew preamble s: Nested footnote helper
+q: quit
+#+end_example
+
+** Comparison: When to Use What
+
+| Scenario | Recommended System |
+|----------|-------------------|
+| Journal submission | LaTeX |
+| Quick draft with live preview | Typst |
+| Complex book with local footnotes | ConTeXt |
+| Integration with Org-roam | Org → LaTeX export |
+| Maximum compilation speed | Typst |
+| Maximum typographic control | ConTeXt |
 
 * LaTeX and AUCTeX
+
 ** Creating a New Document
 
 1. Create file: =C-x C-f myfile.tex RET=
@@ -377,115 +720,122 @@ Available classes:
 
 Or use: =C-c h l= to create a Hebrew LaTeX document with full preamble.
 
-** Basic Document Structure (Hebrew)
+** Basic Hebrew Document
 
 #+begin_src latex
-  \documentclass{article}
-  \usepackage{fontspec}
-  \usepackage[bidi=basic]{babel}
-  \babelprovide[main, import]{hebrew}
-  \babelprovide[import]{english}
-  \babelfont{rm}{David CLM}
+\documentclass{article}
+\usepackage{fontspec}
+\usepackage[bidi=basic]{babel}
+\babelprovide[main, import]{hebrew}
+\babelprovide[import]{english}
+\babelfont{rm}{David CLM}
 
-  \begin{document}
+\begin{document}
 
-  \section{כותרת}
+\section{כותרת}
 
-  טקסט בעברית.
+טקסט בעברית.
 
-  \begin{english}
-  English text here.
-  \end{english}
+\begin{english}
+English text here.
+\end{english}
 
-  \end{document}
+\end{document}
+#+end_src
+
+** AUCTeX Keybindings
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c C-c= | Run command (compile, view, etc.) |
+| =C-c C-a= | Compile all and view |
+| =C-c C-v= | View PDF |
+| =C-c C-e= | Insert environment |
+| =C-c C-s= | Insert section |
+| =C-c C-m= | Insert macro |
+| =C-c C-f C-b= | Bold |
+| =C-c C-f C-i= | Italic |
+| =C-c C-f C-e= | Emphasis |
+| =C-c `= | Go to next error |
+| =C-c C-l= | View compilation log |
+
+** Compiling
+
+1. Press =C-c C-c=
+2. Press =RET= for default command (LaTeX)
+3. Repeat =C-c C-c= and select =View= to open PDF
+
+Documents compile with LuaLaTeX automatically.
+
+** PDF Synctex
+
+Click in PDF → jumps to source location.
+=C-c C-v= from source → jumps to PDF location.
+
+** Unlimited Sectioning
+
+| Level | Command |
+|-------|---------|
+| 1 | =\section{}= |
+| 2 | =\subsection{}= |
+| 3 | =\subsubsection{}= |
+| 4 | =\paragraph{}= |
+| 5 | =\subparagraph{}= |
+| 6 | =\subsubparagraph{}= |
+| 7 | =\subsubsubparagraph{}= |
+| 8 | =\subsubsubsubparagraph{}= |
+| 9 | =\subsubsubsubsubparagraph{}= |
+| 10+ | (continue pattern) |
+
+** Unlimited List Nesting
+
+Standard LaTeX limits lists to 4 levels. With this config, nest up to 20 levels:
+
+#+begin_src latex
+\begin{itemize}
+  \item Level 1
+  \begin{itemize}
+    \item Level 2
+    \begin{itemize}
+      \item Level 3
+      % ... continue to level 20
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
 #+end_src
 
 ** Quick Preamble Insertion
 
-| Command                              | Action                         |
-|--------------------------------------+--------------------------------|
-| =M-x my/insert-hebrew-preamble=      | Insert Babel Hebrew preamble   |
-| =M-x my/insert-polyglossia-preamble= | Insert Polyglossia preamble    |
-| =M-x my/insert-unlimited-structure=  | Insert only unlimited structure|
+| Command | Action |
+|---------|--------|
+| =M-x my/insert-hebrew-preamble= | Insert Babel Hebrew preamble |
+| =M-x my/insert-polyglossia-preamble= | Insert Polyglossia preamble |
+| =M-x my/insert-unlimited-structure= | Insert only unlimited structure |
 
-Or use =C-c P= for the document systems menu.
-
-** AUCTeX Keybindings
-
-| Keybinding    | Action                      |
-|---------------+-----------------------------|
-| =C-c C-c=     | Run command (compile, view) |
-| =C-c C-a=     | Compile and view            |
-| =C-c C-v=     | View PDF                    |
-| =C-c C-e=     | Insert environment          |
-| =C-c C-s=     | Insert section              |
-| =C-c C-m=     | Insert macro                |
-| =C-c C-f C-b= | Bold                        |
-| =C-c C-f C-i= | Italic                      |
-| =C-c `=       | Go to next error            |
-
-** Compiling Documents
-
-1. Press =C-c C-c=
-2. Press =RET= for default (LaTeX)
-3. View with =C-c C-c= then =View=
-
-Documents compile with LuaLaTeX automatically.
-
-** Unlimited Sectioning in LaTeX
-
-| Level | Command                       |
-|-------+-------------------------------|
-| 1     | =\section{}=                  |
-| 2     | =\subsection{}=               |
-| 3     | =\subsubsection{}=            |
-| 4     | =\paragraph{}=                |
-| 5     | =\subparagraph{}=             |
-| 6     | =\subsubparagraph{}=          |
-| 7     | =\subsubsubparagraph{}=       |
-| 8     | =\subsubsubsubparagraph{}=    |
-| 9     | =\subsubsubsubsubparagraph{}= |
-| 10    | (continue pattern)            |
-
-** Unlimited Lists in LaTeX
-
-Standard LaTeX limits lists to 4 levels. With our config, you can nest up to 20 levels:
-
-#+begin_src latex
-  \begin{itemize}
-    \item Level 1
-    \begin{itemize}
-      \item Level 2
-      \begin{itemize}
-        \item Level 3
-        % ... continue to level 20
-      \end{itemize}
-    \end{itemize}
-  \end{itemize}
-#+end_src
+Or use =C-c P= for the document systems hydra.
 
 * Nested Footnotes in LaTeX
-** Overview
 
 The =bigfoot= package provides multiple footnote levels. Each level appears in its own *separate block* at the bottom of the page.
 
 ** Method 1: Simple Footnotes (Non-Nested)
 
-Use =\footnoteB{}=, =\footnoteC{}=, etc. directly from body text. Each level gets its own block:
+Use different footnote commands directly from body text:
 
 #+begin_src latex
-  Main text.\footnote{First level footnote.}
+Main text.\footnote{First level footnote.}
 
-  More text.\footnoteB{Second level, appears in separate block.}
+More text.\footnoteB{Second level, appears in separate block.}
 #+end_src
 
 *Result at page bottom:*
-#+begin_example
-  ─────────────────────────────
-  ¹ First level footnote.
 
-  ─────────────────────────────
-  ¹ Second level, appears in separate block.
+#+begin_example
+─────────────────────────────
+¹ First level footnote.
+
+─────────────────────────────
+¹ Second level, appears in separate block.
 #+end_example
 
 ** Method 2: True Nesting (Footnote Within Footnote)
@@ -493,125 +843,99 @@ Use =\footnoteB{}=, =\footnoteC{}=, etc. directly from body text. Each level get
 To place a footnote *inside* another footnote, use =\footnotemarkX= + =\footnotetextX{}=:
 
 #+begin_src latex
-  \usepackage{bigfoot}
-  \DeclareNewFootnote{default}
-  \DeclareNewFootnote{B}
-  \DeclareNewFootnote{C}
-
-  \begin{document}
-
-  Main text.\footnote{%
-    This is the first-level footnote. It discusses a concept\footnotemarkB{}
-    that needs further explanation.
-    \footnotetextB{%
-      This second-level footnote appears in its own separate block
-      at the bottom of the page, below the first-level footnotes.
-      It can even contain another level\footnotemarkC{}.
-      \footnotetextC{Third level footnote, in its own block.}%
-    }%
-  }
-
-  \end{document}
+Main text.\footnote{%
+  This is the first-level footnote. It discusses a concept\footnotemarkB{}
+  that needs further explanation.
+  \footnotetextB{%
+    This second-level footnote appears in its own separate block.
+    It can even contain another level\footnotemarkC{}.
+    \footnotetextC{Third level footnote, in its own block.}%
+  }%
+}
 #+end_src
 
-*Result at page bottom:*
-#+begin_example
-  ─────────────────────────────
-  ¹ This is the first-level footnote. It discusses a concept¹
-    that needs further explanation.
+** Available Footnote Levels
 
-  ─────────────────────────────
-  ¹ This second-level footnote appears in its own separate block
-    at the bottom of the page, below the first-level footnotes.
-    It can even contain another level¹.
-
-  ─────────────────────────────
-  ¹ Third level footnote, in its own block.
-#+end_example
-
-** Footnote Levels Reference
-
-| Command          | Level | Use                      |
-|------------------+-------+--------------------------|
-| =\footnote{}=    | 1     | Normal footnotes         |
-| =\footnoteB{}=   | 2     | Second level             |
-| =\footnoteC{}=   | 3     | Third level              |
-| =\footnoteD{}=   | 4     | Fourth level             |
-| =\footnoteE{}=   | 5     | Fifth level              |
-| =\footnoteF{}=   | 6     | Sixth level              |
-| =\footnoteG{}=   | 7     | Seventh level            |
-| =\footnoteH{}=   | 8     | Eighth level             |
-| =\footnoteI{}=   | 9     | Ninth level              |
-| =\footnoteJ{}=   | 10    | Tenth level              |
-
-For nesting, use:
-- =\footnotemarkB= through =\footnotemarkJ= (places the superscript)
-- =\footnotetextB{}= through =\footnotetextJ{}= (places the text in its block)
+| Level | Simple | Mark | Text |
+|-------|--------|------|------|
+| 1 | =\footnote{}= | — | — |
+| 2 | =\footnoteB{}= | =\footnotemarkB= | =\footnotetextB{}= |
+| 3 | =\footnoteC{}= | =\footnotemarkC= | =\footnotetextC{}= |
+| 4 | =\footnoteD{}= | =\footnotemarkD= | =\footnotetextD{}= |
+| 5 | =\footnoteE{}= | =\footnotemarkE= | =\footnotetextE{}= |
+| 6 | =\footnoteF{}= | =\footnotemarkF= | =\footnotetextF{}= |
+| 7 | =\footnoteG{}= | =\footnotemarkG= | =\footnotetextG{}= |
+| 8 | =\footnoteH{}= | =\footnotemarkH= | =\footnotetextH{}= |
+| 9 | =\footnoteI{}= | =\footnotemarkI= | =\footnotetextI{}= |
+| 10 | =\footnoteJ{}= | =\footnotemarkJ= | =\footnotetextJ{}= |
 
 ** Keybindings
 
 *** Simple Footnotes (=C-c f <number>=)
 
-| Keybinding | Action                   |
-|------------+--------------------------|
-| =C-c f 1=  | Insert =\footnote{}=     |
-| =C-c f 2=  | Insert =\footnoteB{}=    |
-| =C-c f 3=  | Insert =\footnoteC{}=    |
-| =C-c f 4=  | Insert =\footnoteD{}=    |
-| =C-c f 5=  | Insert =\footnoteE{}=    |
-| =C-c f 6=  | Insert =\footnoteF{}=    |
-| =C-c f 7=  | Insert =\footnoteG{}=    |
-| =C-c f 8=  | Insert =\footnoteH{}=    |
-| =C-c f 9=  | Insert =\footnoteI{}=    |
-| =C-c f 0=  | Insert =\footnoteJ{}=    |
+| Keybinding | Action |
+|------------|--------|
+| =C-c f 1= | Insert =\footnote{}= |
+| =C-c f 2= | Insert =\footnoteB{}= |
+| =C-c f 3= | Insert =\footnoteC{}= |
+| =C-c f 4= | Insert =\footnoteD{}= |
+| =C-c f 5= | Insert =\footnoteE{}= |
+| =C-c f 6= | Insert =\footnoteF{}= |
+| =C-c f 7= | Insert =\footnoteG{}= |
+| =C-c f 8= | Insert =\footnoteH{}= |
+| =C-c f 9= | Insert =\footnoteI{}= |
+| =C-c f 0= | Insert =\footnoteJ{}= |
 
-*** Nested Footnotes (via Hydra Menu)
+*** LaTeX Footnotes Hydra (=C-c F=)
 
-Press =C-c F= to open the footnotes hydra, then:
+Press =C-c F= to open the footnotes menu:
 
-| Key | Action                    |
-|-----+---------------------------|
-| =m= | → Footnote marks sub-menu |
-| =t= | → Footnote texts sub-menu |
-| =n= | Insert nested template    |
+#+begin_example
+LaTeX Footnotes (Simple)
 
-In the *marks* sub-menu:
+1: \footnote    2: \footnoteB   3: \footnoteC   4: \footnoteD   5: \footnoteE
+6: \footnoteF   7: \footnoteG   8: \footnoteH   9: \footnoteI   0: \footnoteJ
 
-| Key | Action                  |
-|-----+-------------------------|
-| =2= | Insert =\footnotemarkB= |
-| =3= | Insert =\footnotemarkC= |
-| =4= | Insert =\footnotemarkD= |
-| =5= | Insert =\footnotemarkE= |
-| =b= | ← Back to main menu     |
+n: Nested template   m: → Marks menu   t: → Texts menu
+q: quit
+#+end_example
 
-In the *texts* sub-menu:
+In the *marks* sub-menu (=m=):
 
-| Key | Action                    |
-|-----+---------------------------|
-| =2= | Insert =\footnotetextB{}= |
-| =3= | Insert =\footnotetextC{}= |
-| =4= | Insert =\footnotetextD{}= |
-| =5= | Insert =\footnotetextE{}= |
-| =b= | ← Back to main menu       |
+#+begin_example
+Footnote Marks (for nesting)
+
+2: \footnotemarkB   3: \footnotemarkC   4: \footnotemarkD   5: \footnotemarkE
+b: ← Back   q: quit
+#+end_example
+
+In the *texts* sub-menu (=t=):
+
+#+begin_example
+Footnote Texts (for nesting)
+
+2: \footnotetextB   3: \footnotetextC   4: \footnotetextD   5: \footnotetextE
+b: ← Back   q: quit
+#+end_example
 
 ** Adding More Levels
 
 If you need more than 10 levels, add to your preamble:
 
 #+begin_src latex
-  \DeclareNewFootnote{K}
-  \DeclareNewFootnote{L}
+\DeclareNewFootnote{K}
+\DeclareNewFootnote{L}
 #+end_src
 
 Then use =\footnoteK{}=, =\footnotemarkK=, =\footnotetextK{}=, etc.
 
 * ConTeXt
+
 ** What is ConTeXt?
 
 ConTeXt is a TeX-based document system with:
 - Native RTL/Hebrew support (no packages needed)
-- Built-in local footnotes (nested footnotes in separate blocks)
+- Built-in local footnotes (true hierarchical nesting)
 - Excellent typography
 - "Batteries included" philosophy
 
@@ -620,22 +944,22 @@ ConTeXt is a TeX-based document system with:
 Use =C-c h x= to create a Hebrew ConTeXt document, or create manually:
 
 #+begin_src tex
-  \mainlanguage[he]
-  \setupalign[r2l]
-  \definefontfamily[hebrew][rm][David CLM]
-  \definefontfamily[hebrew][ss][Nachlieli CLM]
-  \definefontfamily[hebrew][tt][Miriam Mono CLM]
-  \setupbodyfont[hebrew]
+\mainlanguage[he]
+\setupalign[r2l]
+\definefontfamily[hebrew][rm][David CLM]
+\definefontfamily[hebrew][ss][Nachlieli CLM]
+\definefontfamily[hebrew][tt][Miriam Mono CLM]
+\setupbodyfont[hebrew]
 
-  \starttext
+\starttext
 
-  \startsection[title={מבוא}]
+\startsection[title={מבוא}]
 
-  טקסט בעברית.
+טקסט בעברית.
 
-  \stopsection
+\stopsection
 
-  \stoptext
+\stoptext
 #+end_src
 
 ** Compiling ConTeXt
@@ -647,17 +971,17 @@ In Emacs:
 Or from command line:
 
 #+begin_src shell
-  context myfile.tex
+context myfile.tex
 #+end_src
 
 ** ConTeXt Sectioning
 
-| Command                            | Description   |
-|------------------------------------+---------------|
-| =\startpart[title={...}]=          | Part          |
-| =\startchapter[title={...}]=       | Chapter       |
-| =\startsection[title={...}]=       | Section       |
-| =\startsubsection[title={...}]=    | Subsection    |
+| Command | Description |
+|---------|-------------|
+| =\startpart[title={...}]= | Part |
+| =\startchapter[title={...}]= | Chapter |
+| =\startsection[title={...}]= | Section |
+| =\startsubsection[title={...}]= | Subsection |
 | =\startsubsubsection[title={...}]= | Subsubsection |
 
 Each must be closed with =\stop...=
@@ -667,21 +991,21 @@ Each must be closed with =\stop...=
 ConTeXt's killer feature: footnotes that appear at the bottom of their *parent footnote*, not at the bottom of the page.
 
 #+begin_src tex
-  זהו טקסט ראשי.\footnote{
-    זוהי הערת שוליים ראשונה.
+זהו טקסט ראשי.\footnote{
+  זוהי הערת שוליים ראשונה.
+  \startlocalfootnotes
+  מונח כלשהו.\localfootnote{
+    הערה מקוננת — מופיעה בתחתית ההערה הראשונה.
     \startlocalfootnotes
-    מונח כלשהו.\localfootnote{
-      הערה מקוננת — מופיעה בתחתית ההערה הראשונה, לא בתחתית העמוד.
-      \startlocalfootnotes
-      עוד מונח.\localfootnote{
-        הערה שלישית — בתחתית ההערה השנייה.
-      }
-      \placelocalfootnotes
-      \stoplocalfootnotes
+    עוד מונח.\localfootnote{
+      הערה שלישית — בתחתית ההערה השנייה.
     }
     \placelocalfootnotes
     \stoplocalfootnotes
   }
+  \placelocalfootnotes
+  \stoplocalfootnotes
+}
 #+end_src
 
 *Result:*
@@ -692,6 +1016,7 @@ ConTeXt's killer feature: footnotes that appear at the bottom of their *parent f
 Use =C-c P= then =f= to insert a local footnote structure.
 
 * Typst
+
 ** What is Typst?
 
 Typst is a modern document system with:
@@ -699,41 +1024,41 @@ Typst is a modern document system with:
 - Clean, readable syntax
 - Native RTL support
 - Easy scripting
-- ~50MB vs ~4GB for LaTeX
+- ~50MB vs ~4GB for full LaTeX
 
 ** Creating a Typst Document
 
 Use =C-c h t= to create a Hebrew Typst document, or create manually:
 
 #+begin_src typst
-  #set text(lang: "he", font: "David CLM")
-  #set page(flipped: true)
-  #set heading(numbering: "1.1.1")
+#set text(lang: "he", font: "David CLM")
+#set page(flipped: true)
+#set heading(numbering: "1.1.1")
 
-  = מבוא
+= מבוא
 
-  טקסט בעברית.
+טקסט בעברית.
 
-  == תת-כותרת
+== תת-כותרת
 
-  עוד טקסט.
+עוד טקסט.
 #+end_src
 
 ** Compiling Typst
 
-| Keybinding | Action                              |
-|------------+-------------------------------------|
-| =C-c C-c=  | Compile once                        |
-| =C-c C-w=  | Watch mode (live preview)           |
-| =C-c C-v=  | View PDF                            |
-| =C-c t h=  | Insert Hebrew preamble              |
-| =C-c t f=  | Insert nested footnote helper       |
+| Keybinding | Action |
+|------------|--------|
+| =C-c C-c= | Compile once |
+| =C-c C-w= | Watch mode (live preview) |
+| =C-c C-v= | View PDF |
+| =C-c t h= | Insert Hebrew preamble |
+| =C-c t f= | Insert nested footnote helper |
 
 Or from command line:
 
 #+begin_src shell
-  typst compile myfile.typ      # Compile once
-  typst watch myfile.typ        # Watch mode
+typst compile myfile.typ      # Compile once
+typst watch myfile.typ        # Watch mode (recompiles on save)
 #+end_src
 
 ** Typst Syntax Basics
@@ -741,194 +1066,189 @@ Or from command line:
 *** Headings
 
 #+begin_src typst
-  = Level 1
-  == Level 2
-  === Level 3
-  ==== Level 4 (unlimited)
+= Level 1
+== Level 2
+=== Level 3
+==== Level 4 (unlimited)
 #+end_src
 
 *** Text Formatting
 
 #+begin_src typst
-  *bold*
-  _italic_
-  `code`
-  #underline[underlined]
-  #strike[strikethrough]
+*bold*
+_italic_
+`code`
+#underline[underlined]
+#strike[strikethrough]
 #+end_src
 
 *** Lists
 
 #+begin_src typst
-  - Unordered item
-    - Nested item
-      - More nesting (unlimited)
+- Unordered item
+  - Nested item
+    - More nesting (unlimited)
 
-  + Ordered item
-    + Nested ordered
++ Ordered item
+  + Nested ordered
 #+end_src
 
 *** Links
 
 #+begin_src typst
-  #link("https://example.com")[Link text]
+#link("https://example.com")[Link text]
 #+end_src
 
-** Basic Footnotes in Typst
+** Basic Footnotes
 
 #+begin_src typst
-  This is text#footnote[This is a footnote].
+This is text#footnote[This is a footnote].
 #+end_src
 
 ** Nested Footnotes in Typst
 
 *** The Problem
 
-By default, Typst doesn't allow you to place a =#footnote= inside another =#footnote=. If you try, you'll get an error because Typst tries to render all footnote entries inline in a single flow at the bottom of the page.
+By default, Typst doesn't allow =#footnote= inside another =#footnote=.
 
 *** The Solution
 
 Add this show rule at the top of your document:
 
 #+begin_src typst
-  #show footnote.entry: it => {
-    block(it)
-  }
+#show footnote.entry: it => {
+  block(it)
+}
 #+end_src
 
-*** Why It Works
-
-By wrapping each =footnote.entry= in a =block()=:
-
-1. *Isolates each footnote entry* into its own independent layout container
-2. *Breaks the layout dependency* between parent and child footnotes
-3. Each footnote can now independently place its own sub-footnotes
-
-*** Full Working Example
+*** Full Example
 
 #+begin_src typst
-  // This is the critical line: wrap each footnote entry in its own block
-  #show footnote.entry: it => {
-    block(it)
-  }
+#show footnote.entry: it => {
+  block(it)
+}
 
-  This is body text with a footnote.#footnote[
-    This is the first-level footnote, and it contains
-    another footnote inside it.#footnote[
-      This is a second-level (nested) footnote! You can even
-      go deeper.#footnote[
-        Third level nested footnote.
-      ]
+This is body text with a footnote.#footnote[
+  This is the first-level footnote, and it contains
+  another footnote inside it.#footnote[
+    This is a second-level (nested) footnote! You can even
+    go deeper.#footnote[
+      Third level nested footnote.
     ]
   ]
-
-  More body text here.#footnote[A normal, non-nested footnote for comparison.]
+]
 #+end_src
 
 *Result at page bottom:*
 
 #+begin_example
-  ──────────────────────────────────────
-  ¹ This is the first-level footnote, and it contains
-    another footnote inside it.²
-  ² This is a second-level (nested) footnote! You can even
-    go deeper.³
-  ³ Third level nested footnote.
-  ⁴ A normal, non-nested footnote for comparison.
+──────────────────────────────────────
+¹ This is the first-level footnote, and it contains
+  another footnote inside it.²
+² This is a second-level (nested) footnote! You can even
+  go deeper.³
+³ Third level nested footnote.
 #+end_example
-
-Each footnote gets its own numbered entry, laid out sequentially at the page bottom.
 
 *** Hebrew Example
 
 #+begin_src typst
-  #set text(lang: "he", font: "David CLM")
-  #set page(flipped: true)
+#set text(lang: "he", font: "David CLM")
+#set page(flipped: true)
 
-  // Enable nested footnotes
-  #show footnote.entry: it => {
-    block(it)
-  }
+#show footnote.entry: it => {
+  block(it)
+}
 
-  = מבוא
+= מבוא
 
-  זהו טקסט ראשי עם הערת שוליים.#footnote[
-    זוהי הערת שוליים ראשונה, המכילה הערה נוספת.#footnote[
-      זוהי הערת שוליים מקוננת! אפשר להמשיך לעומק.#footnote[
-        הערת שוליים ברמה שלישית.
-      ]
+זהו טקסט ראשי עם הערת שוליים.#footnote[
+  זוהי הערת שוליים ראשונה, המכילה הערה נוספת.#footnote[
+    זוהי הערת שוליים מקוננת!#footnote[
+      הערת שוליים ברמה שלישית.
     ]
   ]
+]
 #+end_src
 
-*** Optional Styling
+** Typst LSP Support
 
-You can add styling while keeping the block wrapper:
+If =tinymist= is installed, Eglot provides:
+- Syntax checking
+- Autocompletion
+- Hover documentation
 
-#+begin_src typst
-  #show footnote.entry: it => {
-    block({
-      set text(size: 9pt)
-      it
-    })
-  }
-#+end_src
-
-*** Caveats
-
-- *Numbering is flat*: All footnotes share one sequential counter (1, 2, 3...). Typst doesn't distinguish "levels."
-- *All appear at page bottom*: Nested footnotes don't appear indented under their parent — they're sequential entries.
-- *Deep nesting*: 2–3 levels work well; extremely deep nesting may be confusing.
-
-*** Comparison with LaTeX/ConTeXt
-
-| Feature              | LaTeX (bigfoot)     | ConTeXt              | Typst                |
-|----------------------+---------------------+----------------------+----------------------|
-| Separate blocks      | ✓ Each level        | ✓ Hierarchical       | ✗ Sequential         |
-| Numbering            | Per-level           | Per-level            | Flat (shared)        |
-| True hierarchy       | ✓                   | ✓                    | ✗                    |
-| Ease of use          | Medium              | Easy                 | Easy                 |
-| Setup required       | Package + declare   | None                 | One show rule        |
+Start manually with =M-x eglot= if not auto-started.
 
 * Nested Footnotes Comparison
 
-| Feature                    | LaTeX (bigfoot)       | ConTeXt               | Typst                  |
-|----------------------------+-----------------------+-----------------------+------------------------|
-| *Setup required*           | Package + declare     | None (built-in)       | One show rule          |
-| *Syntax*                   | =\footnotemarkB= etc. | =\localfootnote{}=    | =#footnote[]= inside   |
-| *Separate visual blocks*   | ✓ Yes                 | ✓ Yes (hierarchical)  | ✗ No (sequential)      |
-| *Numbering*                | Per-level             | Per-level             | Flat (all share)       |
-| *Max levels*               | Unlimited             | Unlimited             | ~3 practical           |
-| *Best for*                 | Journals, academic    | Books, complex docs   | Quick iteration        |
+| Feature | LaTeX (bigfoot) | ConTeXt | Typst |
+|---------|-----------------|---------|-------|
+| *Setup required* | Package + declare | None (built-in) | One show rule |
+| *Syntax* | =\footnotemarkB= etc. | =\localfootnote{}= | =#footnote[]= inside |
+| *Separate visual blocks* | ✓ Yes | ✓ Yes (hierarchical) | ✗ No (sequential) |
+| *Numbering* | Per-level | Per-level | Flat (all share) |
+| *Max practical levels* | 10+ | Unlimited | ~3 |
+| *Hierarchical display* | ✗ Parallel blocks | ✓ True nesting | ✗ Sequential |
+| *Best for* | Journals, academic | Books, complex docs | Quick iteration |
 
 *Recommendations:*
-- For true hierarchical footnotes in separate blocks: *ConTeXt*
-- For separate blocks with journal compatibility: *LaTeX* with bigfoot
-- For fast iteration with acceptable nesting: *Typst*
+- For true hierarchical footnotes: *ConTeXt*
+- For journal compatibility: *LaTeX* with bigfoot
+- For fast iteration: *Typst*
 
 * Org-Roam
+
 ** What is Org-Roam?
 
-Org-roam is a note-taking system based on the Zettelkasten method. It creates a network of interconnected notes.
+Org-roam is a note-taking system based on the Zettelkasten method. It creates a network of interconnected notes with:
+- Bidirectional links
+- Backlink tracking
+- Visual graph
+- Daily notes
+
+** Directory Structure
+
+#+begin_example
+~/Documents/roam/
+├── 20250115120000-note-title.org
+├── 20250115130000-another-note.org
+├── ...
+└── daily/
+    ├── 2025-01-15.org
+    ├── 2025-01-16.org
+    └── ...
+#+end_example
 
 ** Keybindings
 
-| Keybinding | Action              |
-|------------+---------------------|
-| =C-c n f=  | Find or create node |
-| =C-c n i=  | Insert link to node |
-| =C-c n l=  | Toggle backlinks    |
-| =C-c n c=  | Capture new node    |
-| =C-c n g=  | Show graph          |
-| =C-c n t=  | Add tag             |
-| =C-c n r=  | Add reference       |
-| =C-c n a=  | Add alias           |
-| =C-c n d=  | Go to today's daily |
-| =C-c n D=  | Go to specific date |
-| =C-c n h=  | Find Hebrew nodes   |
-| =C-c n R=  | Find research nodes |
-| =C-c n x=  | Open random node    |
-| =C-c R=    | Org-roam hydra menu |
+| Keybinding | Action |
+|------------|--------|
+| =C-c n f= | Find or create node |
+| =C-c n i= | Insert link to node |
+| =C-c n l= | Toggle backlinks buffer |
+| =C-c n c= | Capture new node |
+| =C-c n g= | Show graph |
+| =C-c n t= | Add tag to node |
+| =C-c n r= | Add reference |
+| =C-c n a= | Add alias |
+| =C-c n d= | Go to today's daily note |
+| =C-c n D= | Go to specific date |
+| =C-c n h= | Find Hebrew-tagged nodes |
+| =C-c n R= | Find research-tagged nodes |
+| =C-c n x= | Open random node |
+| =C-c R= | Org-roam hydra menu |
+
+** Org-Roam Hydra (=C-c R=)
+
+#+begin_example
+Org-Roam
+
+f: Find node       i: Insert node      c: Capture
+l: Toggle buffer   g: Graph            t: Add tag
+d: Daily today     D: Daily date       u: Roam UI
+q: quit
+#+end_example
 
 ** Creating Notes
 
@@ -936,12 +1256,16 @@ Org-roam is a note-taking system based on the Zettelkasten method. It creates a 
 2. Type a title
 3. If it doesn't exist, press =RET= to create
 4. Choose a template:
-   - =d= Default
-   - =h= Hebrew
-   - =r= Research
-   - =c= Concept
-   - =l= Literature note
-   - =p= Project
+
+| Key | Template | Description |
+|-----|----------|-------------|
+| =d= | Default | Basic note |
+| =h= | Hebrew | Note with Hebrew settings |
+| =r= | Research | Research note with source fields |
+| =c= | Concept | Definition, examples, related |
+| =l= | Literature | Bibliographic note |
+| =p= | Project | Goals, tasks, resources |
+
 5. Write your note
 6. Save with =C-x C-s=
 
@@ -951,163 +1275,750 @@ Org-roam is a note-taking system based on the Zettelkasten method. It creates a 
 2. Search for note to link to
 3. Select and press =RET=
 
+The link syntax is:
+
+#+begin_example
+[[id:abc123][Note Title]]
+#+end_example
+
 ** Viewing Backlinks
 
-Press =C-c n l= to see all notes that link TO the current note.
-
-** Visual Graph
-
-Run =M-x org-roam-ui-open= to see your notes as an interactive graph.
+Press =C-c n l= to see all notes that link TO the current note. The backlinks buffer shows:
+- Linking note title
+- Context around the link
 
 ** Daily Notes
 
-| Keybinding | Action                |
-|------------+-----------------------|
-| =C-c n d=  | Go to today's daily   |
-| =C-c n D=  | Go to a specific date |
+| Keybinding | Action |
+|------------|--------|
+| =C-c n d= | Go to today's daily |
+| =C-c n D= | Go to specific date |
 
-* Bibliography
-** Citar Keybindings
+Daily note templates:
 
-| Keybinding | Action               |
-|------------+----------------------|
-| =C-c b i=  | Insert citation      |
-| =C-c b o=  | Open reference       |
-| =C-c b n=  | Open notes           |
-| =C-c b r=  | Refresh bibliography |
+| Key | Template | Description |
+|-----|----------|-------------|
+| =d= | Default | Simple timestamped entries |
+| =h= | Hebrew | Hebrew daily with tasks/notes sections |
+
+** Visual Graph
+
+Run =M-x org-roam-ui-open= to see your notes as an interactive graph in a web browser.
+
+The graph shows:
+- Notes as nodes
+- Links as edges
+- Tags as colors
+- Hover for preview
+
+** Integration with Citar
+
+Literature notes can be linked to bibliography entries:
+1. Create a literature note (=C-c n c l=)
+2. Use =C-c b i= to insert citation
+3. Notes are automatically linked via =citar-org-roam=
+
+* PDF Tools and Annotation
+
+** Opening PDFs
+
+PDFs open automatically in =pdf-view-mode= with:
+- Smooth scrolling
+- Midnight mode (dark background)
+- Synctex support for LaTeX
+
+** PDF Keybindings
+
+| Keybinding | Action |
+|------------|--------|
+| =n= / =p= | Next/previous page |
+| =SPC= / =DEL= | Scroll down/up |
+| =+= / =-= | Zoom in/out |
+| =0= | Fit page to window |
+| =W= | Fit width |
+| =H= | Fit height |
+| =g= | Go to page |
+| =o= | Outline (table of contents) |
+| =s= | Search |
+| =C-s= | Isearch |
+| =m= | Set bookmark |
+| =B= | List bookmarks |
+
+** Org-Noter Integration
+
+Org-noter allows you to take notes linked to specific PDF locations.
+
+*** Starting a Session
+
+1. Open a PDF
+2. Press =C-c n= (in pdf-view-mode)
+3. Create or select a notes file
+
+*** During Annotation
+
+| Keybinding | Action |
+|------------|--------|
+| =i= | Insert note at current location |
+| =M-i= | Insert precise note |
+| =C-M-n= / =C-M-p= | Next/previous note |
+| =C-M-.= | Sync PDF to note |
+| =q= | Quit org-noter |
+
+*** Note Structure
+
+Notes are organized hierarchically:
+- Level 1: Document title
+- Level 2: Page/location notes
+- Timestamps link to exact PDF positions
+
+*** Workflow
+
+1. Open PDF in one window
+2. Notes file in adjacent window
+3. Navigate PDF, insert notes with =i=
+4. Notes store page number and position
+5. Click note → jumps to PDF location
+* Bibliography Management
+
+** Citar
+
+Citar provides bibliography management integrated with Org and LaTeX.
 
 ** Bibliography File
 
 Location: =~/Documents/bibliography.bib=
 
+** Keybindings
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c b o= | Open bibliography entry (PDF, URL, etc.) |
+| =C-c b i= | Insert citation |
+| =C-c b n= | Open/create notes for entry |
+| =C-c b r= | Refresh bibliography cache |
+
 ** Adding References
 
-1. Open =~/Documents/bibliography.bib=
-2. Add entries in BibTeX format:
+Edit =~/Documents/bibliography.bib= and add BibTeX entries:
 
 #+begin_src bibtex
-  @article{smith2024,
-    author = {Smith, John},
-    title = {Article Title},
-    journal = {Journal Name},
-    year = {2024},
-    volume = {1},
-    pages = {1--10}
-  }
+@article{smith2024,
+  author = {Smith, John},
+  title = {Article Title},
+  journal = {Journal Name},
+  year = {2024},
+  volume = {1},
+  pages = {1--10}
+}
 
-  @book{jones2023,
-    author = {Jones, Sarah},
-    title = {Book Title},
-    publisher = {Publisher Name},
-    year = {2023}
-  }
+@book{jones2023,
+  author = {Jones, Sarah},
+  title = {Book Title},
+  publisher = {Publisher Name},
+  year = {2023}
+}
+
+@misc{rambam,
+  author = {Maimonides},
+  title = {Mishneh Torah},
+  year = {1180},
+  note = {Hebrew}
+}
 #+end_src
 
-3. Save the file
-4. Run =C-c b r= to refresh
+After editing, run =C-c b r= to refresh.
 
-** Using in LaTeX
+** Inserting Citations
 
-#+begin_src latex
-  \usepackage[backend=biber]{biblatex}
-  \addbibresource{~/Documents/bibliography.bib}
+*** In Org Mode
 
-  % In document:
-  \cite{smith2024}
+1. Press =C-c b i=
+2. Search for entry
+3. Select and press =RET=
 
-  % At end:
-  \printbibliography
-#+end_src
-
-** Using in Org
+Result:
 
 #+begin_example
-See [cite:@smith2024] for details.
+[cite:@smith2024]
 #+end_example
 
-* Programming
+*** In LaTeX
+
+1. Press =C-c b i=
+2. Search and select
+3. Insert style (cite, parencite, textcite, etc.)
+
+Result:
+
+#+begin_src latex
+\cite{smith2024}
+\parencite{smith2024}
+\textcite{smith2024}
+#+end_src
+
+** Integration with Org-Roam
+
+Literature notes are automatically linked:
+
+1. Press =C-c n c= then =l= (literature template)
+2. Or press =C-c b n= on a bibliography entry
+3. Notes are created with bibliographic metadata
+
+The note title format is: "Author - Title"
+
+** LaTeX Bibliography Setup
+
+#+begin_src latex
+\usepackage[backend=biber,style=authoryear]{biblatex}
+\addbibresource{~/Documents/bibliography.bib}
+
+% In document:
+See \textcite{smith2024} for details.
+
+% At end:
+\printbibliography
+#+end_src
+
+** Org Export with Citations
+
+#+begin_example
+,#+BIBLIOGRAPHY: ~/Documents/bibliography.bib
+
+See [cite:@smith2024] for details.
+
+,#+PRINT_BIBLIOGRAPHY:
+#+end_example
+
+* Seforim Library
+
+A complete system for managing and searching large Hebrew text (Seforim) collections.
+
+** Overview
+
+| Tool | Purpose | Speed |
+|------|---------|-------|
+| plocate | Find by filename | Instant (indexed) |
+| recoll | Full-text search | Instant (indexed) |
+| ripgrep | Fallback text search | Fast |
+| fd | Fallback file find | Fast |
+
+The system uses indexed search (plocate/recoll) as primary, with ripgrep/fd as fallbacks when indexes are unavailable.
+
+** Directory Structure
+
+#+begin_example
+~/Documents/seforim/
+├── Torah/
+│   ├── Bereishit.org
+│   ├── Shemot.org
+│   └── ...
+├── Neviim/
+│   └── ...
+├── Ketuvim/
+│   └── ...
+├── Mishnah/
+│   └── ...
+├── Bavli/
+│   ├── Berakhot.org
+│   └── ...
+├── Yerushalmi/
+│   └── ...
+├── Rambam/
+│   └── ...
+└── ...
+#+end_example
+
+** Seforim Hydra (=C-c S=)
+
+#+begin_example
+┌─────────────────────────────────────────────────────┐
+│                 📚 SEFORIM                          │
+├─────────────────────────────────────────────────────┤
+│ FIND FILE          │ SEARCH TEXT                   │
+│  f find (indexed)  │  s search all (indexed)       │
+│  F find (fuzzy)    │  r search all (ripgrep)       │
+│                    │  c search current dir         │
+│                    │  S search choose dir          │
+├─────────────────────────────────────────────────────┤
+│ NAVIGATE           │ MANAGE                        │
+│  o outline         │  I reindex all                │
+│  t toggle sidebar  │  ? status                     │
+│  b browse root     │                               │
+│  B browse current  │                               │
+└─────────────────────────────────────────────────────┘
+                     q quit
+#+end_example
+
+** Keybindings
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c S= | Open Seforim hydra |
+| =C-c S f= | Find file (plocate, indexed) |
+| =C-c S F= | Find file (fuzzy, interactive) |
+| =C-c S s= | Search text (recoll, indexed) |
+| =C-c S r= | Search text (ripgrep, fallback) |
+| =C-c S c= | Search in current directory |
+| =C-c S S= | Choose directory then search |
+| =C-c S o= | Jump to heading (outline) |
+| =C-c S t= | Toggle Dirvish sidebar |
+| =C-c S b= | Browse library root |
+| =C-c S B= | Browse current file's directory |
+| =C-c S I= | Reindex all (plocate + recoll) |
+| =C-c S ?= | Show status of tools and indexes |
+
+** Finding a Sefer
+
+*** By Filename (Indexed)
+
+1. Press =C-c S f=
+2. Type fragments: =bav shab= matches =Bavli/Shabbat.org=
+3. Select and press =RET=
+
+*** By Filename (Fuzzy)
+
+1. Press =C-c S F=
+2. Type interactively with live filtering
+3. Uses =consult-fd= for fuzzy matching
+
+** Searching Content
+
+*** Full-Text Search (Indexed)
+
+1. Press =C-c S s=
+2. Type search term (Hebrew or English): =אברהם=
+3. Results show with context
+4. Select to open file at match
+
+*** Ripgrep Search (Fallback)
+
+1. Press =C-c S r=
+2. Type search term
+3. Uses =consult-ripgrep= with live preview
+
+*** Directory-Scoped Search
+
+| Command | Scope |
+|---------|-------|
+| =C-c S c= | Current file's directory |
+| =C-c S S= | Choose directory interactively |
+
+** Navigating Within a Sefer
+
+1. Open any =.org= sefer file
+2. Press =C-c S o= (or =M-x consult-outline=)
+3. Jump to:
+   - Perakim (chapters)
+   - Daf numbers (=2a=, =2b=, etc.)
+   - Simanim
+   - Halachot
+
+** Browsing the Hierarchy
+
+*** Dirvish File Browser
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c S b= | Open Dirvish at library root |
+| =C-c S B= | Open Dirvish at current directory |
+| =C-c S t= | Toggle Dirvish sidebar |
+
+*** Dirvish Navigation
+
+| Key | Action |
+|-----|--------|
+| =RET= | Open file/enter directory |
+| =^= | Go up to parent directory |
+| =TAB= | Toggle subtree expansion |
+| =q= | Quit Dirvish |
+
+*** Dirvish Modes
+
+Press =C-c d m= in Dirvish to toggle between:
+- *Pretty mode*: File icons, sizes, timestamps, git status
+- *Ultra mode*: Minimal display for maximum speed
+
+** Index Management
+
+*** Rebuilding Indexes
+
+Press =C-c S I= to rebuild all indexes:
+- Recoll index (full-text)
+- Plocate index (filenames, requires sudo)
+
+*** Checking Status
+
+Press =C-c S ?= to see:
+- Which tools are available
+- Index status
+- Library statistics (file count, size)
+
+** Customization
+
+Change the library path:
+
+#+begin_src emacs-lisp
+(setq seforim-directory "~/path/to/your/seforim/")
+#+end_src
+
+** Search Tools Comparison
+
+| Tool | Type | Speed | Index Required | Best For |
+|------|------|-------|----------------|----------|
+| plocate | Filename | Instant | Yes | Finding files by name |
+| recoll | Full-text | Instant | Yes | Searching content |
+| fd | Filename | Fast | No | Fallback file find |
+| ripgrep | Full-text | Fast | No | Fallback content search |
+
+* Programming Languages
+
 ** Supported Languages
 
-| Language | LSP | Org Babel |
-|----------+-----+-----------|
-| Python   | ✓   | ✓         |
-| Rust     | ✓   | ✓         |
-| Java     | ✓   | ✗         |
-| Shell    | ✗   | ✓         |
-| Typst    | ✓   | ✗         |
+| Language | Mode | LSP (Eglot) | Org Babel | Format on Save |
+|----------|------|-------------|-----------|----------------|
+| Python | python-mode | ✓ | ✓ | — |
+| Rust | rust-mode | ✓ | ✓ | ✓ |
+| Java | java-mode | ✓ (eglot-java) | — | — |
+| Shell | sh-mode | — | ✓ | — |
+| Emacs Lisp | emacs-lisp-mode | — | ✓ | — |
+| Typst | typst-ts-mode | ✓ (tinymist) | — | — |
 
-** LSP (Eglot) Keybindings
+** LSP with Eglot
 
-| Keybinding | Action           |
-|------------+------------------|
-| =M-.=      | Go to definition |
-| =M-,=      | Go back          |
-| =M-?=      | Find references  |
-| =C-c C-r=  | Rename symbol    |
+Eglot provides IDE features via Language Server Protocol:
 
-** Running Code in Org
+| Feature | Description |
+|---------|-------------|
+| Completion | Context-aware suggestions |
+| Diagnostics | Real-time error checking |
+| Hover | Documentation on hover |
+| Go to definition | Jump to symbol definition |
+| Find references | Find all uses of symbol |
+| Rename | Rename symbol across project |
 
-1. Create a code block:
+*** Eglot Keybindings
+
+| Keybinding | Action |
+|------------|--------|
+| =M-.= | Go to definition |
+| =M-,= | Go back |
+| =M-?= | Find references |
+| =C-c C-r= | Rename symbol |
+| =C-h .= | Show documentation at point |
+
+*** Starting Eglot
+
+Eglot starts automatically for Python, Rust, Java, and Typst. To start manually:
+
+: M-x eglot RET
+
+*** Required Language Servers
+
+| Language | Server | NixOS Package |
+|----------|--------|---------------|
+| Python | pylsp | =python3Packages.python-lsp-server= |
+| Rust | rust-analyzer | =rust-analyzer= |
+| Java | jdtls | =jdt-language-server= |
+| Typst | tinymist | =tinymist= |
+
+** Python
+
+*** Running Python Code
+
+In an Org file:
 
 #+begin_example
 ,#+begin_src python
-print("Hello")
+print("Hello, World!")
+x = 1 + 2
+print(f"Result: {x}")
 ,#+end_src
 #+end_example
 
-2. Place cursor in block
-3. Press =C-c C-c= to execute
-4. Results appear below
+Press =C-c C-c= to execute.
 
-** Electric Pairs (Auto-closing Brackets)
+*** Python REPL
 
-Electric pairs (auto-inserting matching =()=, ={}=, =""=, etc.) are enabled only in:
-- Programming modes (Python, Rust, Java, etc.)
-- LaTeX mode
-- ConTeXt mode
-- Typst mode
-- Org source block editing (via =C-c '=)
+: M-x run-python RET
 
-They are *disabled* in prose modes (Org, Markdown, plain text) to avoid interfering with Hebrew writing.
+** Rust
 
-* Version Control (Magit)
+*** Cargo Integration
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c C-c C-b= | cargo build |
+| =C-c C-c C-r= | cargo run |
+| =C-c C-c C-t= | cargo test |
+
+*** Running Rust in Org
+
+#+begin_example
+,#+begin_src rust
+fn main() {
+    println!("Hello from Rust!");
+}
+,#+end_src
+#+end_example
+
+Requires =ob-rust= (included in config).
+
+** Java
+
+Eglot-java provides:
+- Project detection
+- Compilation
+- Test running
+- Refactoring
+
+Start with =M-x eglot= in a Java file.
+
+** Shell Scripts
+
+File extensions =.sh=, =.bash=, =.zsh= activate =sh-mode=.
+
+Execute in Org:
+
+#+begin_example
+,#+begin_src shell
+echo "Current directory: $(pwd)"
+ls -la
+,#+end_src
+#+end_example
+
+** Electric Pairs
+
+Auto-closing brackets are enabled only in:
+- Programming modes
+- LaTeX, ConTeXt, Typst
+- Org source block editing (=C-c '=)
+
+Disabled in prose modes to avoid interfering with Hebrew writing.
+
+** Rainbow Delimiters
+
+Matching parentheses are color-coded in all programming modes for easier navigation of nested structures.
+
+** Whitespace Display
+
+In programming modes, trailing whitespace and tabs are highlighted.
+
+* Embark
+
+Embark provides contextual actions on targets (files, buffers, symbols, URLs, etc.).
+
 ** Keybindings
 
-| Keybinding | Action             |
-|------------+--------------------|
-| =C-x g=    | Magit status       |
-| =C-x M-g=  | Magit dispatch     |
-| =C-c g=    | Magit file dispatch|
-| =C-c G=    | Git timemachine    |
+| Keybinding | Action |
+|------------|--------|
+| =C-.= | Embark act (show actions for target at point) |
+| =C-;= | Embark dwim (do what I mean - default action) |
+| =C-h B= | Embark bindings (show all bindings) |
 
-** Basic Magit Workflow
+** Using Embark
+
+1. Place cursor on a target (filename, URL, symbol, etc.)
+2. Press =C-.=
+3. A menu appears with relevant actions
+4. Press a key to execute action
+
+** Example Actions
+
+*** On a File Path
+
+| Key | Action |
+|-----|--------|
+| =f= | Find file |
+| =o= | Find file other window |
+| =d= | Delete file |
+| =r= | Rename file |
+| =c= | Copy file |
+| =w= | Copy path to kill ring |
+
+*** On a URL
+
+| Key | Action |
+|-----|--------|
+| =b= | Browse URL |
+| =w= | Copy URL |
+| =d= | Download |
+
+*** On a Symbol
+
+| Key | Action |
+|-----|--------|
+| =h= | Describe symbol |
+| =.= | Go to definition |
+| =r= | Find references |
+
+*** On a Buffer
+
+| Key | Action |
+|-----|--------|
+| =k= | Kill buffer |
+| =r= | Rename buffer |
+| =s= | Save buffer |
+
+** Embark Collect
+
+Press =E= during minibuffer completion to collect all candidates into a buffer for further action.
+
+** Embark with Consult
+
+When using consult commands (=C-s=, =C-x b=, etc.), press =C-.= on any candidate to act on it without selecting.
+
+* File Management with Dirvish
+
+Dirvish is a modern Dired enhancement providing a polished file management experience.
+
+** Opening Dirvish
+
+| Keybinding | Action |
+|------------|--------|
+| =C-x C-j= | Jump to current file's directory |
+| =C-x d= | Open Dirvish (dired) |
+
+** Basic Navigation
+
+| Key | Action |
+|-----|--------|
+| =RET= | Open file or enter directory |
+| =^= | Go to parent directory |
+| =q= | Quit Dirvish |
+| =g= | Refresh |
+| =j= | Jump to file (by name) |
+
+** File Operations
+
+| Key | Action |
+|-----|--------|
+| =C= | Copy file(s) |
+| =R= | Rename/move file(s) |
+| =D= | Delete file(s) |
+| =+= | Create directory |
+| =m= | Mark file |
+| =u= | Unmark file |
+| =U= | Unmark all |
+| =t= | Toggle marks |
+
+** Dirvish-Specific Features
+
+| Key | Action |
+|-----|--------|
+| =TAB= | Toggle subtree (expand/collapse directory) |
+| =C-c d m= | Toggle pretty/ultra mode |
+
+** Display Modes
+
+*** Pretty Mode (Default)
+
+Shows:
+- File icons (if all-the-icons installed)
+- File sizes
+- Modification times
+- Git status indicators
+- Subtree expansion
+
+*** Ultra Mode
+
+Minimal display for:
+- Maximum performance
+- Large directories
+- Slow filesystems
+
+Toggle with =C-c d m= in Dirvish.
+
+** Dirvish Sidebar
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c S t= | Toggle sidebar (in Seforim context) |
+
+The sidebar provides a tree view alongside your editing buffer.
+
+* Version Control with Magit
+
+** Keybindings
+
+| Keybinding | Action |
+|------------|--------|
+| =C-x g= | Magit status |
+| =C-x M-g= | Magit dispatch (all commands) |
+| =C-c g= | Magit file dispatch |
+| =C-c G= | Git timemachine |
+
+** Magit Status Buffer
+
+Press =C-x g= to open the status buffer:
+
+#+begin_example
+Head:     main Fix typo in readme
+Merge:    origin/main
+
+Untracked files (2)
+  new-file.org
+  another-file.txt
+
+Unstaged changes (1)
+  modified   config.org
+
+Staged changes (1)
+  modified   init.el
+
+Recent commits
+  abc1234 Fix typo in readme
+  def5678 Add new feature
+#+end_example
+
+** Basic Workflow
 
 1. Open status: =C-x g=
-2. Stage changes: =s= on unstaged files
+2. Stage changes: =s= on files (or =S= for all)
 3. Commit: =c c=, write message, =C-c C-c=
 4. Push: =P p=
 
-* Undo and Redo
+** Common Operations
 
-This config uses =undo-tree= for visual, persistent undo/redo:
+| Key | Action |
+|-----|--------|
+| =s= | Stage file/hunk |
+| =u= | Unstage file/hunk |
+| =c c= | Commit |
+| =P p= | Push |
+| =F p= | Pull |
+| =b b= | Switch branch |
+| =b c= | Create branch |
+| =l l= | Log |
+| =d d= | Diff |
+| =z z= | Stash |
+| =z p= | Pop stash |
 
-| Keybinding | Action                                  |
-|------------+-----------------------------------------|
-| =C-/=      | Undo                                    |
-| =C-?=      | Redo                                    |
-| =C-x u=    | Visual undo tree (graphical view)       |
+** Git Gutter
 
-Undo history is saved between sessions in =~/.emacs.d/undo-tree-history/=.
+In programming modes, the gutter shows:
+- Green: Added lines
+- Red: Deleted lines
+- Yellow: Modified lines
 
-In the visual undo tree:
-- Use =p= / =n= to navigate up/down
-- Use =b= / =f= to switch branches
-- Press =q= to quit
+** Git Timemachine
 
-* Adding New Packages
-** Method 1: Edit config.org (Recommended)
+Press =C-c G= to browse file history:
 
-1. Open =~/.emacs.d/config.org=
+| Key | Action |
+|-----|--------|
+| =p= | Previous version |
+| =n= | Next version |
+| =g= | Go to specific revision |
+| =w= | Copy current version's hash |
+| =q= | Quit timemachine |
+
+* Adding New Features
+
+** Adding a New Package
+
+*** Method 1: Edit config.org (Recommended)
+
+1. Open =~/.emacs.d/config.org=: =C-c e i=
 
 2. Find appropriate section or create new heading
 
@@ -1118,274 +2029,333 @@ In the visual undo tree:
 
 ,#+begin_src emacs-lisp
 (use-package package-name
+  :ensure t
   :config
   ;; Configuration here
-  )
+  (setq some-variable value))
 ,#+end_src
 #+end_example
 
-4. Save the file
+4. Save the file (auto-tangles to =config.el=)
 
 5. Either:
    - Restart Emacs, OR
    - Place cursor in the block and press =C-c C-c= to evaluate
 
-** Method 2: Quick Install (Temporary)
+*** Method 2: Quick Install (Temporary)
 
 1. =M-x package-install RET=
 2. Type package name
 3. Press =RET=
 
-Note: This won't persist after restart unless added to config.org.
+Note: This won't persist after restart unless added to =config.org=.
 
 ** Use-Package Syntax Reference
 
 #+begin_src emacs-lisp
-  (use-package package-name
-    :ensure t                      ; Install if not present
-    :hook (mode-name . function)   ; Add hooks
-    :bind (("C-c x" . command))    ; Key bindings
-    :config                        ; Run after loading
-    (setq some-variable value)
-    :custom                        ; Set custom variables
-    (variable-name value)
-    :init                          ; Run before loading
-    (some-setup-function))
+(use-package package-name
+  :ensure t                      ; Install if not present
+  :hook (mode-name . function)   ; Add to mode hook
+  :bind (("C-c x" . command))    ; Global keybinding
+  :bind (:map mode-map           ; Mode-specific keybinding
+         ("C-c y" . command))
+  :custom                        ; Set custom variables
+  (variable-name value)
+  :init                          ; Run BEFORE package loads
+  (some-setup-function)
+  :config                        ; Run AFTER package loads
+  (setq some-variable value)
+  :after other-package           ; Load after dependency
+  :defer t                       ; Lazy load
+  :mode "\\.ext\\'"              ; Associate with file extension
+  :diminish                      ; Hide from modeline
+  :commands (cmd1 cmd2))         ; Autoload these commands
 #+end_src
 
-** Common Use-Package Keywords
+** Common Use-Package Patterns
 
-| Keyword   | Purpose                        |
-|-----------+--------------------------------|
-| =:ensure= | Install package if missing     |
-| =:hook=   | Add function to mode hook      |
-| =:bind=   | Define keybindings             |
-| =:config= | Run code after package loads   |
-| =:init=   | Run code before package loads  |
-| =:custom= | Set customization variables    |
-| =:after=  | Load after specified package   |
-| =:defer=  | Defer loading (lazy load)      |
-| =:mode=   | Associate with file extensions |
+*** Adding a Hook
 
-** Adding System Packages (NixOS)
-
-1. Edit =/etc/nixos/emacs-packages.nix=
-
-2. Add packages to =environment.systemPackages=:
-
-#+begin_src nix
-  environment.systemPackages = with pkgs; [
-    # ... existing packages ...
-    new-package-name
-  ];
+#+begin_src emacs-lisp
+(use-package flycheck
+  :hook (prog-mode . flycheck-mode))
 #+end_src
 
-3. Rebuild:
+*** Adding Keybindings
+
+#+begin_src emacs-lisp
+(use-package avy
+  :bind (("M-j" . avy-goto-char-timer)
+         ("M-g l" . avy-goto-line)))
+#+end_src
+
+*** Loading After Another Package
+
+#+begin_src emacs-lisp
+(use-package evil-collection
+  :after evil
+  :config
+  (evil-collection-init))
+#+end_src
+
+*** Conditional Loading
+
+#+begin_src emacs-lisp
+(use-package pdf-tools
+  :if (display-graphic-p)   ; Only in GUI
+  :mode "\\.pdf\\'")
+#+end_src
+
+** Adding a New Programming Language
+
+1. Find the major mode package (e.g., =go-mode= for Go)
+
+2. Add to =config.org=:
+
+#+begin_src emacs-lisp
+(use-package go-mode
+  :mode "\\.go\\'"
+  :hook (go-mode . eglot-ensure)
+  :config
+  (setq gofmt-command "goimports")
+  (add-hook 'before-save-hook 'gofmt-before-save nil t))
+#+end_src
+
+3. Add LSP server to eglot (if needed):
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs '(go-mode . ("gopls"))))
+#+end_src
+
+4. For Org Babel support, add:
+
+#+begin_src emacs-lisp
+(use-package ob-go
+  :after org
+  :config
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   (append org-babel-load-languages '((go . t)))))
+#+end_src
+
+5. Install system dependencies (language, LSP server) via NixOS.
+
+** Adding a New Org Capture Template
+
+In =config.org=, find the capture templates section and add:
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'org
+  (add-to-list 'org-capture-templates
+               '("m" "Meeting" entry
+                 (file+headline "~/Documents/org/meetings.org" "Meetings")
+                 "* %^{Meeting Title}\n  :PROPERTIES:\n  :DATE: %U\n  :END:\n  %?")))
+#+end_src
+
+** Adding a New Org-Roam Template
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'org-roam
+  (add-to-list 'org-roam-capture-templates
+               '("s" "sefer" plain "%?"
+                 :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                   "#+title: ${title}\n#+filetags: sefer hebrew\n\n")
+                 :unnarrowed t)))
+#+end_src
+
+** Adding a Custom Function
+
+#+begin_src emacs-lisp
+(defun my/custom-function ()
+  "Description of what this function does."
+  (interactive)  ; Makes it callable via M-x
+  ;; Your code here
+  (message "Function executed!"))
+
+;; Bind to key
+(global-set-key (kbd "C-c x") 'my/custom-function)
+#+end_src
+
+** Adding a New Hydra Menu
+
+#+begin_src emacs-lisp
+(defhydra my/hydra-example (:color blue :hint nil)
+  "
+My Custom Menu
+
+_a_: Action A    _b_: Action B
+_c_: Action C    _q_: quit
+"
+  ("a" some-function-a)
+  ("b" some-function-b)
+  ("c" some-function-c)
+  ("q" nil))
+
+(global-set-key (kbd "C-c X") 'my/hydra-example/body)
+#+end_src
+
+** Adding a New Snippet
+
+1. Create snippet directory:
 
 #+begin_src shell
-  sudo nixos-rebuild switch
+mkdir -p ~/.emacs.d/snippets/MODENAME-mode/
 #+end_src
 
-* Customization
-** Changing Theme
+2. Create snippet file (e.g., =~/.emacs.d/snippets/org-mode/hebrew-header=):
 
-In =config.org=, find the doom-themes section and change:
+#+begin_example
+# -*- mode: snippet -*-
+# name: Hebrew Document Header
+# key: hebhead
+# --
+#+TITLE: ${1:כותרת}
+#+AUTHOR: שאול
+#+DATE: `(format-time-string "%Y-%m-%d")`
+#+LATEX_CLASS: article-unlimited
 
-#+begin_src emacs-lisp
-  (load-theme 'doom-one t)
-#+end_src
+$0
+#+end_example
 
-Available themes:
+3. Reload snippets: =M-x yas-reload-all=
 
-- =doom-one= (dark, default)
-- =doom-one-light=
-- =doom-dracula=
-- =doom-gruvbox=
-- =doom-nord=
-- =doom-solarized-dark=
-- =doom-solarized-light=
-- =doom-tomorrow-night=
-- =doom-monokai-pro=
+4. Use: Type =hebhead= and press =TAB=
 
-** Changing Fonts
+** Reloading Configuration
 
-In =config.org=, find the Font Configuration section. Default sizes:
+| Keybinding | Action |
+|------------|--------|
+| =C-c e i= | Open config file |
+| =C-c e r= | Reload config |
 
-| Element     | Height | Approx Size |
-|-------------+--------+-------------|
-| Editor text | 100    | ~10pt       |
-| Modeline    | 80     | ~8pt        |
-| Minibuffer  | 80     | ~8pt        |
+Or manually:
+1. Delete =~/.emacs.d/config.el=
+2. Restart Emacs
 
-To change the editor font:
+* All Hydra Menus
 
-#+begin_src emacs-lisp
-  (set-face-attribute 'default nil
-                      :font "Fira Code"
-                      :height 120) ; 12pt
-#+end_src
+** Direction Controls (=C-c D=)
 
-** Changing Hebrew Fonts
+#+begin_example
+Direction Controls
 
-Edit the =my/latex-hebrew-preamble= variable in config.org.
+r: RTL (Hebrew)    l: LTR (English)    t: Toggle direction
+h: Hebrew spell    e: English spell    b: Both languages
+B: Toggle bidi     w: Focus writing    W: Set width
+q: quit
+#+end_example
 
-Available Hebrew fonts (from culmus):
+** Org-Roam (=C-c R=)
 
-- David CLM
-- Nachlieli CLM
-- Miriam Mono CLM
-- Frank Ruehl CLM
-- Hadasim CLM
+#+begin_example
+Org-Roam
 
-** Adding Custom Keybindings
+f: Find node       i: Insert node      c: Capture
+l: Toggle buffer   g: Graph            t: Add tag
+d: Daily today     D: Daily date       u: Roam UI
+q: quit
+#+end_example
 
-Global keybinding:
+** Document Systems (=C-c P=)
 
-#+begin_src emacs-lisp
-  (global-set-key (kbd "C-c m") 'my-command)
-#+end_src
+#+begin_example
+Document Systems
 
-Mode-specific:
+LaTeX:   p: Babel preamble  g: Polyglossia  u: Unlimited struct
+         n: Nested footnote template
+ConTeXt: c: Hebrew preamble f: Local footnote
+Typst:   h: Hebrew preamble s: Nested footnote helper
+q: quit
+#+end_example
 
-#+begin_src emacs-lisp
-  (define-key org-mode-map (kbd "C-c m") 'my-command)
-#+end_src
+** LaTeX Footnotes (=C-c F=)
 
-** Creating Custom Functions
+#+begin_example
+LaTeX Footnotes (Simple)
 
-#+begin_src emacs-lisp
-  (defun my/custom-function ()
-    "Description of what this function does."
-    (interactive)
-    ;; Your code here
-    (message "Function executed!"))
+1: \footnote    2: \footnoteB   3: \footnoteC   4: \footnoteD   5: \footnoteE
+6: \footnoteF   7: \footnoteG   8: \footnoteH   9: \footnoteI   0: \footnoteJ
 
-  ;; Bind to key
-  (global-set-key (kbd "C-c x") 'my/custom-function)
-#+end_src
+n: Nested template   m: → Marks menu   t: → Texts menu
+q: quit
+#+end_example
 
-* Keybinding Reference
-** Global
+*** Footnote Marks Sub-menu
 
-| Keybinding | Action                          |
-|------------+---------------------------------|
-| =F9=       | Toggle Hebrew/English input     |
-| =C-c d=    | Toggle RTL/LTR direction        |
-| =C-c r=    | Set RTL                         |
-| =C-c l=    | Set LTR                         |
-| =C-c B=    | Toggle bidi reordering          |
-| =C-c D=    | Direction menu (hydra)          |
-| =C-c P=    | Document systems menu           |
-| =C-c w=    | Toggle focused writing          |
-| =C-c W=    | Set focused writing width       |
-| =C-x g=    | Magit status                    |
-| =C-s=      | Search (consult-line)           |
-| =C-x b=    | Switch buffer                   |
-| =M-o=      | Switch window (ace-window)      |
-| =C-c e i=  | Open config file                |
-| =C-c e r=  | Reload config                   |
+#+begin_example
+Footnote Marks (for nesting)
 
-** Undo / Redo
+2: \footnotemarkB   3: \footnotemarkC   4: \footnotemarkD   5: \footnotemarkE
+b: ← Back   q: quit
+#+end_example
 
-| Keybinding | Action               |
-|------------+----------------------|
-| =C-/=      | Undo                 |
-| =C-?=      | Redo                 |
-| =C-x u=    | Visual undo tree     |
+*** Footnote Texts Sub-menu
 
-** Spell Checking
+#+begin_example
+Footnote Texts (for nesting)
 
-** Spell Checking
+2: \footnotetextB   3: \footnotetextC   4: \footnotetextD   5: \footnotetextE
+b: ← Back   q: quit
+#+end_example
 
-| Keybinding | Action                   |
-|------------+--------------------------|
-| =C-c s e=  | English dictionary       |
-| =C-c s h=  | Hebrew dictionary        |
-| =M-$=      | Correct word at point    |
-| =i=        | Add word to personal dict (when correcting) |
+** Seforim Library (=C-c S=)
 
-** Document Creation
-
-| Keybinding | Action                    |
-|------------+---------------------------|
-| =C-c h l=  | Create Hebrew LaTeX doc   |
-| =C-c h x=  | Create Hebrew ConTeXt doc |
-| =C-c h t=  | Create Hebrew Typst doc   |
-| =C-c h o=  | Create Hebrew Org doc     |
-| =C-c h q=  | Insert Hebrew quotes      |
-| =C-c h p=  | Insert Hebrew parentheses |
-| =C-c h c=  | Count Hebrew words        |
-| =C-c h f=  | Fix RTL in all footnotes  |
-
-** Org Mode
-
-| Keybinding | Action              |
-|------------+---------------------|
-| =C-c C-e=  | Export              |
-| =C-c C-c=  | Execute/toggle      |
-| =C-c '=    | Edit source block   |
-| =M-RET=    | New heading/item    |
-| =C-c C-l=  | Insert link         |
-| =C-c C-o=  | Open link           |
-
-** Org-Roam
-
-| Keybinding | Action           |
-|------------+------------------|
-| =C-c n f=  | Find node        |
-| =C-c n i=  | Insert link      |
-| =C-c n l=  | Toggle backlinks |
-| =C-c n c=  | Capture          |
-| =C-c n d=  | Today's daily    |
-| =C-c n D=  | Specific date    |
-| =C-c n h=  | Find Hebrew      |
-| =C-c n R=  | Find research    |
-| =C-c n x=  | Random node      |
-| =C-c R=    | Org-roam menu    |
-
-** LaTeX
-
-| Keybinding | Action                          |
-|------------+---------------------------------|
-| =C-c C-c=  | Compile                         |
-| =C-c C-v=  | View                            |
-| =C-c C-e=  | Insert environment              |
-| =C-c f 1-0= | Insert simple footnote         |
-| =C-c F=    | Footnotes menu (hydra)          |
-
-** Typst
-
-| Keybinding | Action                          |
-|------------+---------------------------------|
-| =C-c C-c=  | Compile                         |
-| =C-c C-w=  | Watch (live preview)            |
-| =C-c C-v=  | View PDF                        |
-| =C-c t h=  | Insert Hebrew preamble          |
-| =C-c t f=  | Insert nested footnote helper   |
-
-** Bibliography
-
-| Keybinding | Action          |
-|------------+-----------------|
-| =C-c b i=  | Insert citation |
-| =C-c b o=  | Open reference  |
-| =C-c b n=  | Open notes      |
-| =C-c b r=  | Refresh         |
+#+begin_example
+┌─────────────────────────────────────────────────────┐
+│                 📚 SEFORIM                          │
+├─────────────────────────────────────────────────────┤
+│ FIND FILE          │ SEARCH TEXT                   │
+│  f find (indexed)  │  s search all (indexed)       │
+│  F find (fuzzy)    │  r search all (ripgrep)       │
+│                    │  c search current dir         │
+│                    │  S search choose dir          │
+├─────────────────────────────────────────────────────┤
+│ NAVIGATE           │ MANAGE                        │
+│  o outline         │  I reindex all                │
+│  t toggle sidebar  │  ? status                     │
+│  b browse root     │                               │
+│  B browse current  │                               │
+└─────────────────────────────────────────────────────┘
+                     q quit
+#+end_example
 
 * Troubleshooting
-** Packages Not Installing
 
-#+begin_src emacs-lisp
-  M-x package-refresh-contents RET
-#+end_src
+** Startup Issues
+
+*** Packages Not Installing
+
+#+begin_example
+M-x package-refresh-contents RET
+#+end_example
 
 Then restart Emacs.
 
-** Hebrew Not Displaying
+*** Slow Startup
+
+First startup is slow due to package installation. If still slow:
+
+1. Check =*Messages*= buffer for errors
+2. Run: =emacs --debug-init=
+3. Profile: =M-x profiler-start RET RET= ... =M-x profiler-report=
+
+*** Config Changes Not Taking Effect
+
+After editing =config.org=:
+
+1. Delete =~/.emacs.d/config.el=
+2. Restart Emacs
+
+Or manually tangle: =M-x org-babel-tangle RET=
+
+** Hebrew and RTL Issues
+
+*** Hebrew Not Displaying
 
 1. Check fonts installed:
    #+begin_src shell
-     fc-list | grep -i hebrew
+   fc-list | grep -i "david\|nachlieli\|miriam"
    #+end_src
 
 2. Check input method:
@@ -1394,160 +2364,418 @@ Then restart Emacs.
 3. Check direction:
    : C-h v bidi-paragraph-direction RET
 
-** Hebrew Footnotes Showing as LTR in Org
+*** Hebrew Footnotes Showing as LTR in Org
 
-Use =C-c h f= to fix all existing footnotes in the buffer. New footnotes are fixed automatically.
+Use =C-c h f= to fix all existing footnotes. New footnotes are fixed automatically.
 
-** PDF Not Opening in Emacs
+*** Bidi Performance Issues
 
-Run once:
-: M-x pdf-tools-install RET
+For very large files, disable bidi: =C-c B=
 
-** Org-Roam Database Errors
+** Spell Checking Issues
 
-: M-x org-roam-db-sync RET
+*** Spell Check Not Working
 
-** LaTeX Compilation Fails
+1. Check hunspell:
+   #+begin_src shell
+   which hunspell
+   hunspell -D
+   #+end_src
+
+2. Verify =en_US= and =he_IL= dictionaries are listed
+
+3. Check DICPATH:
+   #+begin_src shell
+   echo $DICPATH
+   #+end_src
+
+4. Switch to correct language: =C-c s e= or =C-c s h=
+
+*** Word Incorrectly Flagged
+
+Press =i= when correcting to add to personal dictionary (=~/.hunspell_personal=).
+
+** Document Compilation Issues
+
+*** LaTeX Compilation Fails
 
 1. Check =*TeX Help*= buffer for errors
 2. Ensure LuaLaTeX installed:
    #+begin_src shell
-     which lualatex
+   which lualatex
    #+end_src
-3. Check log: =C-c C-l=
+3. View log: =C-c C-l=
 
-** ConTeXt Compilation Fails
+*** ConTeXt Compilation Fails
 
 1. Ensure ConTeXt installed:
    #+begin_src shell
-     which context
+   which context
    #+end_src
 2. Check font access:
    #+begin_src shell
-     echo $OSFONTDIR
+   echo $OSFONTDIR
    #+end_src
 
-** Typst Compilation Fails
+*** Typst Compilation Fails
 
 1. Ensure Typst installed:
    #+begin_src shell
-     which typst
+   which typst
    #+end_src
-2. Check for syntax errors in output
+2. Check error output in compilation buffer
 
-** Typst LSP Not Working
+*** Typst LSP Not Working
 
 1. Ensure tinymist installed:
    #+begin_src shell
-     which tinymist
+   which tinymist
    #+end_src
 2. Start eglot manually: =M-x eglot=
 
-** Spell Check Not Working
+** PDF Issues
 
-1. Check hunspell:
-   #+begin_src shell
-     which hunspell
-   #+end_src
+*** PDF Not Opening in Emacs
 
-2. Check dictionaries:
-   #+begin_src shell
-     hunspell -D
-   #+end_src
+Run once:
+: M-x pdf-tools-install RET
 
-3. Verify both =en_US= and =he_IL= appear in available dictionaries
+*** PDF Renders Incorrectly
 
-4. Check DICPATH environment variable:
-   #+begin_src shell
-     echo $DICPATH
-   #+end_src
+Ensure =poppler= is installed on your system.
 
-5. Switch to correct language: =C-c s e= for English, =C-c s h= for Hebrew
+** Org-Roam Issues
 
-6. If a word is incorrectly flagged, press =i= to add it to personal dictionary
-** Slow Startup
+*** Database Errors
 
-First startup is slow due to package installation. If still slow:
+: M-x org-roam-db-sync RET
 
-1. Check =*Messages*= buffer
-2. Run: =emacs --debug-init=
+*** Nodes Not Appearing
 
-** Config Changes Not Taking Effect
+1. Check file has =#+title:= property
+2. Ensure file is in =~/Documents/roam/=
+3. Rebuild database: =M-x org-roam-db-sync=
 
-After editing =config.org=:
+** Seforim Library Issues
 
-1. Delete =~/.emacs.d/config.el=
-2. Restart Emacs
+*** "Command not found" Errors
 
-Or manually tangle:
-: M-x org-babel-tangle RET
+Ensure tools are installed via NixOS and in =$PATH=. Restart Emacs after installing.
 
-* Getting Help
-** Built-in Help
+*** Slow Search
 
-| Command   | Description            |
-|-----------+------------------------|
-| =C-h r=   | Emacs manual           |
-| =C-h k=   | Describe keybinding    |
-| =C-h f=   | Describe function      |
-| =C-h v=   | Describe variable      |
-| =C-h a=   | Apropos (search)       |
-| =C-h m=   | Describe current mode  |
-| =C-h b=   | List all keybindings   |
+1. Build indexes: =C-c S I=
+2. Use indexed search (=C-c S f=, =C-c S s=) instead of fallbacks
 
-** Which-Key
+*** No Search Results for Hebrew
 
-After pressing a prefix key (like =C-c=), wait briefly to see available completions.
+Check files are UTF-8 encoded:
+#+begin_src shell
+file -i yourfile.org
+#+end_src
 
-** Online Resources
+Convert if needed:
+#+begin_src shell
+iconv -f ISO-8859-8 -t UTF-8 oldfile.org > newfile.org
+#+end_src
 
-- Emacs Manual: https://www.gnu.org/software/emacs/manual/
-- Org Mode Manual: https://orgmode.org/manual/
-- AUCTeX Manual: https://www.gnu.org/software/auctex/manual/
-- Org-Roam: https://www.orgroam.com/
-- ConTeXt Wiki: https://wiki.contextgarden.net/
-- Typst Documentation: https://typst.app/docs/
+** Getting More Help
 
-* File Locations Summary
+| Command | Description |
+|---------|-------------|
+| =C-h r= | Emacs manual |
+| =C-h k= | Describe keybinding |
+| =C-h f= | Describe function |
+| =C-h v= | Describe variable |
+| =C-h m= | Describe current mode |
 
-| File              | Location                         |
-|-------------------+----------------------------------|
-| Emacs config      | =~/.emacs.d/config.org=          |
-| Init file         | =~/.emacs.d/init.el=             |
-| Tangled config    | =~/.emacs.d/config.el=           |
-| Org-roam notes    | =~/Documents/roam/=              |
-| Org directory     | =~/Documents/org/=               |
-| Bibliography      | =~/Documents/bibliography.bib=   |
-| NixOS config      | =/etc/nixos/emacs-packages.nix=  |
-| Personal dict     | =~/.hunspell_personal=           |
-| Undo history      | =~/.emacs.d/undo-tree-history/=  |
+After pressing a prefix key, wait for which-key popup.
 
-* Quick Start Summary
+* Keybinding Reference Tables
 
-After installation:
+** Global Keybindings
 
-| Task                   | Command/Key         |
-|------------------------+---------------------|
-| Switch to Hebrew       | =F9=                |
-| Switch direction       | =C-c d=             |
-| Open file              | =C-x C-f=           |
-| Save                   | =C-x C-s=           |
-| Undo / Redo            | =C-/= / =C-?=      |
-| Visual undo tree       | =C-x u=             |
-| Focused writing        | =C-c w=             |
-| Create LaTeX doc       | =C-c h l=           |
-| Create ConTeXt doc     | =C-c h x=           |
-| Create Typst doc       | =C-c h t=           |
-| Compile LaTeX          | =C-c C-c=           |
-| Compile Typst          | =C-c C-c=           |
-| Typst live preview     | =C-c C-w=           |
-| Export Org to PDF      | =C-c C-e l p=       |
-| Document systems menu  | =C-c P=             |
-| LaTeX footnotes menu   | =C-c F=             |
-| Find note              | =C-c n f=           |
-| Git status             | =C-x g=             |
-| Search                 | =C-s=               |
-| Switch spell to English | =C-c s e=          |
-| Switch spell to Hebrew  | =C-c s h=          |
-| Fix footnotes RTL      | =C-c h f=           |
-| Help on key            | =C-h k= then key    |
+| Keybinding | Action |
+|------------|--------|
+| =F9= | Toggle Hebrew/English input |
+| =C-c d= | Toggle RTL/LTR direction |
+| =C-c r= | Set RTL |
+| =C-c l= | Set LTR |
+| =C-c B= | Toggle bidi reordering |
+| =C-c D= | Direction controls hydra |
+| =C-c w= | Toggle focused writing |
+| =C-c W= | Set focused writing width |
+| =C-c e i= | Open config file |
+| =C-c e r= | Reload config |
+
+** Undo / Redo
+
+| Keybinding | Action |
+|------------|--------|
+| =C-/= | Undo |
+| =C-?= | Redo |
+| =C-x u= | Visual undo tree |
+
+** Spell Checking
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c s e= | English dictionary |
+| =C-c s h= | Hebrew dictionary |
+| =C-c s b= | Both (add Hebrew to personal) |
+| =M-$= | Correct word at point |
+
+** Hebrew Utilities
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c h l= | Create Hebrew LaTeX document |
+| =C-c h x= | Create Hebrew ConTeXt document |
+| =C-c h t= | Create Hebrew Typst document |
+| =C-c h o= | Create Hebrew Org document |
+| =C-c h q= | Insert Hebrew quotes (״״) |
+| =C-c h p= | Insert Hebrew parentheses |
+| =C-c h c= | Count Hebrew words |
+| =C-c h f= | Fix RTL in Org footnotes |
+
+** Document Systems
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c P= | Document systems hydra |
+| =C-c F= | LaTeX footnotes hydra |
+| =C-c f 1-0= | Insert simple footnote level 1-10 |
+
+** Org Mode
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c C-e= | Export dispatcher |
+| =C-c C-c= | Execute/toggle/confirm |
+| =C-c '= | Edit source block |
+| =M-RET= | New heading/item |
+| =C-c C-l= | Insert link |
+| =C-c C-o= | Open link |
+| =C-c a= | Agenda |
+| =C-c c= | Capture |
+
+** Org-Roam
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c n f= | Find node |
+| =C-c n i= | Insert link |
+| =C-c n l= | Toggle backlinks |
+| =C-c n c= | Capture |
+| =C-c n g= | Graph |
+| =C-c n t= | Add tag |
+| =C-c n d= | Today's daily |
+| =C-c n D= | Specific date |
+| =C-c n h= | Find Hebrew nodes |
+| =C-c n R= | Find research nodes |
+| =C-c n x= | Random node |
+| =C-c R= | Org-roam hydra |
+
+** Seforim Library
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c S= | Seforim hydra |
+| =C-c S f= | Find file (indexed) |
+| =C-c S F= | Find file (fuzzy) |
+| =C-c S s= | Search text (indexed) |
+| =C-c S r= | Search text (ripgrep) |
+| =C-c S c= | Search current directory |
+| =C-c S S= | Search chosen directory |
+| =C-c S o= | Outline navigation |
+| =C-c S t= | Toggle sidebar |
+| =C-c S b= | Browse root |
+| =C-c S B= | Browse current |
+| =C-c S I= | Reindex |
+| =C-c S ?= | Status |
+
+** Bibliography
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c b o= | Open entry |
+| =C-c b i= | Insert citation |
+| =C-c b n= | Open notes |
+| =C-c b r= | Refresh |
+
+** LaTeX / AUCTeX
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c C-c= | Compile |
+| =C-c C-v= | View PDF |
+| =C-c C-a= | Compile all + view |
+| =C-c C-e= | Insert environment |
+| =C-c C-s= | Insert section |
+| =C-c C-m= | Insert macro |
+| =C-c `= | Next error |
+| =C-c C-l= | View log |
+
+** Typst
+
+| Keybinding | Action |
+|------------|--------|
+| =C-c C-c= | Compile |
+| =C-c C-w= | Watch (live preview) |
+| =C-c C-v= | View PDF |
+| =C-c t h= | Insert Hebrew preamble |
+| =C-c t f= | Insert footnote helper |
+
+** PDF View
+
+| Key | Action |
+|-----|--------|
+| =n= / =p= | Next/previous page |
+| =SPC= / =DEL= | Scroll |
+| =+= / =-= | Zoom |
+| =o= | Outline |
+| =s= | Search |
+| =C-c n= | Start org-noter |
+
+** Version Control
+
+| Keybinding | Action |
+|------------|--------|
+| =C-x g= | Magit status |
+| =C-x M-g= | Magit dispatch |
+| =C-c g= | Magit file dispatch |
+| =C-c G= | Git timemachine |
+
+** Embark
+
+| Keybinding | Action |
+|------------|--------|
+| =C-.= | Embark act |
+| =C-;= | Embark dwim |
+| =C-h B= | Embark bindings |
+
+** Completion & Navigation
+
+| Keybinding | Action |
+|------------|--------|
+| =C-s= | Search buffer (consult-line) |
+| =C-x b= | Switch buffer (consult) |
+| =M-y= | Yank from kill ring (consult) |
+| =M-g g= | Go to line (consult) |
+| =M-s r= | Ripgrep search |
+| =M-s f= | Find file |
+| =M-o= | Switch window (ace-window) |
+
+** LSP (Eglot)
+
+| Keybinding | Action |
+|------------|--------|
+| =M-.= | Go to definition |
+| =M-,= | Go back |
+| =M-?= | Find references |
+| =C-c C-r= | Rename symbol |
+
+* Quick Start Card
+
+** "I want to..." Reference
+
+| I want to... | Do this |
+|--------------|---------|
+| Switch to Hebrew keyboard | =F9= |
+| Switch text direction | =C-c d= |
+| Create Hebrew LaTeX document | =C-c h l= |
+| Create Hebrew Typst document | =C-c h t= |
+| Compile LaTeX | =C-c C-c= then =RET= |
+| Compile Typst with live preview | =C-c C-w= |
+| Insert nested footnote (LaTeX) | =C-c F= then =n= |
+| Open my notes | =C-c n f= |
+| Create a new note | =C-c n c= |
+| Link to another note | =C-c n i= |
+| See backlinks | =C-c n l= |
+| Today's daily note | =C-c n d= |
+| Find a sefer | =C-c S f= |
+| Search all seforim | =C-c S s= |
+| Insert citation | =C-c b i= |
+| Open bibliography entry | =C-c b o= |
+| Git status | =C-x g= |
+| Search in file | =C-s= |
+| Switch buffer | =C-x b= |
+| Switch window | =M-o= |
+| Undo | =C-/= |
+| Redo | =C-?= |
+| Visual undo tree | =C-x u= |
+| Focused writing mode | =C-c w= |
+| Spell check word | =M-$= |
+| Switch to English spelling | =C-c s e= |
+| Switch to Hebrew spelling | =C-c s h= |
+| Open config | =C-c e i= |
+| Reload config | =C-c e r= |
+| Get help on keybinding | =C-h k= then press key |
+| See all keybindings | Wait after prefix key |
+
+** Essential 20 Keybindings
+
+| # | Keybinding | Action |
+|---|------------|--------|
+| 1 | =C-x C-s= | Save |
+| 2 | =C-x C-f= | Open file |
+| 3 | =C-s= | Search |
+| 4 | =C-g= | Cancel |
+| 5 | =C-/= | Undo |
+| 6 | =C-?= | Redo |
+| 7 | =F9= | Toggle Hebrew input |
+| 8 | =C-c d= | Toggle direction |
+| 9 | =C-c C-c= | Compile / Execute |
+| 10 | =C-c n f= | Find note |
+| 11 | =C-c n i= | Link note |
+| 12 | =C-c S f= | Find sefer |
+| 13 | =C-c S s= | Search seforim |
+| 14 | =C-x b= | Switch buffer |
+| 15 | =M-o= | Switch window |
+| 16 | =C-x g= | Git status |
+| 17 | =C-c P= | Document menu |
+| 18 | =C-c R= | Org-roam menu |
+| 19 | =C-c e i= | Open config |
+| 20 | =C-h k= | Help on key |
+
+** Prefix Key Reference
+
+| Prefix | Domain |
+|--------|--------|
+| =C-c n= | Org-roam notes |
+| =C-c S= | Seforim library |
+| =C-c s= | Spell checking |
+| =C-c h= | Hebrew utilities |
+| =C-c b= | Bibliography |
+| =C-c f= | LaTeX footnotes |
+| =C-c t= | Typst |
+| =C-c e= | Emacs config |
+| =C-c p= | Projectile |
+| =C-c g= | Git (file) |
+| =C-x g= | Git (status) |
+
+** Hydra Menus Summary
+
+| Keybinding | Menu | Contents |
+|------------|------|----------|
+| =C-c D= | Direction | RTL/LTR, spell, bidi, focused writing |
+| =C-c R= | Org-Roam | Find, insert, capture, daily, graph |
+| =C-c P= | Documents | LaTeX/ConTeXt/Typst preambles |
+| =C-c F= | Footnotes | LaTeX nested footnotes (10 levels) |
+| =C-c S= | Seforim | Find, search, browse, index |
+
+* Online Resources
+
+| Resource | URL |
+|----------|-----|
+| Emacs Manual | https://www.gnu.org/software/emacs/manual/ |
+| Org Mode Manual | https://orgmode.org/manual/ |
+| AUCTeX Manual | https://www.gnu.org/software/auctex/manual/ |
+| Org-Roam | https://www.orgroam.com/ |
+| ConTeXt Wiki | https://wiki.contextgarden.net/ |
+| Typst Documentation | https://typst.app/docs/ |
+| Magit Manual | https://magit.vc/manual/ |
+
+* License
+
+This configuration and documentation are released into the public domain. Use freely for Torah study, scholarship, and any other purpose.

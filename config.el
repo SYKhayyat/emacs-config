@@ -7,6 +7,56 @@
 ;; Silence harmless async native-compilation warnings
 (setq native-comp-async-report-warnings-errors nil)
 
+;; Add Nix profile binaries to exec-path
+(when (eq system-type 'gnu/linux)
+  (setq exec-path
+        (append '("/run/current-system/sw/bin"
+                  "/etc/profiles/per-user/shaul/bin"
+                  "~/.nix-profile/bin")
+                exec-path))
+  (setenv "PATH" (concat "/run/current-system/sw/bin:"
+                         "/etc/profiles/per-user/shaul/bin:"
+                         (getenv "PATH"))))
+
+;; Core performance settings for snappy typing with Hebrew
+(setq bidi-inhibit-bpa t)
+(setq bidi-display-reordering t)
+(setq bidi-paragraph-direction 'right-to-left)
+
+;; Faster rendering
+(setq auto-window-vscroll nil)
+(setq fast-but-imprecise-scrolling t)
+(setq jit-lock-defer-time 0)
+(setq read-process-output-max (* 1024 1024))
+
+;; Reasonable undo limits
+(setq undo-limit 20000000)
+(setq undo-strong-limit 40000000)
+(setq undo-outer-limit 60000000)
+
+;; Lighter than relative line numbers
+(setq display-line-numbers-type 'visual)
+
+;; Large file performance guard (5MB threshold)
+(defun my/large-file-performance ()
+  "Disable expensive features in large buffers."
+  (when (> (buffer-size) (* 5 1024 1024))
+    (when (fboundp 'jinx-mode) (jinx-mode -1))
+    (setq-local bidi-display-reordering nil)
+    (message "Large-file performance mode activated")))
+
+(add-hook 'find-file-hook #'my/large-file-performance)
+
+;; Handle long lines better
+(setq-default so-long-threshold 400)
+(global-so-long-mode 1)
+
+(use-package exec-path-from-shell
+  :ensure nil
+  :config
+  (when (memq window-system '(mac ns x pgtk))
+    (exec-path-from-shell-initialize)))
+
 (require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                          ("melpa-stable" . "https://stable.melpa.org/packages/")
@@ -67,6 +117,14 @@
 (setq scroll-conservatively 101)
 (setq scroll-margin 3)
 
+;; Start maximized but respect Plasma panels
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
+;; Ensure new frames also respect panels
+(add-hook 'after-make-frame-functions
+          (lambda (frame)
+            (set-frame-parameter frame 'fullscreen 'maximized)))
+
 ;; Disable backup files
 (setq make-backup-files nil)
 (setq auto-save-default nil)
@@ -109,9 +167,10 @@
 (use-package doom-modeline
   :init (doom-modeline-mode 1)
   :config
-  (setq doom-modeline-height 35)
+  (setq doom-modeline-height 32)
   (setq doom-modeline-buffer-encoding t)
-  (setq doom-modeline-input-method t))
+  (setq doom-modeline-input-method t)
+  (setq doom-modeline-minor-modes nil))
 
 (use-package all-the-icons
   :if (display-graphic-p))
@@ -119,54 +178,30 @@
 (use-package all-the-icons-dired
   :hook (dired-mode . all-the-icons-dired-mode))
 
-;; Default to automatic bidi detection
-(setq-default bidi-paragraph-direction nil)
+;; === Fast & Correct Hebrew/RTL Defaults ===
+(setq bidi-inhibit-bpa t)
+(setq bidi-display-reordering t)
+(setq bidi-paragraph-direction 'right-to-left)
 
-;; Enable bidirectional reordering
-(setq-default bidi-display-reordering t)
+;; === Direction Indicator (updates only on change) ===
+(defvar my/direction-indicator " [RTL עב]"
+  "Current direction indicator for mode line.")
 
-;; Inhibit bidi algorithm for performance when not needed
-(setq bidi-inhibit-bpa nil)
-
-;; Set default input method to Hebrew
-(setq default-input-method "hebrew-full")
-
-;; Bidi paragraph settings
-(setq bidi-paragraph-start-re "^")
-(setq bidi-paragraph-separate-re "^[ \t\f]*$")
-
-;; RTL for prose modes
-(defun my/set-rtl-mode ()
-  "Set buffer to RTL direction."
-  (setq bidi-paragraph-direction 'right-to-left))
-
-;; LTR for code modes
-(defun my/set-ltr-mode ()
-  "Set buffer to LTR direction."
-  (setq bidi-paragraph-direction 'left-to-right))
-
-;; Prose modes: RTL by default
-(add-hook 'org-mode-hook 'my/set-rtl-mode)
-(add-hook 'LaTeX-mode-hook 'my/set-rtl-mode)
-(add-hook 'context-mode-hook 'my/set-rtl-mode)
-(add-hook 'typst-ts-mode-hook 'my/set-rtl-mode)
-(add-hook 'typst-mode-hook 'my/set-rtl-mode)
-(add-hook 'text-mode-hook 'my/set-rtl-mode)
-(add-hook 'markdown-mode-hook 'my/set-rtl-mode)
-
-;; Code modes: LTR by default
-(add-hook 'prog-mode-hook 'my/set-ltr-mode)
-
+;; === Direction Functions ===
 (defun my/set-rtl ()
   "Set buffer direction to RTL (Hebrew)."
   (interactive)
   (setq bidi-paragraph-direction 'right-to-left)
+  (setq my/direction-indicator " [RTL עב]")
+  (force-mode-line-update)
   (message "Direction: RTL (Hebrew)"))
 
 (defun my/set-ltr ()
   "Set buffer direction to LTR (English)."
   (interactive)
   (setq bidi-paragraph-direction 'left-to-right)
+  (setq my/direction-indicator " [LTR EN]")
+  (force-mode-line-update)
   (message "Direction: LTR (English)"))
 
 (defun my/toggle-direction ()
@@ -176,30 +211,6 @@
       (my/set-ltr)
     (my/set-rtl)))
 
-;; Keybindings for direction toggle
-(global-set-key (kbd "C-c d") 'my/toggle-direction)
-(global-set-key (kbd "C-c r") 'my/set-rtl)
-(global-set-key (kbd "C-c l") 'my/set-ltr)
-
-;; Quick input method toggle
-(global-set-key (kbd "<f9>") 'toggle-input-method)
-
-;; Add direction indicator to modeline
-(defvar my/direction-indicator "")
-
-(defun my/update-direction-indicator ()
-  "Update the direction indicator string."
-  (setq my/direction-indicator
-        (if (eq bidi-paragraph-direction 'right-to-left)
-            " [RTL עב]"
-          " [LTR EN]")))
-
-(add-hook 'post-command-hook 'my/update-direction-indicator)
-
-;; Add to mode-line
-(setq-default mode-line-format
-              (append mode-line-format '((:eval my/direction-indicator))))
-
 (defun my/toggle-bidi-reordering ()
   "Toggle bidirectional text reordering for performance."
   (interactive)
@@ -208,70 +219,77 @@
   (message "Bidi reordering: %s"
            (if bidi-display-reordering "enabled" "disabled")))
 
+;; === Apply Defaults by Mode ===
+(defun my/set-rtl-mode ()
+  "Hook function to set RTL direction."
+  (setq bidi-paragraph-direction 'right-to-left))
+
+(defun my/set-ltr-mode ()
+  "Hook function to set LTR direction."
+  (setq bidi-paragraph-direction 'left-to-right))
+
+;; Prose modes: RTL
+(add-hook 'org-mode-hook #'my/set-rtl-mode)
+(add-hook 'LaTeX-mode-hook #'my/set-rtl-mode)
+(add-hook 'context-mode-hook #'my/set-rtl-mode)
+(add-hook 'typst-ts-mode-hook #'my/set-rtl-mode)
+(add-hook 'text-mode-hook #'my/set-rtl-mode)
+(add-hook 'markdown-mode-hook #'my/set-rtl-mode)
+
+;; Code modes: LTR
+(add-hook 'prog-mode-hook #'my/set-ltr-mode)
+
+;; === Keybindings ===
+(global-set-key (kbd "C-c d") 'my/toggle-direction)
+(global-set-key (kbd "C-c r") 'my/set-rtl)
+(global-set-key (kbd "C-c l") 'my/set-ltr)
 (global-set-key (kbd "C-c B") 'my/toggle-bidi-reordering)
 
-;; Use hunspell for spell checking
-(use-package ispell
-  :ensure nil
-  :config
-  (when (executable-find "hunspell")
-    (setq ispell-program-name "hunspell")
-    (setq ispell-really-hunspell t)
-    ;; Set default dictionary to English
-    (setq ispell-dictionary "en_US")
-    ;; Configure dictionary alist for hunspell
-    (setq ispell-local-dictionary-alist
-          '(("en_US" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil ("-d" "en_US") nil utf-8)
-            ("he_IL" "[[:alpha:]]" "[^[:alpha:]]" "" nil ("-d" "he_IL") nil utf-8)))))
-
-;; Flyspell for on-the-fly spell checking
-(use-package flyspell
-  :ensure nil
-  :hook ((text-mode . flyspell-mode)
-         (org-mode . flyspell-mode)
-         (LaTeX-mode . flyspell-mode)
-         (markdown-mode . flyspell-mode)
-         (prog-mode . flyspell-prog-mode))
-  :config
-  (setq flyspell-issue-message-flag nil))
-
-;; Manual dictionary switch
-(defun my/spell-english ()
-  "Switch to English dictionary."
+(defun my/toggle-hebrew-input ()
+  "Smart toggle between no input method and hebrew-full."
   (interactive)
-  (ispell-change-dictionary "en_US")
-  (when flyspell-mode
-    (flyspell-buffer))
-  (message "Spell checking: English"))
+  (if current-input-method
+      (deactivate-input-method)
+    (set-input-method "hebrew-full")))
 
+(global-set-key (kbd "<f9>") 'my/toggle-hebrew-input)
+
+(use-package jinx
+  :ensure nil
+  :hook ((text-mode . jinx-mode)
+         (org-mode . jinx-mode)
+         (LaTeX-mode . jinx-mode))
+  :bind ("M-$" . jinx-correct)
+  :config
+  (setq jinx-languages "en he"))
+
+;; Spell check functions for hydra
 (defun my/spell-hebrew ()
-  "Switch to Hebrew dictionary."
+  "Set spell checking to Hebrew only."
   (interactive)
-  (ispell-change-dictionary "he_IL")
-  (when flyspell-mode
-    (flyspell-buffer))
-  (message "Spell checking: Hebrew"))
+  (setq jinx-languages "he")
+  (jinx-mode 1)
+  (message "Spell check: Hebrew"))
+
+(defun my/spell-english ()
+  "Set spell checking to English only."
+  (interactive)
+  (setq jinx-languages "en")
+  (jinx-mode 1)
+  (message "Spell check: English"))
 
 (defun my/spell-both ()
-  "Use both English and Hebrew dictionaries.
-Note: This creates a personal dictionary approach - 
-words valid in either language should be added to personal dict."
+  "Set spell checking to both Hebrew and English."
   (interactive)
-  (ispell-change-dictionary "en_US")
-  (when flyspell-mode
-    (flyspell-buffer))
-  (message "Spell checking: English (add Hebrew words to personal dict with 'i')"))
-
-(global-set-key (kbd "C-c s e") 'my/spell-english)
-(global-set-key (kbd "C-c s h") 'my/spell-hebrew)
-(global-set-key (kbd "C-c s b") 'my/spell-both)
-(global-set-key (kbd "M-$") 'ispell-word)
+  (setq jinx-languages "en he")
+  (jinx-mode 1)
+  (message "Spell check: English + Hebrew"))
 
 (use-package vertico
   :init
   (vertico-mode)
   :config
-  (setq vertico-cycle t))
+  (setq vertico-count 20))
 
 (use-package orderless
   :config
@@ -293,8 +311,7 @@ words valid in either language should be added to personal dict."
          ("C-x r b" . consult-bookmark)
          ("M-y" . consult-yank-pop))
   :config
-  ;; Use `fd` for faster consult-find
-  (setq consult-find-command "fd --color=never --full-path ARG OPTS"))
+  (setq consult-find-args "fd --color=never --full-path ARG OPTS"))
 
 (use-package corfu
   :custom
@@ -304,6 +321,32 @@ words valid in either language should be added to personal dict."
   (corfu-auto-prefix 2)
   :init
   (global-corfu-mode))
+
+(use-package corfu-popupinfo
+  :ensure nil
+  :after corfu
+  :hook (corfu-mode . corfu-popupinfo-mode)
+  :config
+  (setq corfu-popupinfo-delay '(0.5 . 0.2)))
+
+(use-package embark
+  :bind
+  (("C-." . embark-act)
+   ("C-;" . embark-dwim)
+   ("C-h B" . embark-bindings))
+  :init
+  (setq prefix-help-command #'embark-prefix-help-command))
+
+(use-package embark-consult
+  :after (embark consult)
+  :demand t
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
+
+(use-package ace-window
+  :bind ("M-o" . ace-window)
+  :config
+  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
 
 (use-package winner
   :ensure nil
@@ -366,9 +409,9 @@ words valid in either language should be added to personal dict."
   (make-directory "~/.emacs.d/undo-tree-history/" t)
 
   ;; Increase undo limits
-  (setq undo-limit 80000000)          ;; 80MB
-  (setq undo-strong-limit 120000000)  ;; 120MB
-  (setq undo-outer-limit 300000000)   ;; 300MB
+  (setq undo-limit 80000000)
+  (setq undo-strong-limit 120000000)
+  (setq undo-outer-limit 300000000)
 
   :bind (("C-x u" . undo-tree-visualize)
          ("C-/" . undo-tree-undo)
@@ -422,7 +465,7 @@ words valid in either language should be added to personal dict."
          ("M-<down>" . move-text-down)))
 
 ;; Electric pairs only in code and markup modes (not prose)
-(electric-pair-mode -1)  ;; Disable globally
+(electric-pair-mode -1)
 
 ;; Enable in programming modes
 (add-hook 'prog-mode-hook 'electric-pair-local-mode)
@@ -431,8 +474,6 @@ words valid in either language should be added to personal dict."
 (add-hook 'LaTeX-mode-hook 'electric-pair-local-mode)
 (add-hook 'context-mode-hook 'electric-pair-local-mode)
 (add-hook 'typst-ts-mode-hook 'electric-pair-local-mode)
-
-;; Fallback for old typst-mode if typst-ts-mode not available
 (add-hook 'typst-mode-hook 'electric-pair-local-mode)
 
 (use-package rainbow-delimiters
@@ -507,59 +548,36 @@ $0"))))
   (put 'dired-find-alternate-file 'disabled nil))
 
 (use-package dirvish
-  :ensure t
   :init
   (dirvish-override-dired-mode)
-
   :config
-  ;; Shared defaults
   (setq dirvish-reuse-session t)
   (setq dirvish-show-hidden-files nil)
   (setq dirvish-preview-dispatchers nil)
 
-  ;; Track mode
-  (defvar my/dirvish-current-mode 'pretty)
+  ;; Default attributes
+  (setq dirvish-attributes '(vc-state subtree-state collapse file-time file-size))
 
-  ;; Pretty mode
-  (defun my/dirvish-apply-pretty ()
-    (setq dirvish-attributes
-          '(vc-state subtree-state collapse file-time file-size)))
+  ;; Ultra-fast mode toggle
+  (defvar my/dirvish-ultra-mode nil)
 
-  ;; Ultra mode
-  (defun my/dirvish-apply-ultra ()
-    (setq dirvish-attributes
-          '(subtree-state)))
-
-  ;; Toggle
-  (defun my/dirvish-toggle-mode ()
+  (defun my/dirvish-toggle-ultra ()
+    "Toggle between pretty and ultra-fast mode."
     (interactive)
-    (setq my/dirvish-current-mode
-          (if (eq my/dirvish-current-mode 'pretty)
-              'ultra
-            'pretty))
-    (if (eq my/dirvish-current-mode 'pretty)
+    (if my/dirvish-ultra-mode
         (progn
-          (my/dirvish-apply-pretty)
+          (setq dirvish-attributes '(vc-state subtree-state collapse file-time file-size))
+          (setq my/dirvish-ultra-mode nil)
           (message "Dirvish: Pretty mode"))
-      (my/dirvish-apply-ultra)
+      (setq dirvish-attributes '(subtree-state))
+      (setq my/dirvish-ultra-mode t)
       (message "Dirvish: ULTRA mode"))
     (revert-buffer))
 
-  ;; Apply default when entering Dirvish
-  (add-hook 'dirvish-mode-hook
-            (lambda ()
-              (if (eq my/dirvish-current-mode 'pretty)
-                  (my/dirvish-apply-pretty)
-                (my/dirvish-apply-ultra))))
-
-  ;; Toggle key
-  (define-key dirvish-mode-map (kbd "C-c d m")
-    #'my/dirvish-toggle-mode))
+  :bind (:map dirvish-mode-map
+              ("C-c d m" . my/dirvish-toggle-ultra)))
 
 ;; Fix RTL direction in Org footnotes
-;; Footnotes start with [fn:N] which is LTR, causing paragraph to be LTR
-;; This inserts a Right-to-Left Mark after footnote marker
-
 (defun my/org-footnote-rtl-fix ()
   "Add RTL mark after footnote definition marker for proper Hebrew display."
   (when (and (eq bidi-paragraph-direction 'right-to-left)
@@ -567,9 +585,9 @@ $0"))))
     (save-excursion
       (let ((fn-start (org-footnote-at-definition-p)))
         (when fn-start
-          (goto-char (nth 1 fn-start))  ;; End of [fn:N]
-          (unless (looking-at (char-to-string ?\x200F))  ;; RLM not already there
-            (insert ?\x200F)))))))  ;; Insert Right-to-Left Mark
+          (goto-char (nth 1 fn-start))
+          (unless (looking-at (char-to-string ?\x200F))
+            (insert ?\x200F)))))))
 
 ;; Run fix when entering footnotes
 (advice-add 'org-footnote-new :after
@@ -633,7 +651,7 @@ $0"))))
 
 (with-eval-after-load 'org
   (setq org-agenda-files '("~/Documents/org/"))
-  (setq org-agenda-start-on-weekday 0)  ; Start on Sunday
+  (setq org-agenda-start-on-weekday 0)
 
   (setq org-todo-keywords
         '((sequence "TODO(t)" "IN-PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
@@ -661,13 +679,11 @@ $0"))))
   :after org
   :config
   (with-eval-after-load 'org
-    (org-babel-do-load-languages
-     'org-babel-load-languages
-     (append org-babel-load-languages '((rust . t))))))
+    (add-to-list 'org-babel-load-languages '(rust . t))
+    (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)))
 
 (use-package org-modern
-  :hook ((org-mode . org-modern-mode)
-         (org-agenda-mode . org-modern-agenda))
+  :hook (org-mode . org-modern-mode)
   :config
   (setq org-modern-star '("◉" "○" "◈" "◇" "✦" "✧" "✶" "✷" "❋" "❊"
                           "✺" "✹" "✸" "✷" "✶" "✵" "✴" "✳" "✲" "✱")))
@@ -714,31 +730,11 @@ $0"))))
           ("b" "Book" entry (file+headline "~/Documents/org/reading.org" "To Read")
            "* %^{Title}\n  :PROPERTIES:\n  :AUTHOR: %^{Author}\n  :ADDED: %U\n  :END:\n  %?"))))
 
-(with-eval-after-load 'ox-latex
-  ;; Use LuaLaTeX
-  (setq org-latex-compiler "lualatex")
-
-  ;; PDF process
-  (setq org-latex-pdf-process
-        '("latexmk -pdflatex='lualatex -shell-escape -interaction nonstopmode' -pdf -bibtex -f %f"))
-
-  ;; Packages for all exports
-  (setq org-latex-packages-alist
-        '(("" "fontspec" t)
-          ("bidi=basic" "babel" t)
-          ("" "bigfoot" t)
-          ("" "titlesec" t)
-          ("" "enumitem" t)))
-
-  ;; Article class with unlimited depth
-  (add-to-list 'org-latex-classes
-               '("article-unlimited"
-                 "\\documentclass[11pt]{article}
-[NO-DEFAULT-PACKAGES]
-[PACKAGES]
-[EXTRA]
-
-% Hebrew support
+;; Shared LaTeX preamble components
+  (defvar my/latex-hebrew-setup
+    "% Hebrew support
+\\usepackage{fontspec}
+\\usepackage[bidi=basic]{babel}
 \\babelprovide[main, import]{hebrew}
 \\babelprovide[import]{english}
 \\babelfont{rm}{David CLM}
@@ -746,6 +742,7 @@ $0"))))
 \\babelfont{tt}{Miriam Mono CLM}
 
 % Nested footnotes
+\\usepackage{bigfoot}
 \\DeclareNewFootnote{default}
 \\DeclareNewFootnote{B}
 \\DeclareNewFootnote{C}
@@ -755,9 +752,12 @@ $0"))))
 \\DeclareNewFootnote{G}
 \\DeclareNewFootnote{H}
 \\DeclareNewFootnote{I}
-\\DeclareNewFootnote{J}
+\\DeclareNewFootnote{J}"
+    "Hebrew and nested footnotes setup.")
 
-% Unlimited sectioning
+  (defvar my/latex-unlimited-structure
+    "% Unlimited sectioning
+\\usepackage{titlesec}
 \\setcounter{secnumdepth}{10}
 \\setcounter{tocdepth}{10}
 
@@ -786,6 +786,7 @@ $0"))))
 \\titlespacing*{\\subsubsubsubsubparagraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
 
 % Unlimited list nesting
+\\usepackage{enumitem}
 \\setlistdepth{20}
 \\renewlist{itemize}{itemize}{20}
 \\renewlist{enumerate}{enumerate}{20}
@@ -799,16 +800,6 @@ $0"))))
 \\setlist[itemize,8]{label=\\textperiodcentered}
 \\setlist[itemize,9]{label=\\textbullet}
 \\setlist[itemize,10]{label=\\textendash}
-\\setlist[itemize,11]{label=\\textasteriskcentered}
-\\setlist[itemize,12]{label=\\textperiodcentered}
-\\setlist[itemize,13]{label=\\textbullet}
-\\setlist[itemize,14]{label=\\textendash}
-\\setlist[itemize,15]{label=\\textasteriskcentered}
-\\setlist[itemize,16]{label=\\textperiodcentered}
-\\setlist[itemize,17]{label=\\textbullet}
-\\setlist[itemize,18]{label=\\textendash}
-\\setlist[itemize,19]{label=\\textasteriskcentered}
-\\setlist[itemize,20]{label=\\textperiodcentered}
 \\setlist[enumerate,1]{label=\\arabic*.}
 \\setlist[enumerate,2]{label=\\alph*.}
 \\setlist[enumerate,3]{label=\\roman*.}
@@ -818,254 +809,80 @@ $0"))))
 \\setlist[enumerate,7]{label=\\roman*.}
 \\setlist[enumerate,8]{label=\\Alph*.}
 \\setlist[enumerate,9]{label=\\arabic*.}
-\\setlist[enumerate,10]{label=\\alph*.}
-\\setlist[enumerate,11]{label=\\roman*.}
-\\setlist[enumerate,12]{label=\\Alph*.}
-\\setlist[enumerate,13]{label=\\arabic*.}
-\\setlist[enumerate,14]{label=\\alph*.}
-\\setlist[enumerate,15]{label=\\roman*.}
-\\setlist[enumerate,16]{label=\\Alph*.}
-\\setlist[enumerate,17]{label=\\arabic*.}
-\\setlist[enumerate,18]{label=\\alph*.}
-\\setlist[enumerate,19]{label=\\roman*.}
-\\setlist[enumerate,20]{label=\\Alph*.}
-"
-                 ("\\section{%s}" . "\\section*{%s}")
-                 ("\\subsection{%s}" . "\\subsection*{%s}")
-                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
-                 ("\\subsubparagraph{%s}" . "\\subsubparagraph*{%s}")
-                 ("\\subsubsubparagraph{%s}" . "\\subsubsubparagraph*{%s}")
-                 ("\\subsubsubsubparagraph{%s}" . "\\subsubsubsubparagraph*{%s}")
-                 ("\\subsubsubsubsubparagraph{%s}" . "\\subsubsubsubsubparagraph*{%s}")
-                 ("\\subsubsubsubsubparagraph{%s}" . "\\subsubsubsubsubparagraph*{%s}")))
+\\setlist[enumerate,10]{label=\\alph*.}"
+    "Unlimited sectioning and list nesting setup.")
 
-  ;; Report class with unlimited depth
-  (add-to-list 'org-latex-classes
-               '("report-unlimited"
-                 "\\documentclass[11pt]{report}
+  (defun my/latex-class-preamble (docclass)
+    "Generate LaTeX class preamble for DOCCLASS."
+    (format "\\documentclass[11pt]{%s}
 [NO-DEFAULT-PACKAGES]
 [PACKAGES]
 [EXTRA]
+%s
 
-% Hebrew support
-\\babelprovide[main, import]{hebrew}
-\\babelprovide[import]{english}
-\\babelfont{rm}{David CLM}
-\\babelfont{sf}{Nachlieli CLM}
-\\babelfont{tt}{Miriam Mono CLM}
+%s
+" docclass my/latex-hebrew-setup my/latex-unlimited-structure))
 
-% Nested footnotes
-\\DeclareNewFootnote{default}
-\\DeclareNewFootnote{B}
-\\DeclareNewFootnote{C}
-\\DeclareNewFootnote{D}
-\\DeclareNewFootnote{E}
-\\DeclareNewFootnote{F}
-\\DeclareNewFootnote{G}
-\\DeclareNewFootnote{H}
-\\DeclareNewFootnote{I}
-\\DeclareNewFootnote{J}
+  (with-eval-after-load 'ox-latex
+    ;; Use LuaLaTeX
+    (setq org-latex-compiler "lualatex")
 
-% Unlimited sectioning
-\\setcounter{secnumdepth}{10}
-\\setcounter{tocdepth}{10}
+    ;; PDF process
+    (setq org-latex-pdf-process
+          '("latexmk -pdflatex='lualatex -shell-escape -interaction nonstopmode' -pdf -bibtex -f %f"))
 
-\\titleclass{\\subsubparagraph}{straight}[\\subparagraph]
-\\newcounter{subsubparagraph}[subparagraph]
-\\renewcommand{\\thesubsubparagraph}{\\thesubparagraph.\\arabic{subsubparagraph}}
-\\titleformat{\\subsubparagraph}[runin]{\\normalfont\\normalsize\\bfseries}{\\thesubsubparagraph}{1em}{}
-\\titlespacing*{\\subsubparagraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
+    ;; Packages for all exports
+    (setq org-latex-packages-alist
+          '(("" "fontspec" t)
+            ("bidi=basic" "babel" t)
+            ("" "bigfoot" t)
+            ("" "titlesec" t)
+            ("" "enumitem" t)))
 
-\\titleclass{\\subsubsubparagraph}{straight}[\\subsubparagraph]
-\\newcounter{subsubsubparagraph}[subsubparagraph]
-\\renewcommand{\\thesubsubsubparagraph}{\\thesubsubparagraph.\\arabic{subsubsubparagraph}}
-\\titleformat{\\subsubsubparagraph}[runin]{\\normalfont\\normalsize\\bfseries}{\\thesubsubsubparagraph}{1em}{}
-\\titlespacing*{\\subsubsubparagraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
+    ;; Article class with unlimited depth
+    (add-to-list 'org-latex-classes
+                 `("article-unlimited"
+                   ,(my/latex-class-preamble "article")
+                   ("\\section{%s}" . "\\section*{%s}")
+                   ("\\subsection{%s}" . "\\subsection*{%s}")
+                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                   ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                   ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                   ("\\subsubparagraph{%s}" . "\\subsubparagraph*{%s}")
+                   ("\\subsubsubparagraph{%s}" . "\\subsubsubparagraph*{%s}")
+                   ("\\subsubsubsubparagraph{%s}" . "\\subsubsubsubparagraph*{%s}")
+                   ("\\subsubsubsubsubparagraph{%s}" . "\\subsubsubsubsubparagraph*{%s}")))
 
-\\titleclass{\\subsubsubsubparagraph}{straight}[\\subsubsubparagraph]
-\\newcounter{subsubsubsubparagraph}[subsubsubparagraph]
-\\renewcommand{\\thesubsubsubsubparagraph}{\\thesubsubsubparagraph.\\arabic{subsubsubsubparagraph}}
-\\titleformat{\\subsubsubsubparagraph}[runin]{\\normalfont\\normalsize\\bfseries}{\\thesubsubsubsubparagraph}{1em}{}
-\\titlespacing*{\\subsubsubsubparagraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
+    ;; Report class with unlimited depth
+    (add-to-list 'org-latex-classes
+                 `("report-unlimited"
+                   ,(my/latex-class-preamble "report")
+                   ("\\chapter{%s}" . "\\chapter*{%s}")
+                   ("\\section{%s}" . "\\section*{%s}")
+                   ("\\subsection{%s}" . "\\subsection*{%s}")
+                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                   ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                   ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                   ("\\subsubparagraph{%s}" . "\\subsubparagraph*{%s}")
+                   ("\\subsubsubparagraph{%s}" . "\\subsubsubparagraph*{%s}")
+                   ("\\subsubsubsubparagraph{%s}" . "\\subsubsubsubparagraph*{%s}")))
 
-\\titleclass{\\subsubsubsubsubparagraph}{straight}[\\subsubsubsubparagraph]
-\\newcounter{subsubsubsubsubparagraph}[subsubsubsubparagraph]
-\\renewcommand{\\thesubsubsubsubsubparagraph}{\\thesubsubsubsubparagraph.\\arabic{subsubsubsubsubparagraph}}
-\\titleformat{\\subsubsubsubsubparagraph}[runin]{\\normalfont\\normalsize\\bfseries}{\\thesubsubsubsubsubparagraph}{1em}{}
-\\titlespacing*{\\subsubsubsubsubparagraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
+    ;; Book class with unlimited depth
+    (add-to-list 'org-latex-classes
+                 `("book-unlimited"
+                   ,(my/latex-class-preamble "book")
+                   ("\\part{%s}" . "\\part*{%s}")
+                   ("\\chapter{%s}" . "\\chapter*{%s}")
+                   ("\\section{%s}" . "\\section*{%s}")
+                   ("\\subsection{%s}" . "\\subsection*{%s}")
+                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                   ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                   ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                   ("\\subsubparagraph{%s}" . "\\subsubparagraph*{%s}")
+                   ("\\subsubsubparagraph{%s}" . "\\subsubsubparagraph*{%s}")))
 
-% Unlimited list nesting
-\\setlistdepth{20}
-\\renewlist{itemize}{itemize}{20}
-\\renewlist{enumerate}{enumerate}{20}
-\\setlist[itemize,1]{label=\\textbullet}
-\\setlist[itemize,2]{label=\\textendash}
-\\setlist[itemize,3]{label=\\textasteriskcentered}
-\\setlist[itemize,4]{label=\\textperiodcentered}
-\\setlist[itemize,5]{label=\\textbullet}
-\\setlist[itemize,6]{label=\\textendash}
-\\setlist[itemize,7]{label=\\textasteriskcentered}
-\\setlist[itemize,8]{label=\\textperiodcentered}
-\\setlist[itemize,9]{label=\\textbullet}
-\\setlist[itemize,10]{label=\\textendash}
-\\setlist[itemize,11]{label=\\textasteriskcentered}
-\\setlist[itemize,12]{label=\\textperiodcentered}
-\\setlist[itemize,13]{label=\\textbullet}
-\\setlist[itemize,14]{label=\\textendash}
-\\setlist[itemize,15]{label=\\textasteriskcentered}
-\\setlist[itemize,16]{label=\\textperiodcentered}
-\\setlist[itemize,17]{label=\\textbullet}
-\\setlist[itemize,18]{label=\\textendash}
-\\setlist[itemize,19]{label=\\textasteriskcentered}
-\\setlist[itemize,20]{label=\\textperiodcentered}
-\\setlist[enumerate,1]{label=\\arabic*.}
-\\setlist[enumerate,2]{label=\\alph*.}
-\\setlist[enumerate,3]{label=\\roman*.}
-\\setlist[enumerate,4]{label=\\Alph*.}
-\\setlist[enumerate,5]{label=\\arabic*.}
-\\setlist[enumerate,6]{label=\\alph*.}
-\\setlist[enumerate,7]{label=\\roman*.}
-\\setlist[enumerate,8]{label=\\Alph*.}
-\\setlist[enumerate,9]{label=\\arabic*.}
-\\setlist[enumerate,10]{label=\\alph*.}
-\\setlist[enumerate,11]{label=\\roman*.}
-\\setlist[enumerate,12]{label=\\Alph*.}
-\\setlist[enumerate,13]{label=\\arabic*.}
-\\setlist[enumerate,14]{label=\\alph*.}
-\\setlist[enumerate,15]{label=\\roman*.}
-\\setlist[enumerate,16]{label=\\Alph*.}
-\\setlist[enumerate,17]{label=\\arabic*.}
-\\setlist[enumerate,18]{label=\\alph*.}
-\\setlist[enumerate,19]{label=\\roman*.}
-\\setlist[enumerate,20]{label=\\Alph*.}
-"
-                 ("\\chapter{%s}" . "\\chapter*{%s}")
-                 ("\\section{%s}" . "\\section*{%s}")
-                 ("\\subsection{%s}" . "\\subsection*{%s}")
-                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
-                 ("\\subsubparagraph{%s}" . "\\subsubparagraph*{%s}")
-                 ("\\subsubsubparagraph{%s}" . "\\subsubsubparagraph*{%s}")
-                 ("\\subsubsubsubparagraph{%s}" . "\\subsubsubsubparagraph*{%s}")
-                 ("\\subsubsubsubsubparagraph{%s}" . "\\subsubsubsubsubparagraph*{%s}")))
-
-  ;; Book class with unlimited depth
-  (add-to-list 'org-latex-classes
-               '("book-unlimited"
-                 "\\documentclass[11pt]{book}
-[NO-DEFAULT-PACKAGES]
-[PACKAGES]
-[EXTRA]
-
-% Hebrew support
-\\babelprovide[main, import]{hebrew}
-\\babelprovide[import]{english}
-\\babelfont{rm}{David CLM}
-\\babelfont{sf}{Nachlieli CLM}
-\\babelfont{tt}{Miriam Mono CLM}
-
-% Nested footnotes
-\\DeclareNewFootnote{default}
-\\DeclareNewFootnote{B}
-\\DeclareNewFootnote{C}
-\\DeclareNewFootnote{D}
-\\DeclareNewFootnote{E}
-\\DeclareNewFootnote{F}
-\\DeclareNewFootnote{G}
-\\DeclareNewFootnote{H}
-\\DeclareNewFootnote{I}
-\\DeclareNewFootnote{J}
-
-% Unlimited sectioning
-\\setcounter{secnumdepth}{10}
-\\setcounter{tocdepth}{10}
-
-\\titleclass{\\subsubparagraph}{straight}[\\subparagraph]
-\\newcounter{subsubparagraph}[subparagraph]
-\\renewcommand{\\thesubsubparagraph}{\\thesubparagraph.\\arabic{subsubparagraph}}
-\\titleformat{\\subsubparagraph}[runin]{\\normalfont\\normalsize\\bfseries}{\\thesubsubparagraph}{1em}{}
-\\titlespacing*{\\subsubparagraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
-
-\\titleclass{\\subsubsubparagraph}{straight}[\\subsubparagraph]
-\\newcounter{subsubsubparagraph}[subsubparagraph]
-\\renewcommand{\\thesubsubsubparagraph}{\\thesubsubparagraph.\\arabic{subsubsubparagraph}}
-\\titleformat{\\subsubsubparagraph}[runin]{\\normalfont\\normalsize\\bfseries}{\\thesubsubsubparagraph}{1em}{}
-\\titlespacing*{\\subsubsubparagraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
-
-\\titleclass{\\subsubsubsubparagraph}{straight}[\\subsubsubparagraph]
-\\newcounter{subsubsubsubparagraph}[subsubsubparagraph]
-\\renewcommand{\\thesubsubsubsubparagraph}{\\thesubsubsubparagraph.\\arabic{subsubsubsubparagraph}}
-\\titleformat{\\subsubsubsubparagraph}[runin]{\\normalfont\\normalsize\\bfseries}{\\thesubsubsubsubparagraph}{1em}{}
-\\titlespacing*{\\subsubsubsubparagraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
-
-\\titleclass{\\subsubsubsubsubparagraph}{straight}[\\subsubsubsubparagraph]
-\\newcounter{subsubsubsubsubparagraph}[subsubsubsubparagraph]
-\\renewcommand{\\thesubsubsubsubsubparagraph}{\\thesubsubsubsubparagraph.\\arabic{subsubsubsubsubparagraph}}
-\\titleformat{\\subsubsubsubsubparagraph}[runin]{\\normalfont\\normalsize\\bfseries}{\\thesubsubsubsubsubparagraph}{1em}{}
-\\titlespacing*{\\subsubsubsubsubparagraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
-
-% Unlimited list nesting
-\\setlistdepth{20}
-\\renewlist{itemize}{itemize}{20}
-\\renewlist{enumerate}{enumerate}{20}
-\\setlist[itemize,1]{label=\\textbullet}
-\\setlist[itemize,2]{label=\\textendash}
-\\setlist[itemize,3]{label=\\textasteriskcentered}
-\\setlist[itemize,4]{label=\\textperiodcentered}
-\\setlist[itemize,5]{label=\\textbullet}
-\\setlist[itemize,6]{label=\\textendash}
-\\setlist[itemize,7]{label=\\textasteriskcentered}
-\\setlist[itemize,8]{label=\\textperiodcentered}
-\\setlist[itemize,9]{label=\\textbullet}
-\\setlist[itemize,10]{label=\\textendash}
-\\setlist[itemize,11]{label=\\textasteriskcentered}
-\\setlist[itemize,12]{label=\\textperiodcentered}
-\\setlist[itemize,13]{label=\\textbullet}
-\\setlist[itemize,14]{label=\\textendash}
-\\setlist[itemize,15]{label=\\textasteriskcentered}
-\\setlist[itemize,16]{label=\\textperiodcentered}
-\\setlist[itemize,17]{label=\\textbullet}
-\\setlist[itemize,18]{label=\\textendash}
-\\setlist[itemize,19]{label=\\textasteriskcentered}
-\\setlist[itemize,20]{label=\\textperiodcentered}
-\\setlist[enumerate,1]{label=\\arabic*.}
-\\setlist[enumerate,2]{label=\\alph*.}
-\\setlist[enumerate,3]{label=\\roman*.}
-\\setlist[enumerate,4]{label=\\Alph*.}
-\\setlist[enumerate,5]{label=\\arabic*.}
-\\setlist[enumerate,6]{label=\\alph*.}
-\\setlist[enumerate,7]{label=\\roman*.}
-\\setlist[enumerate,8]{label=\\Alph*.}
-\\setlist[enumerate,9]{label=\\arabic*.}
-\\setlist[enumerate,10]{label=\\alph*.}
-\\setlist[enumerate,11]{label=\\roman*.}
-\\setlist[enumerate,12]{label=\\Alph*.}
-\\setlist[enumerate,13]{label=\\arabic*.}
-\\setlist[enumerate,14]{label=\\alph*.}
-\\setlist[enumerate,15]{label=\\roman*.}
-\\setlist[enumerate,16]{label=\\Alph*.}
-\\setlist[enumerate,17]{label=\\arabic*.}
-\\setlist[enumerate,18]{label=\\alph*.}
-\\setlist[enumerate,19]{label=\\roman*.}
-\\setlist[enumerate,20]{label=\\Alph*.}
-"
-                 ("\\part{%s}" . "\\part*{%s}")
-                 ("\\chapter{%s}" . "\\chapter*{%s}")
-                 ("\\section{%s}" . "\\section*{%s}")
-                 ("\\subsection{%s}" . "\\subsection*{%s}")
-                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
-                 ("\\subsubparagraph{%s}" . "\\subsubparagraph*{%s}")
-                 ("\\subsubsubparagraph{%s}" . "\\subsubsubparagraph*{%s}")
-                 ("\\subsubsubsubparagraph{%s}" . "\\subsubsubsubparagraph*{%s}")
-                 ("\\subsubsubsubsubparagraph{%s}" . "\\subsubsubsubsubparagraph*{%s}")))
-
-  ;; Make article-unlimited the default
-  (setq org-latex-default-class "article-unlimited"))
+    ;; Make article-unlimited the default
+    (setq org-latex-default-class "article-unlimited"))
 
 (use-package org-roam
   :custom
@@ -1091,50 +908,43 @@ $0"))))
 
 (with-eval-after-load 'org-roam
   (setq org-roam-capture-templates
-        '(;; Default template
-          ("d" "default" plain "%?"
+        '(("d" "default" plain "%?"
            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                             "#+title: ${title}\n#+date: %U\n#+filetags: \n\n")
+                              "#+title: ${title}\n#+date: %U\n#+filetags: \n\n")
            :unnarrowed t)
 
-          ;; Hebrew template
           ("h" "hebrew" plain "%?"
            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                             "#+title: ${title}\n#+date: %U\n#+filetags: hebrew\n#+LATEX_CLASS: article-unlimited\n#+LATEX_HEADER: \\babelprovide[main, import]{hebrew}\n\n")
+                              "#+title: ${title}\n#+date: %U\n#+filetags: hebrew\n#+LATEX_CLASS: article-unlimited\n#+LATEX_HEADER: \\babelprovide[main, import]{hebrew}\n\n")
            :unnarrowed t)
 
-          ;; Research note template
           ("r" "research" plain "%?"
            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                             "#+title: ${title}\n#+date: %U\n#+filetags: research\n#+LATEX_CLASS: article-unlimited\n\n* מקור / Source\n\n* הערות / Notes\n\n* שאלות / Questions\n\n")
+                              "#+title: ${title}\n#+date: %U\n#+filetags: research\n#+LATEX_CLASS: article-unlimited\n\n* מקור / Source\n\n* הערות / Notes\n\n* שאלות / Questions\n\n")
            :unnarrowed t)
 
-          ;; Concept/term template (Hebrew)
           ("c" "concept" plain "%?"
            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                             "#+title: ${title}\n#+date: %U\n#+filetags: concept hebrew\n\n* הגדרה / Definition\n\n* דוגמאות / Examples\n\n* קשרים / Related\n\n")
+                              "#+title: ${title}\n#+date: %U\n#+filetags: concept hebrew\n\n* הגדרה / Definition\n\n* דוגמאות / Examples\n\n* קשרים / Related\n\n")
            :unnarrowed t)
 
-          ;; Literature note template
           ("l" "literature" plain "%?"
            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                             "#+title: ${title}\n#+date: %U\n#+filetags: literature\n#+LATEX_CLASS: article-unlimited\n\n* ביבליוגרפיה / Bibliographic Info\n- Author: \n- Year: \n- Title: \n\n* תקציר / Summary\n\n* ציטוטים / Key Quotes\n\n* הערות / Notes\n\n")
+                              "#+title: ${title}\n#+date: %U\n#+filetags: literature\n#+LATEX_CLASS: article-unlimited\n\n* ביבליוגרפיה / Bibliographic Info\n- Author: \n- Year: \n- Title: \n\n* תקציר / Summary\n\n* ציטוטים / Key Quotes\n\n* הערות / Notes\n\n")
            :unnarrowed t)
 
-          ;; Project template
           ("p" "project" plain "%?"
            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                             "#+title: ${title}\n#+date: %U\n#+filetags: project\n\n* מטרות / Goals\n\n* משימות / Tasks\n** TODO \n\n* הערות / Notes\n\n* משאבים / Resources\n\n")
+                              "#+title: ${title}\n#+date: %U\n#+filetags: project\n\n* מטרות / Goals\n\n* משימות / Tasks\n** TODO \n\n* הערות / Notes\n\n* משאבים / Resources\n\n")
            :unnarrowed t)))
 
-  ;; Daily notes templates with Hebrew support
   (setq org-roam-dailies-capture-templates
         '(("d" "default" entry "* %<%H:%M> %?"
            :target (file+head "%<%Y-%m-%d>.org"
-                             "#+title: %<%Y-%m-%d>\n#+filetags: daily\n\n"))
+                              "#+title: %<%Y-%m-%d>\n#+filetags: daily\n\n"))
           ("h" "hebrew" entry "* %<%H:%M> %?"
            :target (file+head "%<%Y-%m-%d>.org"
-                             "#+title: %<%Y-%m-%d>\n#+filetags: daily hebrew\n\n* משימות / Tasks\n\n* הערות / Notes\n\n")))))
+                              "#+title: %<%Y-%m-%d>\n#+filetags: daily hebrew\n\n* משימות / Tasks\n\n* הערות / Notes\n\n")))))
 
 (use-package org-roam-ui
   :after org-roam
@@ -1184,133 +994,26 @@ $0"))))
   (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
 
   ;; Visual line mode
-  (add-hook 'LaTeX-mode-hook 'visual-line-mode))
+  (add-hook 'LaTeX-mode-hook 'visual-line-mode)
+
+  ;; Add LuaLaTeX command
+  (add-to-list 'TeX-command-list
+               '("LuaLaTeX" "lualatex -shell-escape -interaction=nonstopmode %s"
+                 TeX-run-TeX nil (latex-mode) :help "Run LuaLaTeX")))
 
 (with-eval-after-load 'latex
   (setq preview-auto-cache-preamble t)
   (setq preview-scale-function 1.5))
 
-(defvar my/latex-unlimited-structure
-  "% ============================================
-% UNLIMITED SECTIONING DEPTH
-% ============================================
-\\usepackage{titlesec}
-\\setcounter{secnumdepth}{10}
-\\setcounter{tocdepth}{10}
+(defun my/insert-hebrew-preamble ()
+    "Insert complete Hebrew LaTeX preamble (Babel)."
+    (interactive)
+    (insert my/latex-hebrew-setup "\n\n" my/latex-unlimited-structure))
 
-\\titleclass{\\subsubparagraph}{straight}[\\subparagraph]
-\\newcounter{subsubparagraph}[subparagraph]
-\\renewcommand{\\thesubsubparagraph}{\\thesubparagraph.\\arabic{subsubparagraph}}
-\\titleformat{\\subsubparagraph}[runin]{\\normalfont\\normalsize\\bfseries}{\\thesubsubparagraph}{1em}{}
-\\titlespacing*{\\subsubparagraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
-
-\\titleclass{\\subsubsubparagraph}{straight}[\\subsubparagraph]
-\\newcounter{subsubsubparagraph}[subsubparagraph]
-\\renewcommand{\\thesubsubsubparagraph}{\\thesubsubparagraph.\\arabic{subsubsubparagraph}}
-\\titleformat{\\subsubsubparagraph}[runin]{\\normalfont\\normalsize\\bfseries}{\\thesubsubsubparagraph}{1em}{}
-\\titlespacing*{\\subsubsubparagraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
-
-\\titleclass{\\subsubsubsubparagraph}{straight}[\\subsubsubparagraph]
-\\newcounter{subsubsubsubparagraph}[subsubsubparagraph]
-\\renewcommand{\\thesubsubsubsubparagraph}{\\thesubsubsubparagraph.\\arabic{subsubsubsubparagraph}}
-\\titleformat{\\subsubsubsubparagraph}[runin]{\\normalfont\\normalsize\\bfseries}{\\thesubsubsubsubparagraph}{1em}{}
-\\titlespacing*{\\subsubsubsubparagraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
-
-\\titleclass{\\subsubsubsubsubparagraph}{straight}[\\subsubsubsubparagraph]
-\\newcounter{subsubsubsubsubparagraph}[subsubsubsubparagraph]
-\\renewcommand{\\thesubsubsubsubsubparagraph}{\\thesubsubsubsubparagraph.\\arabic{subsubsubsubsubparagraph}}
-\\titleformat{\\subsubsubsubsubparagraph}[runin]{\\normalfont\\normalsize\\bfseries}{\\thesubsubsubsubsubparagraph}{1em}{}
-\\titlespacing*{\\subsubsubsubsubparagraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
-
-% ============================================
-% UNLIMITED LIST NESTING
-% ============================================
-\\usepackage{enumitem}
-\\setlistdepth{20}
-\\renewlist{itemize}{itemize}{20}
-\\renewlist{enumerate}{enumerate}{20}
-
-\\setlist[itemize,1]{label=\\textbullet}
-\\setlist[itemize,2]{label=\\textendash}
-\\setlist[itemize,3]{label=\\textasteriskcentered}
-\\setlist[itemize,4]{label=\\textperiodcentered}
-\\setlist[itemize,5]{label=\\textbullet}
-\\setlist[itemize,6]{label=\\textendash}
-\\setlist[itemize,7]{label=\\textasteriskcentered}
-\\setlist[itemize,8]{label=\\textperiodcentered}
-\\setlist[itemize,9]{label=\\textbullet}
-\\setlist[itemize,10]{label=\\textendash}
-\\setlist[itemize,11]{label=\\textasteriskcentered}
-\\setlist[itemize,12]{label=\\textperiodcentered}
-\\setlist[itemize,13]{label=\\textbullet}
-\\setlist[itemize,14]{label=\\textendash}
-\\setlist[itemize,15]{label=\\textasteriskcentered}
-\\setlist[itemize,16]{label=\\textperiodcentered}
-\\setlist[itemize,17]{label=\\textbullet}
-\\setlist[itemize,18]{label=\\textendash}
-\\setlist[itemize,19]{label=\\textasteriskcentered}
-\\setlist[itemize,20]{label=\\textperiodcentered}
-
-\\setlist[enumerate,1]{label=\\arabic*.}
-\\setlist[enumerate,2]{label=\\alph*.}
-\\setlist[enumerate,3]{label=\\roman*.}
-\\setlist[enumerate,4]{label=\\Alph*.}
-\\setlist[enumerate,5]{label=\\arabic*.}
-\\setlist[enumerate,6]{label=\\alph*.}
-\\setlist[enumerate,7]{label=\\roman*.}
-\\setlist[enumerate,8]{label=\\Alph*.}
-\\setlist[enumerate,9]{label=\\arabic*.}
-\\setlist[enumerate,10]{label=\\alph*.}
-\\setlist[enumerate,11]{label=\\roman*.}
-\\setlist[enumerate,12]{label=\\Alph*.}
-\\setlist[enumerate,13]{label=\\arabic*.}
-\\setlist[enumerate,14]{label=\\alph*.}
-\\setlist[enumerate,15]{label=\\roman*.}
-\\setlist[enumerate,16]{label=\\Alph*.}
-\\setlist[enumerate,17]{label=\\arabic*.}
-\\setlist[enumerate,18]{label=\\alph*.}
-\\setlist[enumerate,19]{label=\\roman*.}
-\\setlist[enumerate,20]{label=\\Alph*.}
-"
-  "LaTeX preamble for unlimited sectioning and list nesting.")
-
-(defvar my/latex-hebrew-preamble
-  (concat
-   "% ============================================
-% HEBREW SUPPORT (BABEL)
-% ============================================
-\\usepackage{fontspec}
-\\usepackage[bidi=basic]{babel}
-\\babelprovide[main, import]{hebrew}
-\\babelprovide[import]{english}
-\\babelfont{rm}{David CLM}
-\\babelfont{sf}{Nachlieli CLM}
-\\babelfont{tt}{Miriam Mono CLM}
-
-% ============================================
-% NESTED FOOTNOTES (BIGFOOT)
-% ============================================
-\\usepackage{bigfoot}
-\\DeclareNewFootnote{default}
-\\DeclareNewFootnote{B}
-\\DeclareNewFootnote{C}
-\\DeclareNewFootnote{D}
-\\DeclareNewFootnote{E}
-\\DeclareNewFootnote{F}
-\\DeclareNewFootnote{G}
-\\DeclareNewFootnote{H}
-\\DeclareNewFootnote{I}
-\\DeclareNewFootnote{J}
-
-"
-   my/latex-unlimited-structure)
-  "Complete Hebrew LaTeX preamble with unlimited structure.")
-
-(defvar my/latex-polyglossia-preamble
-  (concat
-   "% ============================================
-% HEBREW SUPPORT (POLYGLOSSIA)
-% ============================================
+  (defun my/insert-polyglossia-preamble ()
+    "Insert complete Hebrew LaTeX preamble (Polyglossia)."
+    (interactive)
+    (insert "% Hebrew support (Polyglossia)
 \\usepackage{fontspec}
 \\usepackage{polyglossia}
 \\setmainlanguage{hebrew}
@@ -1319,150 +1022,116 @@ $0"))))
 \\setsansfont{Nachlieli CLM}
 \\setmonofont{Miriam Mono CLM}
 
-% ============================================
-% NESTED FOOTNOTES (BIGFOOT)
-% ============================================
-\\usepackage{bigfoot}
-\\DeclareNewFootnote{default}
-\\DeclareNewFootnote{B}
-\\DeclareNewFootnote{C}
-\\DeclareNewFootnote{D}
-\\DeclareNewFootnote{E}
-\\DeclareNewFootnote{F}
-\\DeclareNewFootnote{G}
-\\DeclareNewFootnote{H}
-\\DeclareNewFootnote{I}
-\\DeclareNewFootnote{J}
+" my/latex-unlimited-structure))
 
-"
-   my/latex-unlimited-structure)
-  "Complete Polyglossia Hebrew preamble with unlimited structure.")
+  (defun my/insert-unlimited-structure ()
+    "Insert only unlimited sectioning and list preamble."
+    (interactive)
+    (insert my/latex-unlimited-structure))
 
-(defun my/insert-hebrew-preamble ()
-  "Insert complete Hebrew LaTeX preamble (Babel)."
-  (interactive)
-  (insert my/latex-hebrew-preamble))
-
-(defun my/insert-polyglossia-preamble ()
-  "Insert complete Hebrew LaTeX preamble (Polyglossia)."
-  (interactive)
-  (insert my/latex-polyglossia-preamble))
-
-(defun my/insert-unlimited-structure ()
-  "Insert only unlimited sectioning and list preamble."
-  (interactive)
-  (insert my/latex-unlimited-structure))
-
-;; ============================================
-;; SIMPLE FOOTNOTES (for non-nested use)
-;; Each level appears in its own block at page bottom
-;; ============================================
-
+;; Simple footnotes (non-nested)
 (defun my/insert-footnote-level-1 ()
-  "Insert level 1 footnote (simple, non-nested)."
+  "Insert level 1 footnote."
   (interactive)
   (insert "\\footnote{}")
   (backward-char 1))
 
 (defun my/insert-footnote-level-2 ()
-  "Insert level 2 footnote (simple, non-nested)."
+  "Insert level 2 footnote."
   (interactive)
   (insert "\\footnoteB{}")
   (backward-char 1))
 
 (defun my/insert-footnote-level-3 ()
-  "Insert level 3 footnote (simple, non-nested)."
+  "Insert level 3 footnote."
   (interactive)
   (insert "\\footnoteC{}")
   (backward-char 1))
 
 (defun my/insert-footnote-level-4 ()
-  "Insert level 4 footnote (simple, non-nested)."
+  "Insert level 4 footnote."
   (interactive)
   (insert "\\footnoteD{}")
   (backward-char 1))
 
 (defun my/insert-footnote-level-5 ()
-  "Insert level 5 footnote (simple, non-nested)."
+  "Insert level 5 footnote."
   (interactive)
   (insert "\\footnoteE{}")
   (backward-char 1))
 
 (defun my/insert-footnote-level-6 ()
-  "Insert level 6 footnote (simple, non-nested)."
+  "Insert level 6 footnote."
   (interactive)
   (insert "\\footnoteF{}")
   (backward-char 1))
 
 (defun my/insert-footnote-level-7 ()
-  "Insert level 7 footnote (simple, non-nested)."
+  "Insert level 7 footnote."
   (interactive)
   (insert "\\footnoteG{}")
   (backward-char 1))
 
 (defun my/insert-footnote-level-8 ()
-  "Insert level 8 footnote (simple, non-nested)."
+  "Insert level 8 footnote."
   (interactive)
   (insert "\\footnoteH{}")
   (backward-char 1))
 
 (defun my/insert-footnote-level-9 ()
-  "Insert level 9 footnote (simple, non-nested)."
+  "Insert level 9 footnote."
   (interactive)
   (insert "\\footnoteI{}")
   (backward-char 1))
 
 (defun my/insert-footnote-level-10 ()
-  "Insert level 10 footnote (simple, non-nested)."
+  "Insert level 10 footnote."
   (interactive)
   (insert "\\footnoteJ{}")
   (backward-char 1))
 
-;; ============================================
-;; NESTED FOOTNOTES (for true nesting)
-;; Use \footnotemarkX + \footnotetextX{} inside another footnote
-;; ============================================
-
+;; Nested footnote marks
 (defun my/insert-footnotemark-level-2 ()
-  "Insert level 2 footnote mark (for nesting inside another footnote)."
+  "Insert level 2 footnote mark (for nesting)."
   (interactive)
   (insert "\\footnotemarkB"))
 
 (defun my/insert-footnotemark-level-3 ()
-  "Insert level 3 footnote mark (for nesting)."
+  "Insert level 3 footnote mark."
   (interactive)
   (insert "\\footnotemarkC"))
 
 (defun my/insert-footnotemark-level-4 ()
-  "Insert level 4 footnote mark (for nesting)."
+  "Insert level 4 footnote mark."
   (interactive)
   (insert "\\footnotemarkD"))
 
 (defun my/insert-footnotemark-level-5 ()
-  "Insert level 5 footnote mark (for nesting)."
+  "Insert level 5 footnote mark."
   (interactive)
   (insert "\\footnotemarkE"))
 
+;; Nested footnote texts
 (defun my/insert-footnotetext-level-2 ()
-  "Insert level 2 footnote text (for nesting inside another footnote)."
+  "Insert level 2 footnote text (for nesting)."
   (interactive)
   (insert "\\footnotetextB{}")
   (backward-char 1))
 
 (defun my/insert-footnotetext-level-3 ()
-  "Insert level 3 footnote text (for nesting)."
+  "Insert level 3 footnote text."
   (interactive)
   (insert "\\footnotetextC{}")
   (backward-char 1))
 
 (defun my/insert-footnotetext-level-4 ()
-  "Insert level 4 footnote text (for nesting)."
+  "Insert level 4 footnote text."
   (interactive)
   (insert "\\footnotetextD{}")
   (backward-char 1))
 
 (defun my/insert-footnotetext-level-5 ()
-  "Insert level 5 footnote text (for nesting)."
+  "Insert level 5 footnote text."
   (interactive)
   (insert "\\footnotetextE{}")
   (backward-char 1))
@@ -1473,12 +1142,8 @@ $0"))))
   (insert "\\footnote{%\n  First level text\\footnotemarkB.\n  \\footnotetextB{Second level text.}%\n}")
   (search-backward "First level text"))
 
-;; ============================================
-;; KEYBINDINGS
-;; ============================================
-
+;; Keybindings
 (with-eval-after-load 'latex
-  ;; Simple footnotes: C-c f <number>
   (define-key LaTeX-mode-map (kbd "C-c f 1") 'my/insert-footnote-level-1)
   (define-key LaTeX-mode-map (kbd "C-c f 2") 'my/insert-footnote-level-2)
   (define-key LaTeX-mode-map (kbd "C-c f 3") 'my/insert-footnote-level-3)
@@ -1489,24 +1154,15 @@ $0"))))
   (define-key LaTeX-mode-map (kbd "C-c f 8") 'my/insert-footnote-level-8)
   (define-key LaTeX-mode-map (kbd "C-c f 9") 'my/insert-footnote-level-9)
   (define-key LaTeX-mode-map (kbd "C-c f 0") 'my/insert-footnote-level-10)
-
-  ;; Nested footnote marks: C-c f m <number>
   (define-key LaTeX-mode-map (kbd "C-c f m 2") 'my/insert-footnotemark-level-2)
   (define-key LaTeX-mode-map (kbd "C-c f m 3") 'my/insert-footnotemark-level-3)
   (define-key LaTeX-mode-map (kbd "C-c f m 4") 'my/insert-footnotemark-level-4)
   (define-key LaTeX-mode-map (kbd "C-c f m 5") 'my/insert-footnotemark-level-5)
-
-  ;; Nested footnote texts: C-c f t <number>
   (define-key LaTeX-mode-map (kbd "C-c f t 2") 'my/insert-footnotetext-level-2)
   (define-key LaTeX-mode-map (kbd "C-c f t 3") 'my/insert-footnotetext-level-3)
   (define-key LaTeX-mode-map (kbd "C-c f t 4") 'my/insert-footnotetext-level-4)
   (define-key LaTeX-mode-map (kbd "C-c f t 5") 'my/insert-footnotetext-level-5)
-
-  ;; Nested footnote template: C-c f n
   (define-key LaTeX-mode-map (kbd "C-c f n") 'my/insert-nested-footnote-template))
-
-;; ConTeXt is handled by AUCTeX automatically via scheme-full
-;; Add ConTeXt-specific configuration
 
 (with-eval-after-load 'tex
   ;; Add ConTeXt command
@@ -1539,51 +1195,52 @@ $0"))))
     (search-backward "\\localfootnote{}")
     (forward-char 15)))
 
-;; typst-ts-mode should be installed via package-vc or manually
-(when (package-installed-p 'typst-ts-mode)
-  (require 'typst-ts-mode nil t))
+;; Install typst-ts-mode via package-vc if not available
+(unless (package-installed-p 'typst-ts-mode)
+  (when (fboundp 'package-vc-install)
+    (package-vc-install
+     '(typst-ts-mode
+       :url "https://git.sr.ht/~meow_king/typst-ts-mode"
+       :branch "master"))))
 
-;; Fallback: define basic typst-mode if typst-ts-mode not available
+(use-package typst-ts-mode
+  :ensure nil
+  :mode "\\.typ\\'"
+  :config
+  ;; Use tinymist LSP (provided by NixOS)
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-server-programs '(typst-ts-mode . ("tinymist"))))
+
+  (add-hook 'typst-ts-mode-hook #'eglot-ensure)
+  (add-hook 'typst-ts-mode-hook #'my/set-rtl-mode)
+  (add-hook 'typst-ts-mode-hook #'electric-pair-local-mode))
+
+;; Fallback mode if tree-sitter not available
 (unless (fboundp 'typst-ts-mode)
   (define-derived-mode typst-mode text-mode "Typst"
     "Major mode for editing Typst files."
     (setq-local comment-start "// ")
-    (setq-local comment-end "")))
-
-;; Set up file association
-(add-to-list 'auto-mode-alist '("\\.typ\\'" . (lambda ()
-                                                 (if (fboundp 'typst-ts-mode)
-                                                     (typst-ts-mode)
-                                                   (typst-mode)))))
-
-;; RTL and electric pair setup
-(defun my/typst-mode-setup ()
-  "Setup for Typst modes."
-  (setq bidi-paragraph-direction 'right-to-left)
-  (electric-pair-local-mode 1))
-
-(add-hook 'typst-ts-mode-hook 'my/typst-mode-setup)
-(add-hook 'typst-mode-hook 'my/typst-mode-setup)
+    (setq-local comment-end ""))
+  (add-to-list 'auto-mode-alist '("\\.typ\\'" . typst-mode))
+  (add-hook 'typst-mode-hook #'my/set-rtl-mode)
+  (add-hook 'typst-mode-hook #'electric-pair-local-mode))
 
 ;; Compilation functions
 (defun my/typst-compile ()
   "Compile current Typst file."
   (interactive)
-  (let ((file (buffer-file-name)))
-    (compile (format "typst compile %s" (shell-quote-argument file)))))
+  (compile (format "typst compile %s" (shell-quote-argument buffer-file-name))))
 
 (defun my/typst-watch ()
   "Start Typst watch mode for live preview."
   (interactive)
-  (let ((file (buffer-file-name)))
-    (async-shell-command
-     (format "typst watch %s" (shell-quote-argument file)))))
+  (async-shell-command
+   (format "typst watch %s" (shell-quote-argument buffer-file-name))))
 
 (defun my/typst-view ()
   "View compiled PDF."
   (interactive)
-  (let* ((file (buffer-file-name))
-         (pdf (concat (file-name-sans-extension file) ".pdf")))
+  (let ((pdf (concat (file-name-sans-extension buffer-file-name) ".pdf")))
     (if (file-exists-p pdf)
         (find-file-other-window pdf)
       (message "PDF not found. Compile first."))))
@@ -1611,7 +1268,7 @@ $0"))))
   (insert "  ]\n")
   (insert "]\n\n"))
 
-;; Keybindings via hook (using C-c t prefix to avoid conflicts)
+;; Keybindings
 (defun my/typst-keybindings ()
   "Set Typst keybindings."
   (local-set-key (kbd "C-c C-c") 'my/typst-compile)
@@ -1621,18 +1278,14 @@ $0"))))
   (local-set-key (kbd "C-c t f") 'my/typst-insert-nested-footnote-helper))
 
 (add-hook 'typst-ts-mode-hook 'my/typst-keybindings)
-(add-hook 'typst-mode-hook 'my/typst-keybindings)
-
-;; Eglot LSP support
-(with-eval-after-load 'eglot
-  (when (executable-find "tinymist")
-    (add-to-list 'eglot-server-programs '(typst-ts-mode . ("tinymist")))
-    (add-to-list 'eglot-server-programs '(typst-mode . ("tinymist")))))
+(when (fboundp 'typst-mode)
+  (add-hook 'typst-mode-hook 'my/typst-keybindings))
 
 (use-package pdf-tools
+  :ensure nil
   :mode ("\\.pdf\\'" . pdf-view-mode)
   :config
-  (pdf-tools-install)
+  (pdf-tools-install :no-query)
   (setq pdf-view-display-size 'fit-page)
   (setq pdf-view-continuous t)
   (add-hook 'pdf-view-mode-hook (lambda () (pdf-view-midnight-minor-mode 1))))
@@ -1676,11 +1329,7 @@ $0"))))
          (rust-mode . eglot-ensure)
          (java-mode . eglot-ensure))
   :config
-  (setq eglot-autoshutdown t)
-  ;; Add typst support if tinymist is available
-  (when (executable-find "tinymist")
-    (add-to-list 'eglot-server-programs '(typst-ts-mode . ("tinymist")))
-    (add-to-list 'eglot-server-programs '(typst-mode . ("tinymist")))))
+  (setq eglot-autoshutdown t))
 
 (use-package python
   :ensure nil
@@ -1727,10 +1376,10 @@ $0"))))
   ("C-h C" . helpful-command))
 
 (use-package hydra
-  :config
-  ;; Direction and language hydra
-  (defhydra hydra-direction (:color blue :hint nil)
-    "
+    :config
+    ;; Direction and language hydra
+    (defhydra hydra-direction (:color blue :hint nil)
+      "
 Direction Controls
 
 _r_: RTL (Hebrew)    _l_: LTR (English)    _t_: Toggle direction
@@ -1738,22 +1387,22 @@ _h_: Hebrew spell    _e_: English spell    _b_: Both languages
 _B_: Toggle bidi     _w_: Focus writing    _W_: Set width
 _q_: quit
 "
-    ("r" my/set-rtl)
-    ("l" my/set-ltr)
-    ("t" my/toggle-direction)
-    ("h" my/spell-hebrew)
-    ("e" my/spell-english)
-    ("b" my/spell-both)
-    ("B" my/toggle-bidi-reordering)
-    ("w" my/toggle-focused-writing)
-    ("W" my/set-focused-writing-width)
-    ("q" nil))
+      ("r" my/set-rtl)
+      ("l" my/set-ltr)
+      ("t" my/toggle-direction)
+      ("h" my/spell-hebrew)
+      ("e" my/spell-english)
+      ("b" my/spell-both)
+      ("B" my/toggle-bidi-reordering)
+      ("w" my/toggle-focused-writing)
+      ("W" my/set-focused-writing-width)
+      ("q" nil))
 
-  (global-set-key (kbd "C-c D") 'hydra-direction/body)
+    (global-set-key (kbd "C-c D") 'hydra-direction/body)
 
-  ;; Org-roam hydra
-  (defhydra hydra-org-roam (:color blue :hint nil)
-    "
+    ;; Org-roam hydra
+    (defhydra hydra-org-roam (:color blue :hint nil)
+      "
 Org-Roam
 
 _f_: Find node       _i_: Insert node      _c_: Capture
@@ -1761,22 +1410,22 @@ _l_: Toggle buffer   _g_: Graph            _t_: Add tag
 _d_: Daily today     _D_: Daily date       _u_: Roam UI
 _q_: quit
 "
-    ("f" org-roam-node-find)
-    ("i" org-roam-node-insert)
-    ("c" org-roam-capture)
-    ("l" org-roam-buffer-toggle)
-    ("g" org-roam-graph)
-    ("t" org-roam-tag-add)
-    ("d" org-roam-dailies-goto-today)
-    ("D" org-roam-dailies-goto-date)
-    ("u" (when (fboundp 'org-roam-ui-open) (org-roam-ui-open)))
-    ("q" nil))
+      ("f" org-roam-node-find)
+      ("i" org-roam-node-insert)
+      ("c" org-roam-capture)
+      ("l" org-roam-buffer-toggle)
+      ("g" org-roam-graph)
+      ("t" org-roam-tag-add)
+      ("d" org-roam-dailies-goto-today)
+      ("D" org-roam-dailies-goto-date)
+      ("u" (when (fboundp 'org-roam-ui-open) (org-roam-ui-open)))
+      ("q" nil))
 
-  (global-set-key (kbd "C-c R") 'hydra-org-roam/body)
+    (global-set-key (kbd "C-c R") 'hydra-org-roam/body)
 
-  ;; Document system hydra
-  (defhydra hydra-document (:color blue :hint nil)
-    "
+    ;; Document system hydra
+    (defhydra hydra-document (:color blue :hint nil)
+      "
 Document Systems
 
 LaTeX:   _p_: Babel preamble  _g_: Polyglossia  _u_: Unlimited struct
@@ -1785,21 +1434,21 @@ ConTeXt: _c_: Hebrew preamble _f_: Local footnote
 Typst:   _h_: Hebrew preamble _s_: Nested footnote helper
 _q_: quit
 "
-    ("p" my/insert-hebrew-preamble)
-    ("g" my/insert-polyglossia-preamble)
-    ("u" my/insert-unlimited-structure)
-    ("n" my/insert-nested-footnote-template)
-    ("c" my/insert-context-hebrew-preamble)
-    ("f" my/insert-context-local-footnote)
-    ("h" my/insert-typst-hebrew-preamble)
-    ("s" my/typst-insert-nested-footnote-helper)
-    ("q" nil))
+      ("p" my/insert-hebrew-preamble)
+      ("g" my/insert-polyglossia-preamble)
+      ("u" my/insert-unlimited-structure)
+      ("n" my/insert-nested-footnote-template)
+      ("c" my/insert-context-hebrew-preamble)
+      ("f" my/insert-context-local-footnote)
+      ("h" my/insert-typst-hebrew-preamble)
+      ("s" my/typst-insert-nested-footnote-helper)
+      ("q" nil))
 
-  (global-set-key (kbd "C-c P") 'hydra-document/body)
+    (global-set-key (kbd "C-c P") 'hydra-document/body)
 
-  ;; LaTeX footnotes hydra - simple levels
-  (defhydra hydra-latex-footnotes (:color blue :hint nil)
-    "
+    ;; LaTeX footnotes hydra
+    (defhydra hydra-latex-footnotes (:color blue :hint nil)
+      "
 LaTeX Footnotes (Simple)
 
 _1_: \\footnote    _2_: \\footnoteB   _3_: \\footnoteC   _4_: \\footnoteD   _5_: \\footnoteE
@@ -1808,53 +1457,53 @@ _6_: \\footnoteF   _7_: \\footnoteG   _8_: \\footnoteH   _9_: \\footnoteI   _0_:
 _n_: Nested template   _m_: → Marks menu   _t_: → Texts menu
 _q_: quit
 "
-    ("1" my/insert-footnote-level-1)
-    ("2" my/insert-footnote-level-2)
-    ("3" my/insert-footnote-level-3)
-    ("4" my/insert-footnote-level-4)
-    ("5" my/insert-footnote-level-5)
-    ("6" my/insert-footnote-level-6)
-    ("7" my/insert-footnote-level-7)
-    ("8" my/insert-footnote-level-8)
-    ("9" my/insert-footnote-level-9)
-    ("0" my/insert-footnote-level-10)
-    ("n" my/insert-nested-footnote-template)
-    ("m" hydra-latex-footnote-marks/body)
-    ("t" hydra-latex-footnote-texts/body)
-    ("q" nil))
+      ("1" my/insert-footnote-level-1)
+      ("2" my/insert-footnote-level-2)
+      ("3" my/insert-footnote-level-3)
+      ("4" my/insert-footnote-level-4)
+      ("5" my/insert-footnote-level-5)
+      ("6" my/insert-footnote-level-6)
+      ("7" my/insert-footnote-level-7)
+      ("8" my/insert-footnote-level-8)
+      ("9" my/insert-footnote-level-9)
+      ("0" my/insert-footnote-level-10)
+      ("n" my/insert-nested-footnote-template)
+      ("m" hydra-latex-footnote-marks/body)
+      ("t" hydra-latex-footnote-texts/body)
+      ("q" nil))
 
-  ;; Sub-hydra for footnote marks
-  (defhydra hydra-latex-footnote-marks (:color blue :hint nil)
-    "
+    ;; Sub-hydra for footnote marks
+    (defhydra hydra-latex-footnote-marks (:color blue :hint nil)
+      "
 Footnote Marks (for nesting)
 
 _2_: \\footnotemarkB   _3_: \\footnotemarkC   _4_: \\footnotemarkD   _5_: \\footnotemarkE
 _b_: ← Back   _q_: quit
 "
-    ("2" my/insert-footnotemark-level-2)
-    ("3" my/insert-footnotemark-level-3)
-    ("4" my/insert-footnotemark-level-4)
-    ("5" my/insert-footnotemark-level-5)
-    ("b" hydra-latex-footnotes/body)
-    ("q" nil))
+      ("2" my/insert-footnotemark-level-2)
+      ("3" my/insert-footnotemark-level-3)
+      ("4" my/insert-footnotemark-level-4)
+      ("5" my/insert-footnotemark-level-5)
+      ("b" hydra-latex-footnotes/body)
+      ("q" nil))
 
-  ;; Sub-hydra for footnote texts
-  (defhydra hydra-latex-footnote-texts (:color blue :hint nil)
-    "
+    ;; Sub-hydra for footnote texts
+    (defhydra hydra-latex-footnote-texts (:color blue :hint nil)
+      "
 Footnote Texts (for nesting)
 
 _2_: \\footnotetextB   _3_: \\footnotetextC   _4_: \\footnotetextD   _5_: \\footnotetextE
 _b_: ← Back   _q_: quit
 "
-    ("2" my/insert-footnotetext-level-2)
-    ("3" my/insert-footnotetext-level-3)
-    ("4" my/insert-footnotetext-level-4)
-    ("5" my/insert-footnotetext-level-5)
-    ("b" hydra-latex-footnotes/body)
-    ("q" nil))
+      ("2" my/insert-footnotetext-level-2)
+      ("3" my/insert-footnotetext-level-3)
+      ("4" my/insert-footnotetext-level-4)
+      ("5" my/insert-footnotetext-level-5)
+      ("b" hydra-latex-footnotes/body)
+      ("q" nil))
 
-  (with-eval-after-load 'latex
-    (define-key LaTeX-mode-map (kbd "C-c F") 'hydra-latex-footnotes/body)))
+    (with-eval-after-load 'latex
+      (define-key LaTeX-mode-map (kbd "C-c F") 'hydra-latex-footnotes/body)))
 
 (defun my/open-init-file ()
   "Open the Emacs init file."
@@ -1928,112 +1577,6 @@ _b_: ← Back   _q_: quit
 (global-set-key (kbd "C-c h p") 'my/insert-hebrew-parentheses)
 (global-set-key (kbd "C-c h c") 'my/count-hebrew-words)
 
-(defun my/create-hebrew-latex-document ()
-  "Create a new Hebrew LaTeX document with full preamble."
-  (interactive)
-  (let ((filename (read-file-name "New Hebrew LaTeX file: ")))
-    (find-file filename)
-    (insert "\\documentclass[11pt]{article}
-
-% Hebrew support
-\\usepackage{fontspec}
-\\usepackage[bidi=basic]{babel}
-\\babelprovide[main, import]{hebrew}
-\\babelprovide[import]{english}
-\\babelfont{rm}{David CLM}
-\\babelfont{sf}{Nachlieli CLM}
-\\babelfont{tt}{Miriam Mono CLM}
-
-% Nested footnotes
-\\usepackage{bigfoot}
-\\DeclareNewFootnote{default}
-\\DeclareNewFootnote{B}
-\\DeclareNewFootnote{C}
-
-% Lists
-\\usepackage{enumitem}
-
-% Title
-\\title{כותרת}
-\\author{מחבר}
-\\date{\\today}
-
-\\begin{document}
-
-\\maketitle
-
-\\section{מבוא}
-
-\\end{document}
-")
-    (goto-char (point-min))
-    (search-forward "\\section{מבוא}")
-    (forward-line 1)
-    (message "Hebrew LaTeX document created.")))
-
-(defun my/create-hebrew-org-document ()
-  "Create a new Hebrew Org document ready for LaTeX export."
-  (interactive)
-  (let ((filename (read-file-name "New Hebrew Org file: ")))
-    (find-file filename)
-    (insert "#+TITLE: כותרת
-#+AUTHOR: מחבר
-#+DATE: " (format-time-string "%Y-%m-%d") "
-#+LATEX_CLASS: article-unlimited
-#+LATEX_HEADER: \\babelprovide[main, import]{hebrew}
-#+OPTIONS: toc:nil
-
-* מבוא
-
-")
-    (goto-char (point-max))
-    (message "Hebrew Org document created.")))
-
-(defun my/create-hebrew-context-document ()
-  "Create a new Hebrew ConTeXt document."
-  (interactive)
-  (let ((filename (read-file-name "New Hebrew ConTeXt file: ")))
-    (find-file filename)
-    (insert "\\mainlanguage[he]
-\\setupalign[r2l]
-\\definefontfamily[hebrew][rm][David CLM]
-\\definefontfamily[hebrew][ss][Nachlieli CLM]
-\\definefontfamily[hebrew][tt][Miriam Mono CLM]
-\\setupbodyfont[hebrew]
-
-\\starttext
-
-\\startsection[title={מבוא}]
-
-\\stopsection
-
-\\stoptext
-")
-    (goto-char (point-min))
-    (search-forward "\\startsection")
-    (forward-line 1)
-    (message "Hebrew ConTeXt document created.")))
-
-(defun my/create-hebrew-typst-document ()
-  "Create a new Hebrew Typst document."
-  (interactive)
-  (let ((filename (read-file-name "New Hebrew Typst file: ")))
-    (find-file filename)
-    (insert "#set text(lang: \"he\", font: \"David CLM\")
-#set page(flipped: true)
-#set heading(numbering: \"1.1.1\")
-
-= מבוא
-
-")
-    (goto-char (point-max))
-    (message "Hebrew Typst document created.")))
-
-(global-set-key (kbd "C-c h l") 'my/create-hebrew-latex-document)
-(global-set-key (kbd "C-c h o") 'my/create-hebrew-org-document)
-(global-set-key (kbd "C-c h x") 'my/create-hebrew-context-document)
-(global-set-key (kbd "C-c h t") 'my/create-hebrew-typst-document)
-
 (defun my/org-roam-find-hebrew ()
   "Find org-roam nodes tagged with hebrew."
   (interactive)
@@ -2057,48 +1600,32 @@ _b_: ← Back   _q_: quit
 (global-set-key (kbd "C-c n R") 'my/org-roam-find-research)
 (global-set-key (kbd "C-c n x") 'my/org-roam-open-random)
 
-;; Set default fonts (with existence checks)
 (when (display-graphic-p)
-  ;; Default font for Latin text (size 10)
-  (when (find-font (font-spec :family "JetBrains Mono"))
-    (set-face-attribute 'default nil
-                        :family "JetBrains Mono"
-                        :height 100
-                        :weight 'normal))
+  ;; Default monospace font
+  (set-face-attribute 'default nil
+                      :family "JetBrains Mono"
+                      :height 100
+                      :weight 'regular)
 
-  ;; Fallback to DejaVu Sans Mono if JetBrains Mono not found
-  (unless (find-font (font-spec :family "JetBrains Mono"))
-    (when (find-font (font-spec :family "DejaVu Sans Mono"))
-      (set-face-attribute 'default nil
-                          :family "DejaVu Sans Mono"
-                          :height 100
-                          :weight 'normal)))
+  ;; Hebrew font (Culmus + Noto fallback)
+  (set-fontset-font t 'hebrew
+                    (font-spec :family "David CLM"))
+  (set-fontset-font t 'hebrew
+                    (font-spec :family "Noto Sans Hebrew") nil 'append)
 
-  ;; Hebrew font
-  (when (find-font (font-spec :family "David CLM"))
-    (set-fontset-font t 'hebrew (font-spec :family "David CLM" :size 12)))
+  ;; Fallbacks
+  (set-fontset-font t 'unicode
+                    (font-spec :family "DejaVu Sans") nil 'append)
 
-  ;; Fallback Hebrew fonts
-  (unless (find-font (font-spec :family "David CLM"))
-    (catch 'font-found
-      (dolist (font '("Noto Sans Hebrew" "DejaVu Sans" "Arial Hebrew"))
-        (when (find-font (font-spec :family font))
-          (set-fontset-font t 'hebrew (font-spec :family font :size 12))
-          (throw 'font-found t)))))
-
-  ;; Modeline font (size 8)
-  (set-face-attribute 'mode-line nil :height 80)
-  (set-face-attribute 'mode-line-inactive nil :height 80)
-
-  ;; Minibuffer font (size 8)
-  (add-hook 'minibuffer-setup-hook
-            (lambda ()
-              (face-remap-add-relative 'default :height 80))))
+  ;; Modeline smaller
+  (set-face-attribute 'mode-line nil :height 90)
+  (set-face-attribute 'mode-line-inactive nil :height 90))
 
 ;; Ensure necessary directories exist
 (dolist (dir '("~/Documents/org/"
                "~/Documents/roam/"
                "~/Documents/roam/daily/"
+               "~/Documents/seforim/"
                "~/projects/"))
   (unless (file-exists-p dir)
     (make-directory dir t)))
@@ -2139,88 +1666,152 @@ _b_: ← Back   _q_: quit
   :type 'directory
   :group 'seforim)
 
-(defcustom seforim-file-extensions '("org" "txt" "md")
+(defcustom seforim-file-extensions '("org" "pdf" "epub" "docx" "doc" "odt")
   "File extensions to include in searches."
   :type '(repeat string)
   :group 'seforim)
 
-;; Ensure the seforim directory exists to avoid startup errors
+(defcustom seforim-plocate-db "/var/cache/locatedb"
+  "Path to the plocate database."
+  :type 'file
+  :group 'seforim)
+
+(defcustom seforim-plocate-min-query-length 2
+  "Minimum query length before running plocate."
+  :type 'integer
+  :group 'seforim)
+
+;; Ensure directory exists
 (unless (file-exists-p seforim-directory)
   (make-directory seforim-directory t))
 
 (require 'cl-lib)
-
-(use-package consult
-  :ensure t)
-
-(use-package hydra
-  :ensure t)
+(require 'subr-x)
+(require 'seq)
 
 (defun seforim--executable-p (name)
-  "Return t if NAME is an executable in PATH."
+  "Return non-nil if NAME is an executable in PATH."
   (executable-find name))
+
+(defun seforim--plocate-db-readable-p ()
+  "Return non-nil if `seforim-plocate-db' exists and is readable."
+  (and (stringp seforim-plocate-db)
+       (file-exists-p seforim-plocate-db)
+       (file-readable-p seforim-plocate-db)))
 
 (defun seforim--check-tools ()
   "Return alist of available tools."
   `((plocate . ,(seforim--executable-p "plocate"))
+    (fd . ,(seforim--executable-p "fd"))
     (recoll . ,(seforim--executable-p "recoll"))
-    (recollindex . ,(seforim--executable-p "recollindex"))
-    (ripgrep . ,(seforim--executable-p "rg"))
-    (fd . ,(seforim--executable-p "fd"))))
+    (ripgrep-all . ,(seforim--executable-p "rga"))
+    (ripgrep . ,(seforim--executable-p "rg"))))
+
+(defun seforim--plocate-lines (&rest args)
+  "Run plocate with ARGS and return output as a list of lines."
+  (unless (seforim--executable-p "plocate")
+    (user-error "plocate not found in PATH"))
+  (unless (seforim--plocate-db-readable-p)
+    (user-error "plocate DB not readable: %s\nAdd user to 'plocate' group and re-login"
+                seforim-plocate-db))
+  (let ((buf (generate-new-buffer " *seforim-plocate*")))
+    (unwind-protect
+        (let* ((coding-system-for-read 'utf-8-unix)
+               (exit (apply #'process-file "plocate" nil buf nil
+                            "--database" seforim-plocate-db
+                            args)))
+          (with-current-buffer buf
+            (let ((out (string-trim (buffer-string))))
+              (cond
+               ((= exit 0)
+                (if (string-empty-p out) nil (split-string out "\n" t)))
+               (t
+                (user-error "plocate failed (exit %s):\n%s" exit out))))))
+      (kill-buffer buf))))
 
 (defun seforim-find ()
   "Find a sefer by filename. Uses plocate (indexed) with fd fallback."
   (interactive)
-  (if (seforim--executable-p "plocate")
+  (if (and (seforim--executable-p "plocate")
+           (seforim--plocate-db-readable-p))
       (seforim--find-plocate)
     (seforim--find-fd)))
 
 (defun seforim--find-plocate ()
-  "Find sefer using plocate index."
-  (let* ((pattern (read-string "Find sefer: "))
-         (regex (format "%s.*\\.org$" (regexp-quote seforim-directory)))
-         (cmd (format "plocate -i -r '%s' 2>/dev/null" regex))
-         (output (shell-command-to-string cmd))
-         (all-files (cl-remove-if #'string-empty-p (split-string output "\n")))
-         (matches (cl-remove-if-not
-                   (lambda (f) (string-match-p (regexp-quote pattern) f))
-                   all-files)))
-    (if matches
-        (find-file (completing-read "Select: " matches nil t))
-      (if all-files
-          (find-file (completing-read "All seforim: " all-files nil t))
-        (user-error "No seforim found")))))
+  "Find sefer using plocate, scoped to `seforim-directory'."
+  (let* ((query (string-trim (read-string "Find sefer (plocate): ")))
+         (root (file-name-as-directory (expand-file-name seforim-directory))))
+    (when (< (length query) seforim-plocate-min-query-length)
+      (user-error "Query too short (min %d characters)" seforim-plocate-min-query-length))
+    (let* ((lines (seforim--plocate-lines "-i" query))
+           (files (seq-filter
+                   (lambda (f)
+                     (and (string-prefix-p root f)
+                          (let ((ext (downcase (or (file-name-extension f) ""))))
+                            (member ext seforim-file-extensions))
+                          (file-exists-p f)))
+                   lines))
+           (cands (mapcar (lambda (f)
+                            (propertize (file-relative-name f root) 'file f))
+                          files)))
+      (unless cands
+        (user-error "No matches for %S under %s" query root))
+      (let* ((choice (completing-read "Select: " cands nil t))
+             (file (get-text-property 0 'file choice)))
+        (find-file file)))))
 
 (defun seforim--find-fd ()
-  "Find sefer using fd."
-  (let* ((pattern (read-string "Find sefer: "))
-         (cmd (format "fd -t f -e org -i '%s' '%s' 2>/dev/null"
-                      pattern seforim-directory))
-         (output (shell-command-to-string cmd))
-         (files (cl-remove-if #'string-empty-p (split-string output "\n"))))
-    (if files
-        (find-file (completing-read "Select: " files nil t))
-      (user-error "No seforim found matching '%s'" pattern))))
+  "Find sefer using fd (fallback, non-indexed)."
+  (unless (seforim--executable-p "fd")
+    (user-error "Neither plocate (usable) nor fd found"))
+  (let* ((pattern (string-trim (read-string "Find sefer (fd): ")))
+         (ext-args (cl-loop for ext in seforim-file-extensions
+                            append (list "-e" ext)))
+         (cmd (append '("fd" "--color=never" "-i" "-t" "f")
+                      ext-args
+                      (list pattern seforim-directory)))
+         (buf (generate-new-buffer " *seforim-fd*")))
+    (unwind-protect
+        (let ((coding-system-for-read 'utf-8-unix)
+              (exit (apply #'process-file (car cmd) nil buf nil (cdr cmd))))
+          (with-current-buffer buf
+            (let* ((out (string-trim (buffer-string)))
+                   (files (if (or (/= exit 0) (string-empty-p out))
+                              nil
+                            (split-string out "\n" t))))
+              (if files
+                  (find-file (completing-read "Select: " files nil t))
+                (user-error "No seforim found matching %S" pattern)))))
+      (kill-buffer buf))))
 
 (defun seforim-find-fuzzy ()
-  "Find sefer using consult-fd for interactive fuzzy matching."
+  "Fuzzy find inside the seforim directory using consult-fd."
   (interactive)
-  (let ((default-directory seforim-directory)
-        (consult-fd-args '("fd" "--color=never" "-i" "-t" "f" "-e" "org")))
+  (unless (fboundp 'consult-fd)
+    (user-error "consult-fd not available"))
+  (let* ((default-directory seforim-directory)
+         (ext-args (cl-loop for ext in seforim-file-extensions
+                            append (list "-e" ext)))
+         (consult-fd-args (append (list "fd" "--color=never" "-i" "-t" "f")
+                                  ext-args)))
     (call-interactively #'consult-fd)))
 
 (defun seforim-search ()
-  "Search contents of all seforim. Uses recoll (indexed) with ripgrep fallback."
+  "Search contents of all seforim. Uses recoll (indexed) with ripgrep-all fallback."
   (interactive)
   (if (seforim--executable-p "recoll")
       (seforim--search-recoll seforim-directory)
-    (seforim--search-ripgrep seforim-directory)))
+    (progn
+      (message "recoll not found — falling back to ripgrep-all")
+      (seforim--search-ripgrep seforim-directory))))
 
 (defun seforim--search-recoll (directory)
   "Search DIRECTORY using recoll."
-  (let* ((query (read-string "Search: "))
+  (let* ((query (read-string "Search (recoll): "))
          (dir-filter (format "dir:\"%s\"" (expand-file-name directory)))
-         (cmd (format "recoll -t -q '%s %s' 2>/dev/null" query dir-filter))
+         (cmd (format "recoll -t -q %s %s 2>/dev/null"
+                      (shell-quote-argument query)
+                      (shell-quote-argument dir-filter)))
          (output (shell-command-to-string cmd))
          (results (seforim--parse-recoll output)))
     (if results
@@ -2240,9 +1831,10 @@ _b_: ← Back   _q_: quit
         (results '())
         (seen (make-hash-table :test 'equal)))
     (dolist (line lines)
-      (when (string-match "^/\\([^ ]+\\)" line)
-        (let ((file (concat "/" (match-string 1 line))))
-          (when (and (string-suffix-p ".org" file)
+      (when (string-match "\\(/[^[:cntrl:]]+\\)" line)
+        (let* ((file (match-string 1 line))
+               (ext (downcase (or (file-name-extension file) ""))))
+          (when (and (member ext seforim-file-extensions)
                      (file-exists-p file)
                      (string-prefix-p (expand-file-name seforim-directory)
                                       (expand-file-name file))
@@ -2253,19 +1845,17 @@ _b_: ← Back   _q_: quit
     (nreverse results)))
 
 (defun seforim--search-ripgrep (directory)
-  "Search DIRECTORY using ripgrep."
+  "Search DIRECTORY using ripgrep-all via consult-ripgrep."
+  (unless (fboundp 'consult-ripgrep)
+    (user-error "consult-ripgrep not available"))
   (let ((consult-ripgrep-args
-         (concat "rg "
-                 "--null --line-buffered --color=never "
+         (concat "rga --null --line-buffered --color=never "
                  "--line-number --smart-case --no-heading "
-                 "--max-columns=1000 --max-columns-preview "
-                 "--type=org "
-                 "--threads=" (number-to-string (num-processors)) " "
-                 "-- ")))
+                 "--max-columns=1000 --max-columns-preview -- ")))
     (consult-ripgrep directory)))
 
 (defun seforim-search-ripgrep ()
-  "Search all seforim using ripgrep directly."
+  "Search using ripgrep-all directly."
   (interactive)
   (seforim--search-ripgrep seforim-directory))
 
@@ -2290,33 +1880,44 @@ _b_: ← Back   _q_: quit
 (defun seforim-outline ()
   "Jump to heading in current file."
   (interactive)
-  (consult-outline))
+  (if (fboundp 'consult-outline)
+      (consult-outline)
+    (user-error "consult-outline not available")))
 
 (defun seforim-browse ()
   "Open Dirvish at the seforim root."
   (interactive)
-  (dirvish seforim-directory))
+  (if (fboundp 'dirvish)
+      (dirvish seforim-directory)
+    (dired seforim-directory)))
 
 (defun seforim-browse-current ()
   "Open Dirvish in current file's directory."
   (interactive)
-  (dirvish (if buffer-file-name
-               (file-name-directory buffer-file-name)
-             seforim-directory)))
+  (let ((dir (if buffer-file-name
+                 (file-name-directory buffer-file-name)
+               seforim-directory)))
+    (if (fboundp 'dirvish)
+        (dirvish dir)
+      (dired dir))))
 
 (defun seforim-toggle-sidebar ()
   "Toggle Dirvish sidebar scoped to the Seforim directory."
   (interactive)
+  (unless (fboundp 'dirvish-side)
+    (user-error "dirvish-side not available"))
   (dirvish-side seforim-directory))
 
 (defun seforim-reindex ()
-  "Rebuild all indexes."
+  "Rebuild indexes (recoll + system locate DB)."
   (interactive)
   (when (seforim--executable-p "recollindex")
     (message "Starting recoll indexing...")
     (start-process "recollindex" "*seforim-index*" "recollindex"))
-  (message "Updating plocate index (may need sudo)...")
-  (start-process-shell-command "updatedb" "*seforim-index*" "sudo updatedb")
+  (message "Requesting locate DB update (may require sudo)...")
+  (start-process-shell-command
+   "update-locatedb" "*seforim-index*"
+   "sudo systemctl start update-locatedb.service")
   (display-buffer "*seforim-index*"))
 
 (defun seforim-reindex-recoll ()
@@ -2334,38 +1935,33 @@ _b_: ← Back   _q_: quit
   (with-current-buffer (get-buffer-create "*Seforim Status*")
     (erase-buffer)
     (insert "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-    (insert "           📚 SEFORIM STATUS\n")
+    (insert "           SEFORIM STATUS\n")
     (insert "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n")
 
     (insert "TOOLS:\n")
     (dolist (tool (seforim--check-tools))
-      (insert (format "  %-12s %s\n"
+      (insert (format "  %-14s %s\n"
                       (car tool)
                       (if (cdr tool) "✓" "✗"))))
 
+    (insert "\nSEARCH CAPABILITIES:\n")
+    (insert "  plocate      → all types (filename only)\n")
+    (insert "  fd           → all types (filename only)\n")
+    (insert "  recoll       → org,pdf,epub,docx,doc,odt (indexed)\n")
+    (insert "  ripgrep-all  → org,pdf,epub,docx,doc,odt (live search)\n")
+
+    (insert (format "\nFILE EXTENSIONS: %s\n"
+                    (mapconcat #'identity seforim-file-extensions ", ")))
+
     (insert "\nINDEXES:\n")
     (let ((recoll-db (expand-file-name "~/.recoll/xapiandb")))
-      (insert (format "  recoll:      %s\n"
+      (insert (format "  recoll db:   %s\n"
                       (if (file-directory-p recoll-db) "✓ exists" "✗ missing"))))
-    (insert (format "  plocate:     %s\n"
-                    (if (file-exists-p "/var/lib/plocate/plocate.db")
-                        "✓ exists" "✗ missing")))
-
-    (insert "\nLIBRARY:\n")
-    (insert (format "  path:        %s\n" seforim-directory))
-    (insert (format "  exists:      %s\n"
-                    (if (file-directory-p seforim-directory) "✓" "✗")))
-    (when (file-directory-p seforim-directory)
-      (insert (format "  org files:   %s\n"
-                      (string-trim
-                       (shell-command-to-string
-                        (format "find '%s' -name '*.org' 2>/dev/null | wc -l"
-                                seforim-directory)))))
-      (insert (format "  total size:  %s\n"
-                      (string-trim
-                       (shell-command-to-string
-                        (format "du -sh '%s' 2>/dev/null | cut -f1"
-                                seforim-directory))))))
+    (insert (format "  plocate db:  %s (%s)\n"
+                    seforim-plocate-db
+                    (if (seforim--plocate-db-readable-p)
+                        "readable ✓"
+                      "NOT readable ✗")))
 
     (insert "\n[q] close\n")
     (goto-char (point-min))
@@ -2373,53 +1969,41 @@ _b_: ← Back   _q_: quit
     (display-buffer (current-buffer))))
 
 (defhydra seforim-hydra (:color blue :hint nil)
-  "
+    "
 ┌─────────────────────────────────────────────────────┐
-│                 📚 SEFORIM                          │
+│                     SEFORIM                         │
 ├─────────────────────────────────────────────────────┤
-│ FIND FILE          │ SEARCH TEXT                   │
-│  _f_ find (indexed) │  _s_ search all (indexed)     │
-│  _F_ find (fuzzy)   │  _r_ search all (ripgrep)     │
-│                    │  _c_ search current dir       │
-│                    │  _S_ search choose dir        │
+│ FIND FILE          │ SEARCH CONTENT                 │
+│  _f_ find (plocate) │  _s_ search (recoll)          │
+│  _F_ find (fuzzy)   │  _r_ search (ripgrep-all)     │
+│                    │  _c_ search current dir        │
+│                    │  _S_ search choose dir         │
 ├─────────────────────────────────────────────────────┤
-│ NAVIGATE           │ MANAGE                        │
-│  _o_ outline        │  _I_ reindex all              │
-│  _t_ toggle sidebar │  _?_ status                   │
-│  _b_ browse root    │                              │
-│  _B_ browse current │                              │
+│ NAVIGATE           │ MANAGE                         │
+│  _o_ outline        │  _I_ reindex all               │
+│  _t_ toggle sidebar │  _?_ status                    │
+│  _b_ browse root    │                               │
+│  _B_ browse current │                               │
 └─────────────────────────────────────────────────────┘
                      _q_ quit
 "
-  ("f" seforim-find)
-  ("F" seforim-find-fuzzy)
-  ("s" seforim-search)
-  ("r" seforim-search-ripgrep)
-  ("c" seforim-search-current-dir)
-  ("S" seforim-search-choose-dir)
-  ("o" seforim-outline)
-  ("t" seforim-toggle-sidebar)
-  ("b" seforim-browse)
-  ("B" seforim-browse-current)
-  ("I" seforim-reindex)
-  ("?" seforim-status)
-  ("q" nil))
+    ("f" seforim-find)
+    ("F" seforim-find-fuzzy)
+    ("s" seforim-search)
+    ("r" seforim-search-ripgrep)
+    ("c" seforim-search-current-dir)
+    ("S" seforim-search-choose-dir)
+    ("o" seforim-outline)
+    ("t" seforim-toggle-sidebar)
+    ("b" seforim-browse)
+    ("B" seforim-browse-current)
+    ("I" seforim-reindex)
+    ("?" seforim-status)
+    ("q" nil))
 
-(global-set-key (kbd "C-c S") #'seforim-hydra/body)
+  (global-set-key (kbd "C-c S") 'seforim-hydra/body)
 
 (provide 'seforim)
-
-;; Speed up rendering
-(setq auto-window-vscroll nil)
-(setq fast-but-imprecise-scrolling t)
-(setq jit-lock-defer-time 0)
-
-;; Handle long lines better
-(setq-default so-long-threshold 400)
-(global-so-long-mode 1)
-
-;; Increase read process output
-(setq read-process-output-max (* 1024 1024))
 
 ;; Start server if not already running (only in GUI mode)
 (when (display-graphic-p)
