@@ -20,25 +20,57 @@ The configuration is written in literate Org format (=config.org=) and automatic
 
 ** System Requirements
 
-This configuration assumes NixOS with the following packages installed:
+This configuration runs on NixOS with a dedicated =emacs.nix= module. The following are provided by the NixOS configuration:
 
 | Category | Packages |
 |----------|----------|
-| Emacs | =emacs29= (or later with native compilation) |
+| Emacs | =emacs-pgtk= (native Wayland, built-in =use-package=) |
+| Nix-provided Emacs packages | =jinx=, =exec-path-from-shell=, =pdf-tools= (use =:ensure nil=) |
 | TeX | =texlive.combined.scheme-full= (includes LuaLaTeX, ConTeXt) |
 | Typst | =typst=, =tinymist= (LSP server) |
-| Fonts | =culmus= (Hebrew fonts: David CLM, Nachlieli CLM, Miriam Mono CLM) |
-| Search | =plocate=, =recoll=, =ripgrep=, =fd= |
-| Spell | =hunspell=, =hunspellDicts.en_US=, =hunspellDicts.he_IL= |
-| PDF | =poppler_utils= (for pdf-tools) |
-| Dev | =python3=, =rustc=, =cargo=, =jdk= (optional, per language) |
+| Fonts | =culmus= (Hebrew: David CLM, Nachlieli CLM, Miriam Mono CLM), =jetbrains-mono=, =noto-fonts= |
+| Search | =plocate=, =recoll=, =ripgrep=, =ripgrep-all=, =fd= |
+| Spell | =enchant2=, =hunspell= with =en_US= and =he_IL= dictionaries |
+| PDF | =poppler=, =poppler-utils= (for pdf-tools and recoll) |
+| Document converters | =pandoc=, =antiword=, =catdoc=, =unzip=, =calibre= |
+| Dev | =python3=, =python-lsp-server=, =rustc=, =cargo=, =rust-analyzer=, =jdk=, =jdt-language-server= |
 | VCS | =git= |
+| Other | =sqlite= (org-roam), =graphviz= (org-roam graph), =xapian= (recoll) |
 | Icons | Run =M-x all-the-icons-install-fonts= after first launch |
+
+*** NixOS Module
+
+The Emacs environment is defined in =emacs.nix=. Import it from =configuration.nix=:
+
+#+begin_example
+imports = [ ./emacs.nix ];
+#+end_example
+
+The module provides:
+- All system packages and fonts
+- Emacs with Nix-provided packages (jinx, exec-path-from-shell, pdf-tools)
+- Plocate service with hourly indexing
+- Recoll configuration and systemd timer for periodic indexing
+- User membership in =plocate= group
+- Environment variables (=DICPATH=, =OSFONTDIR=)
+- Seforim directory creation
+
+*** Important: Nix-Provided vs MELPA Packages
+
+Packages provided by Nix must use =:ensure nil= in =config.org=:
+
+| Package | Source | =:ensure= |
+|---------|--------|-----------|
+| =jinx= | Nix | =nil= |
+| =exec-path-from-shell= | Nix | =nil= |
+| =pdf-tools= | Nix | =nil= |
+| Everything else | MELPA | =t= (default) |
 
 ** File Locations
 
 | File | Location |
 |------|----------|
+| NixOS Emacs module | =/etc/nixos/emacs.nix= (or your flake path) |
 | Emacs config (source) | =~/.emacs.d/config.org= |
 | Emacs config (tangled) | =~/.emacs.d/config.el= |
 | Init file | =~/.emacs.d/init.el= |
@@ -48,13 +80,14 @@ This configuration assumes NixOS with the following packages installed:
 | Bibliography | =~/Documents/bibliography.bib= |
 | Seforim library | =~/Documents/seforim/= |
 | Undo history | =~/.emacs.d/undo-tree-history/= |
-| Personal dictionary | =~/.hunspell_personal= |
+| Recoll config | =~/.recoll/recoll.conf= (managed by NixOS) |
+| Plocate database | =/var/cache/locatedb= |
 
 ** First Run Tasks
 
 After first launch:
 
-1. Wait for packages to install (first startup is slow)
+1. Wait for MELPA packages to install (first startup is slow)
 
 2. Install icon fonts:
    : M-x all-the-icons-install-fonts RET
@@ -62,11 +95,39 @@ After first launch:
 3. Initialize org-roam database:
    : M-x org-roam-db-sync RET
 
-4. Build PDF-tools (if not already compiled):
-   : M-x pdf-tools-install RET
-
-5. Build Seforim indexes (if using Seforim library):
+4. Build Seforim indexes (if using Seforim library):
    : M-x seforim-reindex RET
+
+5. Verify tools are available:
+   : M-x seforim-status RET
+
+Note: =pdf-tools= is installed via Nix and does not need =M-x pdf-tools-install=. It runs =pdf-tools-install :no-query= automatically.
+
+** Verifying the Installation
+
+After =sudo nixos-rebuild switch= and starting Emacs:
+
+#+begin_src shell
+# Verify plocate group membership (re-login after first rebuild)
+groups | grep plocate
+
+# Verify recoll config
+cat ~/.recoll/recoll.conf
+
+# Verify fonts
+fc-list | grep -i "david\|nachlieli\|miriam"
+
+# Verify tools
+which plocate fd rg rga recoll typst tinymist lualatex
+#+end_src
+
+In Emacs:
+
+#+begin_example
+M-x jinx-languages RET        → should show "en he"
+M-x seforim-status RET        → should show all tools ✓
+C-h v exec-path RET           → should include /run/current-system/sw/bin
+#+end_example
 
 * Basic Emacs Usage
 
@@ -262,6 +323,8 @@ The modeline shows current state:
 - =[RTL עב]= — Hebrew mode, right-to-left
 - =[LTR EN]= — English mode, left-to-right
 
+The indicator updates only when direction changes (no performance cost).
+
 ** Direction Controls Hydra (=C-c D=)
 
 #+begin_example
@@ -275,7 +338,11 @@ q: quit
 
 ** Performance Toggle
 
-For very large files with complex bidirectional text, you can disable bidi reordering for better performance:
+For very large files (>5MB), expensive features are automatically disabled:
+- Jinx spell checking turned off
+- Bidi reordering disabled
+
+For manual control:
 
 | Keybinding | Action |
 |------------|--------|
@@ -292,40 +359,50 @@ Re-enable when you need proper RTL display.
 
 * Spell Checking
 
-Spell checking uses Flyspell with Hunspell backend, supporting both English and Hebrew.
+Spell checking uses Jinx with Enchant2 backend, supporting both English and Hebrew simultaneously.
 
 ** Keybindings
 
 | Keybinding | Action |
 |------------|--------|
-| =C-c s e= | Switch to English dictionary |
-| =C-c s h= | Switch to Hebrew dictionary |
-| =C-c s b= | Use both (add Hebrew words to personal dict) |
-| =M-$= | Correct word at point |
+| =M-$= | Correct word at point (jinx-correct) |
+
+** Spell Language Switching
+
+Available via the Direction Controls hydra (=C-c D=):
+
+| Key in hydra | Action |
+|--------------|--------|
+| =h= | Switch to Hebrew only |
+| =e= | Switch to English only |
+| =b= | Use both English + Hebrew |
+
+Or call directly:
+
+| Command | Action |
+|---------|--------|
+| =M-x my/spell-hebrew= | Hebrew dictionary only |
+| =M-x my/spell-english= | English dictionary only |
+| =M-x my/spell-both= | Both dictionaries |
 
 ** Where Spell Checking is Active
 
-- All prose modes: Org, LaTeX, Markdown, Text
-- Comments and strings in programming modes
+Jinx is automatically enabled in:
+- =text-mode= (and derived modes)
+- =org-mode=
+- =LaTeX-mode=
 
-** Adding Words to Personal Dictionary
+It is automatically disabled in buffers larger than 5MB for performance.
 
-When a word is flagged incorrectly:
-1. Place cursor on the word
-2. Press =M-$=
-3. Press =i= to add to personal dictionary
+** NixOS Requirements
 
-Personal dictionary is saved to =~/.hunspell_personal=.
+Spell checking requires these packages (provided by =emacs.nix=):
+- =enchant2= — spell checking library
+- =hunspell= with =en_US= and =he_IL= dictionaries
+- =jinx= — Emacs package (provided via Nix, use =:ensure nil=)
 
-** Switching Languages
+The =DICPATH= environment variable is set by =emacs.nix= to point to the Nix-provided dictionaries.
 
-Since spell checking can only use one dictionary at a time:
-
-1. For Hebrew documents: =C-c s h=
-2. For English documents: =C-c s e=
-3. For mixed documents: Use =C-c s e= and add Hebrew words to personal dict with =i=
-
-After switching, the buffer is re-checked automatically.
 * Org Mode
 
 ** Basic Structure
@@ -658,7 +735,7 @@ Add to the top of your Org file:
 | =report-unlimited= | Longer reports with chapters |
 | =book-unlimited= | Books with parts and chapters |
 
-All classes support unlimited heading depth and list nesting.
+All classes support unlimited heading depth and list nesting. Preambles are generated from shared templates to avoid code duplication.
 
 ** LaTeX Preview in Org
 
@@ -683,6 +760,7 @@ This configuration supports three document systems for typesetting:
 
 | Keybinding | Action |
 |------------|--------|
+| =C-c h n= | Create Hebrew document (choose type) |
 | =C-c h l= | Create Hebrew LaTeX document |
 | =C-c h x= | Create Hebrew ConTeXt document |
 | =C-c h t= | Create Hebrew Typst document |
@@ -718,7 +796,7 @@ q: quit
 1. Create file: =C-x C-f myfile.tex RET=
 2. AUCTeX mode activates automatically
 
-Or use: =C-c h l= to create a Hebrew LaTeX document with full preamble.
+Or use: =C-c h l= (or =C-c h n= → =latex=) to create a Hebrew LaTeX document with full preamble.
 
 ** Basic Hebrew Document
 
@@ -765,7 +843,7 @@ English text here.
 2. Press =RET= for default command (LaTeX)
 3. Repeat =C-c C-c= and select =View= to open PDF
 
-Documents compile with LuaLaTeX automatically.
+Documents compile with LuaLaTeX automatically. A dedicated =LuaLaTeX= command is also available in the command list.
 
 ** PDF Synctex
 
@@ -939,9 +1017,11 @@ ConTeXt is a TeX-based document system with:
 - Excellent typography
 - "Batteries included" philosophy
 
+ConTeXt is included in =texlive.combined.scheme-full= (provided by =emacs.nix=).
+
 ** Creating a ConTeXt Document
 
-Use =C-c h x= to create a Hebrew ConTeXt document, or create manually:
+Use =C-c h x= (or =C-c h n= → =context=) to create a Hebrew ConTeXt document, or create manually:
 
 #+begin_src tex
 \mainlanguage[he]
@@ -1028,7 +1108,7 @@ Typst is a modern document system with:
 
 ** Creating a Typst Document
 
-Use =C-c h t= to create a Hebrew Typst document, or create manually:
+Use =C-c h t= (or =C-c h n= → =typst=) to create a Hebrew Typst document, or create manually:
 
 #+begin_src typst
 #set text(lang: "he", font: "David CLM")
@@ -1173,12 +1253,19 @@ This is body text with a footnote.#footnote[
 
 ** Typst LSP Support
 
-If =tinymist= is installed, Eglot provides:
+If =tinymist= is installed (provided by =emacs.nix=), Eglot starts automatically and provides:
 - Syntax checking
 - Autocompletion
 - Hover documentation
 
-Start manually with =M-x eglot= if not auto-started.
+** Typst Tree-Sitter Mode
+
+The configuration uses =typst-ts-mode= (tree-sitter based) for enhanced syntax highlighting. It is installed via =package-vc-install= from =https://git.sr.ht/~meow_king/typst-ts-mode=.
+
+If tree-sitter grammars are not available, a simple =typst-mode= fallback is defined automatically.
+
+Dependencies:
+- =treesit-auto= — installed from MELPA for tree-sitter grammar management
 
 * Nested Footnotes Comparison
 
@@ -1327,6 +1414,8 @@ PDFs open automatically in =pdf-view-mode= with:
 - Midnight mode (dark background)
 - Synctex support for LaTeX
 
+PDF-tools is provided by Nix and auto-configured (no need to run =pdf-tools-install= manually).
+
 ** PDF Keybindings
 
 | Keybinding | Action |
@@ -1378,6 +1467,7 @@ Notes are organized hierarchically:
 3. Navigate PDF, insert notes with =i=
 4. Notes store page number and position
 5. Click note → jumps to PDF location
+
 * Bibliography Management
 
 ** Citar
@@ -1386,7 +1476,7 @@ Citar provides bibliography management integrated with Org and LaTeX.
 
 ** Bibliography File
 
-Location: =~/Documents/bibliography.bib=
+Location: =~/Documents/bibliography.bib= (created automatically if missing).
 
 ** Keybindings
 
@@ -1495,14 +1585,25 @@ A complete system for managing and searching large Hebrew text (Seforim) collect
 
 ** Overview
 
-| Tool | Purpose | Speed |
-|------|---------|-------|
-| plocate | Find by filename | Instant (indexed) |
-| recoll | Full-text search | Instant (indexed) |
-| ripgrep | Fallback text search | Fast |
-| fd | Fallback file find | Fast |
+| Tool | Purpose | Speed | Format Support |
+|------|---------|-------|----------------|
+| plocate | Find by filename | Instant (indexed) | All |
+| recoll | Full-text search | Instant (indexed) | org, pdf, epub, docx, doc, odt |
+| ripgrep-all | Fallback text search | Fast (live) | org, pdf, epub, docx, doc, odt |
+| fd | Fallback file find | Fast (live) | All |
 
-The system uses indexed search (plocate/recoll) as primary, with ripgrep/fd as fallbacks when indexes are unavailable.
+The system uses indexed search (plocate/recoll) as primary, with ripgrep-all/fd as fallbacks when indexes are unavailable.
+
+** NixOS Integration
+
+The =emacs.nix= module provides:
+- All search tools (plocate, recoll, ripgrep-all, fd)
+- Document converters (pandoc, antiword, catdoc, unzip, calibre) for recoll and rga
+- Plocate service with hourly indexing (=services.locate=)
+- Recoll configuration (=~/.recoll/recoll.conf=, managed by NixOS)
+- Systemd timer for periodic recoll indexing
+- User membership in =plocate= group
+- Seforim directory creation
 
 ** Directory Structure
 
@@ -1532,19 +1633,19 @@ The system uses indexed search (plocate/recoll) as primary, with ripgrep/fd as f
 
 #+begin_example
 ┌─────────────────────────────────────────────────────┐
-│                 📚 SEFORIM                          │
+│                     SEFORIM                         │
 ├─────────────────────────────────────────────────────┤
-│ FIND FILE          │ SEARCH TEXT                   │
-│  f find (indexed)  │  s search all (indexed)       │
-│  F find (fuzzy)    │  r search all (ripgrep)       │
-│                    │  c search current dir         │
-│                    │  S search choose dir          │
+│ FIND FILE          │ SEARCH CONTENT                 │
+│  f find (plocate)  │  s search (recoll)             │
+│  F find (fuzzy)    │  r search (ripgrep-all)        │
+│                    │  c search current dir           │
+│                    │  S search choose dir            │
 ├─────────────────────────────────────────────────────┤
-│ NAVIGATE           │ MANAGE                        │
-│  o outline         │  I reindex all                │
-│  t toggle sidebar  │  ? status                     │
-│  b browse root     │                               │
-│  B browse current  │                               │
+│ NAVIGATE           │ MANAGE                         │
+│  o outline         │  I reindex all                  │
+│  t toggle sidebar  │  ? status                      │
+│  b browse root     │                                │
+│  B browse current  │                                │
 └─────────────────────────────────────────────────────┘
                      q quit
 #+end_example
@@ -1557,7 +1658,7 @@ The system uses indexed search (plocate/recoll) as primary, with ripgrep/fd as f
 | =C-c S f= | Find file (plocate, indexed) |
 | =C-c S F= | Find file (fuzzy, interactive) |
 | =C-c S s= | Search text (recoll, indexed) |
-| =C-c S r= | Search text (ripgrep, fallback) |
+| =C-c S r= | Search text (ripgrep-all, fallback) |
 | =C-c S c= | Search in current directory |
 | =C-c S S= | Choose directory then search |
 | =C-c S o= | Jump to heading (outline) |
@@ -1575,6 +1676,8 @@ The system uses indexed search (plocate/recoll) as primary, with ripgrep/fd as f
 2. Type fragments: =bav shab= matches =Bavli/Shabbat.org=
 3. Select and press =RET=
 
+Uses plocate (instant, indexed). Falls back to fd if plocate unavailable.
+
 *** By Filename (Fuzzy)
 
 1. Press =C-c S F=
@@ -1590,11 +1693,15 @@ The system uses indexed search (plocate/recoll) as primary, with ripgrep/fd as f
 3. Results show with context
 4. Select to open file at match
 
-*** Ripgrep Search (Fallback)
+Uses recoll (instant, indexed). Searches inside PDFs, EPUB, DOCX, and ODT files as well as plain text.
+
+*** Ripgrep-All Search (Fallback)
 
 1. Press =C-c S r=
 2. Type search term
-3. Uses =consult-ripgrep= with live preview
+3. Uses =consult-ripgrep= with =rga= backend for live preview
+
+Also supports searching inside PDF, EPUB, DOCX, and other binary formats.
 
 *** Directory-Scoped Search
 
@@ -1635,7 +1742,7 @@ The system uses indexed search (plocate/recoll) as primary, with ripgrep/fd as f
 *** Dirvish Modes
 
 Press =C-c d m= in Dirvish to toggle between:
-- *Pretty mode*: File icons, sizes, timestamps, git status
+- *Pretty mode*: File sizes, timestamps, git status, subtree expansion
 - *Ultra mode*: Minimal display for maximum speed
 
 ** Index Management
@@ -1643,15 +1750,22 @@ Press =C-c d m= in Dirvish to toggle between:
 *** Rebuilding Indexes
 
 Press =C-c S I= to rebuild all indexes:
-- Recoll index (full-text)
-- Plocate index (filenames, requires sudo)
+- Recoll index (full-text) — runs as user process
+- Plocate index (filenames) — requests systemd service restart (may require sudo)
+
+*** Automatic Indexing
+
+NixOS configures automatic indexing:
+- Plocate: hourly via =services.locate=
+- Recoll: every 4 hours via =systemd.timers.recoll-index=
 
 *** Checking Status
 
 Press =C-c S ?= to see:
-- Which tools are available
-- Index status
-- Library statistics (file count, size)
+- Which tools are available (✓ / ✗)
+- Search capabilities per tool
+- Supported file extensions
+- Index database status
 
 ** Customization
 
@@ -1661,14 +1775,20 @@ Change the library path:
 (setq seforim-directory "~/path/to/your/seforim/")
 #+end_src
 
+Change supported file extensions:
+
+#+begin_src emacs-lisp
+(setq seforim-file-extensions '("org" "pdf" "epub" "docx" "doc" "odt" "txt"))
+#+end_src
+
 ** Search Tools Comparison
 
-| Tool | Type | Speed | Index Required | Best For |
-|------|------|-------|----------------|----------|
-| plocate | Filename | Instant | Yes | Finding files by name |
-| recoll | Full-text | Instant | Yes | Searching content |
-| fd | Filename | Fast | No | Fallback file find |
-| ripgrep | Full-text | Fast | No | Fallback content search |
+| Tool | Type | Speed | Index Required | Searches Inside PDFs | Best For |
+|------|------|-------|----------------|---------------------|----------|
+| plocate | Filename | Instant | Yes | N/A | Finding files by name |
+| fd | Filename | Fast | No | N/A | Fallback file find |
+| recoll | Full-text | Instant | Yes | ✓ | Searching all content |
+| ripgrep-all | Full-text | Fast | No | ✓ | Fallback content search |
 
 * Programming Languages
 
@@ -1689,7 +1809,7 @@ Eglot provides IDE features via Language Server Protocol:
 
 | Feature | Description |
 |---------|-------------|
-| Completion | Context-aware suggestions |
+| Completion | Context-aware suggestions (via Corfu) |
 | Diagnostics | Real-time error checking |
 | Hover | Documentation on hover |
 | Go to definition | Jump to symbol definition |
@@ -1713,6 +1833,8 @@ Eglot starts automatically for Python, Rust, Java, and Typst. To start manually:
 : M-x eglot RET
 
 *** Required Language Servers
+
+All provided by =emacs.nix=:
 
 | Language | Server | NixOS Package |
 |----------|--------|---------------|
@@ -1802,6 +1924,13 @@ Matching parentheses are color-coded in all programming modes for easier navigat
 ** Whitespace Display
 
 In programming modes, trailing whitespace and tabs are highlighted.
+
+** Completion with Corfu
+
+Corfu provides inline completion in all modes:
+- Auto-triggers after 2 characters (0.2s delay)
+- Popup info shows documentation for selected candidate
+- Cycle through candidates with =TAB=
 
 * Embark
 
@@ -1913,11 +2042,11 @@ Dirvish is a modern Dired enhancement providing a polished file management exper
 *** Pretty Mode (Default)
 
 Shows:
-- File icons (if all-the-icons installed)
 - File sizes
 - Modification times
 - Git status indicators
 - Subtree expansion
+- Collapse indicators
 
 *** Ultra Mode
 
@@ -2050,11 +2179,37 @@ Press =C-c G= to browse file history:
 
 Note: This won't persist after restart unless added to =config.org=.
 
+*** Method 3: Via NixOS (for packages needing system libraries)
+
+For packages that need C libraries or system integration (like =jinx=, =pdf-tools=):
+
+1. Add to =emacs.nix=:
+
+#+begin_src nix
+(epkgs.emacsWithPackages (p: [
+  p.jinx
+  p.exec-path-from-shell
+  p.pdf-tools
+  p.your-new-package  # ← Add here
+]))
+#+end_src
+
+2. Rebuild: =sudo nixos-rebuild switch=
+
+3. In =config.org=, use =:ensure nil=:
+
+#+begin_src emacs-lisp
+(use-package your-new-package
+  :ensure nil  ; Provided by Nix
+  :config
+  ...)
+#+end_src
+
 ** Use-Package Syntax Reference
 
 #+begin_src emacs-lisp
 (use-package package-name
-  :ensure t                      ; Install if not present
+  :ensure t                      ; Install if not present (nil for Nix packages)
   :hook (mode-name . function)   ; Add to mode hook
   :bind (("C-c x" . command))    ; Global keybinding
   :bind (:map mode-map           ; Mode-specific keybinding
@@ -2139,7 +2294,7 @@ Note: This won't persist after restart unless added to =config.org=.
    (append org-babel-load-languages '((go . t)))))
 #+end_src
 
-5. Install system dependencies (language, LSP server) via NixOS.
+5. Install system dependencies (language, LSP server) via NixOS in =emacs.nix=.
 
 ** Adding a New Org Capture Template
 
@@ -2303,19 +2458,19 @@ b: ← Back   q: quit
 
 #+begin_example
 ┌─────────────────────────────────────────────────────┐
-│                 📚 SEFORIM                          │
+│                     SEFORIM                         │
 ├─────────────────────────────────────────────────────┤
-│ FIND FILE          │ SEARCH TEXT                   │
-│  f find (indexed)  │  s search all (indexed)       │
-│  F find (fuzzy)    │  r search all (ripgrep)       │
-│                    │  c search current dir         │
-│                    │  S search choose dir          │
+│ FIND FILE          │ SEARCH CONTENT                 │
+│  f find (plocate)  │  s search (recoll)             │
+│  F find (fuzzy)    │  r search (ripgrep-all)        │
+│                    │  c search current dir           │
+│                    │  S search choose dir            │
 ├─────────────────────────────────────────────────────┤
-│ NAVIGATE           │ MANAGE                        │
-│  o outline         │  I reindex all                │
-│  t toggle sidebar  │  ? status                     │
-│  b browse root     │                               │
-│  B browse current  │                               │
+│ NAVIGATE           │ MANAGE                         │
+│  o outline         │  I reindex all                  │
+│  t toggle sidebar  │  ? status                      │
+│  b browse root     │                                │
+│  B browse current  │                                │
 └─────────────────────────────────────────────────────┘
                      q quit
 #+end_example
@@ -2349,6 +2504,17 @@ After editing =config.org=:
 
 Or manually tangle: =M-x org-babel-tangle RET=
 
+*** NixOS: Package Not Found
+
+If Emacs can't find a tool (e.g., =plocate=, =recoll=):
+
+1. Check exec-path:
+   : C-h v exec-path RET
+
+2. Ensure =/run/current-system/sw/bin= is in the list
+
+3. If not, restart Emacs after =nixos-rebuild switch=
+
 ** Hebrew and RTL Issues
 
 *** Hebrew Not Displaying
@@ -2370,30 +2536,22 @@ Use =C-c h f= to fix all existing footnotes. New footnotes are fixed automatical
 
 *** Bidi Performance Issues
 
-For very large files, disable bidi: =C-c B=
+Files larger than 5MB automatically disable bidi reordering. For manual control: =C-c B=
 
 ** Spell Checking Issues
 
 *** Spell Check Not Working
 
-1. Check hunspell:
-   #+begin_src shell
-   which hunspell
-   hunspell -D
-   #+end_src
-
-2. Verify =en_US= and =he_IL= dictionaries are listed
-
-3. Check DICPATH:
+1. Check enchant2 and dictionaries:
    #+begin_src shell
    echo $DICPATH
+   ls $DICPATH
    #+end_src
 
-4. Switch to correct language: =C-c s e= or =C-c s h=
+2. Verify jinx in Emacs:
+   : M-x jinx-languages RET
 
-*** Word Incorrectly Flagged
-
-Press =i= when correcting to add to personal dictionary (=~/.hunspell_personal=).
+3. Ensure =jinx= uses =:ensure nil= (Nix-provided)
 
 ** Document Compilation Issues
 
@@ -2408,7 +2566,7 @@ Press =i= when correcting to add to personal dictionary (=~/.hunspell_personal=)
 
 *** ConTeXt Compilation Fails
 
-1. Ensure ConTeXt installed:
+1. ConTeXt is included in =texlive.combined.scheme-full=:
    #+begin_src shell
    which context
    #+end_src
@@ -2432,17 +2590,23 @@ Press =i= when correcting to add to personal dictionary (=~/.hunspell_personal=)
    which tinymist
    #+end_src
 2. Start eglot manually: =M-x eglot=
+3. Check =*eglot-events*= buffer for errors
+
+*** Typst Tree-Sitter Warnings
+
+Byte-compilation warnings from =typst-ts-mode= are suppressed in the config. If you see warnings about =treesit-auto-recipe-list= or =eglot--all-major-modes=, they are harmless and do not affect functionality.
 
 ** PDF Issues
 
 *** PDF Not Opening in Emacs
 
-Run once:
-: M-x pdf-tools-install RET
+PDF-tools is installed via Nix. If issues persist:
+1. Check =epdfinfo= binary: =M-x pdf-tools-install RET=
+2. Ensure =poppler= is installed in =emacs.nix=
 
 *** PDF Renders Incorrectly
 
-Ensure =poppler= is installed on your system.
+Ensure =poppler= and =poppler-utils= are installed (provided by =emacs.nix=).
 
 ** Org-Roam Issues
 
@@ -2458,9 +2622,29 @@ Ensure =poppler= is installed on your system.
 
 ** Seforim Library Issues
 
-*** "Command not found" Errors
+*** "plocate not found" or "DB not readable"
 
-Ensure tools are installed via NixOS and in =$PATH=. Restart Emacs after installing.
+1. Ensure user is in =plocate= group:
+   #+begin_src shell
+   groups | grep plocate
+   #+end_src
+2. If not, re-login after =nixos-rebuild switch= (group changes require re-login)
+3. Check database exists:
+   #+begin_src shell
+   ls -la /var/cache/locatedb
+   #+end_src
+
+*** Recoll Returns No Results
+
+1. Check recoll config:
+   #+begin_src shell
+   cat ~/.recoll/recoll.conf
+   #+end_src
+2. Run initial indexing:
+   #+begin_src shell
+   recollindex
+   #+end_src
+3. Or from Emacs: =C-c S I=
 
 *** Slow Search
 
@@ -2520,15 +2704,21 @@ After pressing a prefix key, wait for which-key popup.
 
 | Keybinding | Action |
 |------------|--------|
-| =C-c s e= | English dictionary |
-| =C-c s h= | Hebrew dictionary |
-| =C-c s b= | Both (add Hebrew to personal) |
-| =M-$= | Correct word at point |
+| =M-$= | Correct word at point (jinx-correct) |
+
+Via Direction Controls hydra (=C-c D=):
+
+| Key | Action |
+|-----|--------|
+| =h= | Hebrew spell only |
+| =e= | English spell only |
+| =b= | Both languages |
 
 ** Hebrew Utilities
 
 | Keybinding | Action |
 |------------|--------|
+| =C-c h n= | Create Hebrew document (choose type) |
 | =C-c h l= | Create Hebrew LaTeX document |
 | =C-c h x= | Create Hebrew ConTeXt document |
 | =C-c h t= | Create Hebrew Typst document |
@@ -2584,7 +2774,7 @@ After pressing a prefix key, wait for which-key popup.
 | =C-c S f= | Find file (indexed) |
 | =C-c S F= | Find file (fuzzy) |
 | =C-c S s= | Search text (indexed) |
-| =C-c S r= | Search text (ripgrep) |
+| =C-c S r= | Search text (ripgrep-all) |
 | =C-c S c= | Search current directory |
 | =C-c S S= | Search chosen directory |
 | =C-c S o= | Outline navigation |
@@ -2683,6 +2873,7 @@ After pressing a prefix key, wait for which-key popup.
 |--------------|---------|
 | Switch to Hebrew keyboard | =F9= |
 | Switch text direction | =C-c d= |
+| Create Hebrew document (any type) | =C-c h n= |
 | Create Hebrew LaTeX document | =C-c h l= |
 | Create Hebrew Typst document | =C-c h t= |
 | Compile LaTeX | =C-c C-c= then =RET= |
@@ -2706,12 +2897,13 @@ After pressing a prefix key, wait for which-key popup.
 | Visual undo tree | =C-x u= |
 | Focused writing mode | =C-c w= |
 | Spell check word | =M-$= |
-| Switch to English spelling | =C-c s e= |
-| Switch to Hebrew spelling | =C-c s h= |
+| Switch to English spelling | =C-c D= then =e= |
+| Switch to Hebrew spelling | =C-c D= then =h= |
 | Open config | =C-c e i= |
 | Reload config | =C-c e r= |
 | Get help on keybinding | =C-h k= then press key |
 | See all keybindings | Wait after prefix key |
+| Check seforim tools status | =C-c S ?= |
 
 ** Essential 20 Keybindings
 
@@ -2744,7 +2936,6 @@ After pressing a prefix key, wait for which-key popup.
 |--------|--------|
 | =C-c n= | Org-roam notes |
 | =C-c S= | Seforim library |
-| =C-c s= | Spell checking |
 | =C-c h= | Hebrew utilities |
 | =C-c b= | Bibliography |
 | =C-c f= | LaTeX footnotes |
@@ -2775,6 +2966,8 @@ After pressing a prefix key, wait for which-key popup.
 | ConTeXt Wiki | https://wiki.contextgarden.net/ |
 | Typst Documentation | https://typst.app/docs/ |
 | Magit Manual | https://magit.vc/manual/ |
+| NixOS Manual | https://nixos.org/manual/nixos/ |
+| Nix Packages Search | https://search.nixos.org/packages |
 
 * License
 
