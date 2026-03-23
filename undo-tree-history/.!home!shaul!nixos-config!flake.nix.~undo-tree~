@@ -1,0 +1,338 @@
+(undo-tree-save-format-version . 1)
+"cabbb6d39f76f07259b020ed5b277b4ad6893329"
+[nil nil nil nil (27068 42290 475452 214000) 0 nil]
+([nil nil ((#("# flake.nix
+# Master configuration - defines inputs and system profiles
+
+{
+  description = \"Shaul's NixOS Configuration\";
+
+  inputs = {
+    # ══════════════════════════════════════════════════════════════
+    # PACKAGE SOURCES
+    # ══════════════════════════════════════════════════════════════
+
+    # Main NixOS packages (stable)
+    nixpkgs.url = \"github:NixOS/nixpkgs/nixos-25.11\";
+
+    # Unstable packages (for bleeding-edge software when needed)
+    nixpkgs-unstable.url = \"github:NixOS/nixpkgs/nixos-unstable\";
+
+    # ══════════════════════════════════════════════════════════════
+    # HOME MANAGER
+    # ══════════════════════════════════════════════════════════════
+
+    home-manager = {
+      url = \"github:nix-community/home-manager/release-25.11\";
+      inputs.nixpkgs.follows = \"nixpkgs\";
+    };
+
+    # ══════════════════════════════════════════════════════════════
+    # LIX (Your preferred Nix implementation)
+    # ══════════════════════════════════════════════════════════════
+
+    lix-module = {
+      url = \"https://git.lix.systems/lix-project/nixos-module/archive/2.93.0.tar.gz\";
+      inputs.nixpkgs.follows = \"nixpkgs\";
+    };
+
+    # ══════════════════════════════════════════════════════════════
+    # EMACS OVERLAY (Latest Emacs packages)
+    # ══════════════════════════════════════════════════════════════
+
+    emacs-overlay = {
+      url = \"github:nix-community/emacs-overlay\";
+      inputs.nixpkgs.follows = \"nixpkgs\";
+    };
+  };
+
+  outputs = {
+    self,
+    nixpkgs,
+    nixpkgs-unstable,
+    home-manager,
+    lix-module,
+    emacs-overlay,
+    ...
+  }@inputs:
+  let
+    system = \"x86_64-linux\";
+
+    # ══════════════════════════════════════════════════════════════
+    # SHARED CONFIGURATION VALUES
+    # Edit these to match your setup
+    # ══════════════════════════════════════════════════════════════
+
+    myConfig = {
+      username = \"shaul\";
+      fullName = \"Shaul Khayyat\";
+      hostname = \"nixos\";
+      homeDir = \"/home/shaul\";
+      timezone = \"America/New_York\";
+      locale = \"en_US.UTF-8\";
+      seforimPath = \"/home/shaul/Documents/seforim\";
+    };
+
+    # ══════════════════════════════════════════════════════════════
+    # PACKAGE SETS WITH OVERLAYS
+    # ══════════════════════════════════════════════════════════════
+
+    pkgsForSystem = import nixpkgs {
+      inherit system;
+      config.allowUnfree = true;
+      config.android_sdk.accept_license = true;
+      overlays = [
+        emacs-overlay.overlays.default
+      ];
+    };
+
+    unstable = import nixpkgs-unstable {
+      inherit system;
+      config.allowUnfree = true;
+    };
+
+  in {
+    # ══════════════════════════════════════════════════════════════
+    # NIXOS SYSTEM CONFIGURATIONS (Profiles)
+    # ══════════════════════════════════════════════════════════════
+
+    nixosConfigurations = {
+
+      # ────────────────────────────────────────────────────────────
+      # DESKTOP PROFILE
+      # Your full-featured daily driver
+      # Switch to this with: sudo nixos-rebuild switch --flake .#desktop
+      # ────────────────────────────────────────────────────────────
+
+      desktop = nixpkgs.lib.nixosSystem {
+        inherit system;
+        specialArgs = {
+          inherit inputs myConfig unstable;
+          pkgs = pkgsForSystem;
+        };
+        modules = [
+          # Lix Nix implementation
+          lix-module.nixosModules.default
+
+          # System configuration
+          ./hosts/desktop/configuration.nix
+
+          # Home Manager integration
+          home-manager.nixosModules.home-manager
+          {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              backupFileExtension = \"hm-backup\";
+              users.${myConfig.username} = import ./home/desktop.nix;
+              extraSpecialArgs = { inherit inputs myConfig unstable; };
+            };
+          }
+        ];
+      };
+
+      # ────────────────────────────────────────────────────────────
+      # MINIMAL PROFILE
+      # Lightweight system for recovery or testing
+      # Switch to this with: sudo nixos-rebuild switch --flake .#minimal
+      # ────────────────────────────────────────────────────────────
+
+      minimal = nixpkgs.lib.nixosSystem {
+        inherit system;
+        specialArgs = { inherit inputs myConfig; };
+        modules = [
+          ./hosts/minimal/configuration.nix
+        ];
+      };
+
+    };
+
+    # ══════════════════════════════════════════════════════════════
+    # DEVELOPMENT SHELL
+    # Enter with: nix develop
+    # ══════════════════════════════════════════════════════════════
+
+    devShells.${system}.default = pkgsForSystem.mkShell {
+      packages = with pkgsForSystem; [
+        nil           # Nix language server
+        nixpkgs-fmt   # Nix formatter
+        statix        # Nix linter
+        deadnix       # Find dead code
+      ];
+
+      shellHook = ''
+        echo \"\"
+        echo \"══════════════════════════════════════════════════════\"
+        echo \"  NixOS Configuration Development Shell\"
+        echo \"══════════════════════════════════════════════════════\"
+        echo \"\"
+        echo \"  Commands:\"
+        echo \"    nix fmt           Format all .nix files\"
+        echo \"    statix check .    Lint configuration\"
+        echo \"    deadnix .         Find unused code\"
+        echo \"\"
+        echo \"  Rebuild:\"
+        echo \"    sudo nixos-rebuild switch --flake .#desktop\"
+        echo \"    sudo nixos-rebuild switch --flake .#minimal\"
+        echo \"\"
+      '';
+    };
+
+    # Formatter for 'nix fmt'
+    formatter.${system} = pkgsForSystem.nixpkgs-fmt;
+  };
+}" 0 2 (face font-lock-comment-delimiter-face fontified t) 2 12 (face font-lock-comment-face fontified t) 12 14 (face font-lock-comment-delimiter-face fontified t) 14 72 (face font-lock-comment-face fontified t) 72 73 (fontified t) 73 74 (face (rainbow-delimiters-depth-1-face) fontified t) 74 77 (fontified t) 77 88 (face nix-attribute-face fontified t) 88 91 (fontified t) 91 92 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 92 119 (face font-lock-string-face fontified t) 119 120 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 120 125 (fontified t) 125 131 (face nix-attribute-face fontified t) 131 134 (fontified t) 134 135 (face (rainbow-delimiters-depth-2-face) fontified t) 135 140 (fontified t) 140 205 (face font-lock-comment-face fontified t) 205 209 (fontified t) 209 227 (face font-lock-comment-face fontified t) 227 231 (fontified t) 231 296 (face font-lock-comment-face fontified t) 296 301 (fontified t) 301 332 (face font-lock-comment-face fontified t) 332 336 (fontified t) 336 347 (face nix-attribute-face fontified t) 347 350 (fontified t) 350 351 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 351 383 (face font-lock-string-face fontified t) 383 384 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 384 391 (fontified t) 391 452 (face font-lock-comment-face fontified t) 452 456 (fontified t) 456 476 (face nix-attribute-face fontified t) 476 479 (fontified t) 479 480 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 480 515 (face font-lock-string-face fontified t) 515 516 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 516 523 (fontified t) 523 588 (face font-lock-comment-face fontified t) 588 592 (fontified t) 592 607 (face font-lock-comment-face fontified t) 607 611 (fontified t) 611 676 (face font-lock-comment-face fontified t) 676 681 (fontified t) 681 693 (face nix-attribute-face fontified t) 693 696 (fontified t) 696 697 (face (rainbow-delimiters-depth-3-face) fontified t) 697 704 (fontified t) 704 707 (face nix-attribute-face fontified t) 707 710 (fontified t) 710 711 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 711 758 (face font-lock-string-face fontified t) 758 759 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 759 767 (fontified t) 767 789 (face nix-attribute-face fontified t) 789 792 (fontified t) 792 793 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 793 800 (face font-lock-string-face fontified t) 800 801 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 801 807 (fontified t) 807 808 (face (rainbow-delimiters-depth-3-face) fontified t) 808 815 (fontified t) 815 880 (face font-lock-comment-face fontified t) 880 884 (fontified t) 884 926 (face font-lock-comment-face fontified t) 926 930 (fontified t) 930 995 (face font-lock-comment-face fontified t) 995 1000 (fontified t) 1000 1010 (face nix-attribute-face fontified t) 1010 1013 (fontified t) 1013 1014 (face (rainbow-delimiters-depth-3-face) fontified t) 1014 1021 (fontified t) 1021 1024 (face nix-attribute-face fontified t) 1024 1027 (fontified t) 1027 1028 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1028 1098 (face font-lock-string-face fontified t) 1098 1099 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1099 1107 (fontified t) 1107 1129 (face nix-attribute-face fontified t) 1129 1132 (fontified t) 1132 1133 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1133 1140 (face font-lock-string-face fontified t) 1140 1141 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1141 1147 (fontified t) 1147 1148 (face (rainbow-delimiters-depth-3-face) fontified t) 1148 1155 (fontified t) 1155 1220 (face font-lock-comment-face fontified t) 1220 1224 (fontified t) 1224 1264 (face font-lock-comment-face fontified t) 1264 1268 (fontified t) 1268 1333 (face font-lock-comment-face fontified t) 1333 1338 (fontified t) 1338 1351 (face nix-attribute-face fontified t) 1351 1354 (fontified t) 1354 1355 (face (rainbow-delimiters-depth-3-face) fontified t) 1355 1362 (fontified t) 1362 1365 (face nix-attribute-face fontified t) 1365 1368 (fontified t) 1368 1369 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1369 1403 (face font-lock-string-face fontified t) 1403 1404 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1404 1412 (fontified t) 1412 1434 (face nix-attribute-face fontified t) 1434 1437 (fontified t) 1437 1438 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1438 1445 (face font-lock-string-face fontified t) 1445 1446 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1446 1452 (fontified t) 1452 1453 (face (rainbow-delimiters-depth-3-face) fontified t) 1453 1457 (fontified t) 1457 1458 (face (rainbow-delimiters-depth-2-face) fontified t) 1458 1463 (fontified t) 1463 1470 (face nix-attribute-face fontified t) 1470 1473 (fontified t) 1473 1474 (face (rainbow-delimiters-depth-2-face) fontified t) 1474 1500 (fontified t) 1500 1520 (fontified t) 1520 1583 (fontified t) 1583 1584 (face (rainbow-delimiters-depth-2-face) fontified t) 1584 1595 (fontified t) 1595 1598 (face nix-keyword-face fontified t) 1598 1603 (fontified t) 1603 1609 (face nix-attribute-face fontified t) 1609 1612 (fontified t) 1612 1613 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1613 1625 (face font-lock-string-face fontified t) 1625 1626 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1626 1633 (fontified t) 1633 1698 (face font-lock-comment-face fontified t) 1698 1702 (fontified t) 1702 1732 (face font-lock-comment-face fontified t) 1732 1736 (fontified t) 1736 1769 (face font-lock-comment-face fontified t) 1769 1773 (fontified t) 1773 1838 (face font-lock-comment-face fontified t) 1838 1843 (fontified t) 1843 1851 (face nix-attribute-face fontified t) 1851 1854 (fontified t) 1854 1855 (face (rainbow-delimiters-depth-2-face) fontified t) 1855 1862 (fontified t) 1862 1870 (face nix-attribute-face fontified t) 1870 1873 (fontified t) 1873 1874 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1874 1879 (face font-lock-string-face fontified t) 1879 1880 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1880 1888 (fontified t) 1888 1896 (face nix-attribute-face fontified t) 1896 1899 (fontified t) 1899 1900 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1900 1913 (face font-lock-string-face fontified t) 1913 1914 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1914 1922 (fontified t) 1922 1930 (face nix-attribute-face fontified t) 1930 1933 (fontified t) 1933 1934 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1934 1939 (face font-lock-string-face fontified t) 1939 1940 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1940 1948 (fontified t) 1948 1955 (face nix-attribute-face fontified t) 1955 1958 (fontified t) 1958 1959 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1959 1970 (face font-lock-string-face fontified t) 1970 1971 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1971 1979 (fontified t) 1979 1987 (face nix-attribute-face fontified t) 1987 1990 (fontified t) 1990 1991 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1991 2007 (face font-lock-string-face fontified t) 2007 2008 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 2008 2016 (fontified t) 2016 2022 (face nix-attribute-face fontified t) 2022 2025 (fontified t) 2025 2026 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 2026 2037 (face font-lock-string-face fontified t) 2037 2038 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 2038 2046 (fontified t) 2046 2057 (face nix-attribute-face fontified t) 2057 2060 (fontified t) 2060 2061 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 2061 2090 (face font-lock-string-face fontified t) 2090 2091 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 2091 2097 (fontified t) 2097 2098 (face (rainbow-delimiters-depth-2-face) fontified t) 2098 2105 (fontified t) 2105 2170 (face font-lock-comment-face fontified t) 2170 2174 (fontified t) 2174 2203 (face font-lock-comment-face fontified t) 2203 2207 (fontified t) 2207 2272 (face font-lock-comment-face fontified t) 2272 2277 (fontified t) 2277 2290 (face nix-attribute-face fontified t) 2290 2293 (fontified t) 2293 2299 (face nix-builtin-face fontified t) 2299 2308 (fontified t) 2308 2309 (face (rainbow-delimiters-depth-2-face) fontified t) 2309 2316 (fontified t) 2316 2323 (face nix-keyword-face fontified t) 2323 2338 (fontified t) 2338 2356 (face nix-attribute-face fontified t) 2356 2359 (fontified t) 2359 2363 (face nix-builtin-face fontified t) 2363 2371 (fontified t) 2371 2404 (face nix-attribute-face fontified t) 2404 2407 (fontified t) 2407 2411 (face nix-builtin-face fontified t) 2411 2419 (fontified t) 2419 2427 (face nix-attribute-face fontified t) 2427 2430 (fontified t) 2430 2431 (face (rainbow-delimiters-depth-3-face) fontified t) 2431 2477 (fontified t) 2477 2478 (face (rainbow-delimiters-depth-3-face) fontified t) 2478 2484 (fontified t) 2484 2485 (face (rainbow-delimiters-depth-2-face) fontified t) 2485 2492 (fontified t) 2492 2500 (face nix-attribute-face fontified t) 2500 2503 (fontified t) 2503 2509 (face nix-builtin-face fontified t) 2509 2527 (fontified t) 2527 2528 (face (rainbow-delimiters-depth-2-face) fontified t) 2528 2535 (fontified t) 2535 2542 (face nix-keyword-face fontified t) 2542 2557 (fontified t) 2557 2575 (face nix-attribute-face fontified t) 2575 2578 (fontified t) 2578 2582 (face nix-builtin-face fontified t) 2582 2588 (fontified t) 2588 2589 (face (rainbow-delimiters-depth-2-face) fontified t) 2589 2594 (fontified t) 2594 2596 (face nix-keyword-face fontified t) 2596 2597 (fontified t) 2597 2598 (face (rainbow-delimiters-depth-2-face) fontified t) 2598 2603 (fontified t) 2603 2668 (face font-lock-comment-face fontified t) 2668 2672 (fontified t) 2672 2713 (face font-lock-comment-face fontified t) 2713 2717 (fontified t) 2717 2782 (face font-lock-comment-face fontified t) 2782 2787 (fontified t) 2787 2806 (face nix-attribute-face fontified t) 2806 2809 (fontified t) 2809 2810 (face (rainbow-delimiters-depth-3-face) fontified t) 2810 2818 (fontified t) 2818 2881 (face font-lock-comment-face fontified t) 2881 2887 (fontified t) 2887 2905 (face font-lock-comment-face fontified t) 2905 2911 (fontified t) 2911 2945 (face font-lock-comment-face fontified t) 2945 2951 (fontified t) 2951 3018 (face font-lock-comment-face fontified t) 3018 3020 (fontified t) 3020 3024 (fontified t) 3024 3087 (face font-lock-comment-face fontified t) 3087 3094 (fontified t) 3094 3101 (face nix-attribute-face fontified t) 3101 3128 (fontified t) 3128 3129 (face (rainbow-delimiters-depth-4-face) fontified t) 3129 3138 (fontified t) 3138 3145 (face nix-keyword-face fontified t) 3145 3162 (fontified t) 3162 3173 (face nix-attribute-face fontified t) 3173 3176 (fontified t) 3176 3177 (face (rainbow-delimiters-depth-5-face) fontified t) 3177 3188 (fontified t) 3188 3195 (face nix-keyword-face fontified t) 3195 3232 (fontified t) 3232 3236 (face nix-attribute-face fontified t) 3236 3262 (fontified t) 3262 3263 (face (rainbow-delimiters-depth-5-face) fontified t) 3263 3273 (fontified t) 3273 3280 (face nix-attribute-face fontified t) 3280 3283 (fontified t) 3283 3284 (face (rainbow-delimiters-depth-5-face) fontified t) 3284 3295 (fontified t) 3295 3320 (face font-lock-comment-face fontified t) 3320 3373 (fontified t) 3373 3396 (face font-lock-comment-face fontified t) 3396 3406 (fontified t) 3406 3439 (face nix-constant-face fontified t) 3439 3451 (fontified t) 3451 3478 (face font-lock-comment-face fontified t) 3478 3537 (fontified t) 3537 3538 (face (rainbow-delimiters-depth-6-face) fontified t) 3538 3551 (fontified t) 3551 3563 (face nix-attribute-face fontified t) 3563 3566 (fontified t) 3566 3567 (face (rainbow-delimiters-depth-7-face) fontified t) 3567 3582 (fontified t) 3582 3595 (face nix-attribute-face fontified t) 3595 3598 (fontified t) 3598 3602 (face nix-builtin-face fontified t) 3602 3618 (fontified t) 3618 3633 (face nix-attribute-face fontified t) 3633 3636 (fontified t) 3636 3640 (face nix-builtin-face fontified t) 3640 3656 (fontified t) 3656 3675 (face nix-attribute-face fontified t) 3675 3678 (fontified t) 3678 3679 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 3679 3688 (face font-lock-string-face fontified t) 3688 3689 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 3689 3712 (fontified t) 3712 3713 (face (rainbow-delimiters-depth-8-face) fontified t) 3713 3730 (fontified t) 3730 3731 (face (rainbow-delimiters-depth-8-face) fontified t) 3731 3734 (fontified t) 3734 3740 (face nix-builtin-face fontified t) 3740 3741 (fontified t) 3741 3759 (face nix-constant-face fontified t) 3759 3775 (fontified t) 3775 3791 (face nix-attribute-face fontified t) 3791 3794 (fontified t) 3794 3795 (face (rainbow-delimiters-depth-8-face) fontified t) 3795 3796 (fontified t) 3796 3803 (face nix-keyword-face fontified t) 3803 3830 (fontified t) 3830 3831 (face (rainbow-delimiters-depth-8-face) fontified t) 3831 3845 (fontified t) 3845 3846 (face (rainbow-delimiters-depth-7-face) fontified t) 3846 3858 (fontified t) 3858 3859 (face (rainbow-delimiters-depth-6-face) fontified t) 3859 3868 (fontified t) 3868 3869 (face (rainbow-delimiters-depth-5-face) fontified t) 3869 3877 (fontified t) 3877 3878 (face (rainbow-delimiters-depth-4-face) fontified t) 3878 3887 (fontified t) 3887 3950 (face font-lock-comment-face fontified t) 3950 3956 (fontified t) 3956 3974 (face font-lock-comment-face fontified t) 3974 3980 (fontified t) 3980 4025 (face font-lock-comment-face fontified t) 4025 4031 (fontified t) 4031 4098 (face font-lock-comment-face fontified t) 4098 4104 (fontified t) 4104 4167 (face font-lock-comment-face fontified t) 4167 4174 (fontified t) 4174 4181 (face nix-attribute-face fontified t) 4181 4208 (fontified t) 4208 4209 (face (rainbow-delimiters-depth-4-face) fontified t) 4209 4218 (fontified t) 4218 4225 (face nix-keyword-face fontified t) 4225 4242 (fontified t) 4242 4253 (face nix-attribute-face fontified t) 4253 4256 (fontified t) 4256 4257 (face (rainbow-delimiters-depth-5-face) fontified t) 4257 4258 (fontified t) 4258 4265 (face nix-keyword-face fontified t) 4265 4283 (fontified t) 4283 4284 (face (rainbow-delimiters-depth-5-face) fontified t) 4284 4294 (fontified t) 4294 4301 (face nix-attribute-face fontified t) 4301 4304 (fontified t) 4304 4305 (face (rainbow-delimiters-depth-5-face) fontified t) 4305 4316 (fontified t) 4316 4349 (face nix-constant-face fontified t) 4349 4358 (fontified t) 4358 4359 (face (rainbow-delimiters-depth-5-face) fontified t) 4359 4367 (fontified t) 4367 4368 (face (rainbow-delimiters-depth-4-face) fontified t) 4368 4375 (fontified t) 4375 4376 (face (rainbow-delimiters-depth-3-face) fontified t) 4376 4383 (fontified t) 4383 4448 (face font-lock-comment-face fontified t) 4448 4452 (fontified t) 4452 4472 (face font-lock-comment-face fontified t) 4472 4476 (fontified t) 4476 4502 (face font-lock-comment-face fontified t) 4502 4506 (fontified t) 4506 4571 (face font-lock-comment-face fontified t) 4571 4587 (fontified t) 4587 4588 (face (rainbow-delimiters-depth-3-face) fontified t) 4588 4594 (fontified t) 4594 4595 (face (rainbow-delimiters-depth-3-face) fontified t) 4595 4596 (fontified t) 4596 4603 (face nix-attribute-face fontified t) 4603 4628 (fontified t) 4628 4629 (face (rainbow-delimiters-depth-3-face) fontified t) 4629 4630 (fontified t) 4630 4636 (fontified t) 4636 4644 (face nix-attribute-face fontified t) 4644 4647 (fontified t) 4647 4651 (face nix-keyword-face fontified t) 4651 4667 (fontified t) 4667 4668 (face (rainbow-delimiters-depth-4-face) fontified t) 4668 4669 (fontified t) 4669 4691 (fontified t) 4691 4713 (face font-lock-comment-face fontified t) 4713 4735 (fontified t) 4735 4751 (face font-lock-comment-face fontified t) 4751 4773 (fontified t) 4773 4786 (face font-lock-comment-face fontified t) 4786 4808 (fontified t) 4808 4825 (face font-lock-comment-face fontified t) 4825 4831 (fontified t) 4831 4832 (face (rainbow-delimiters-depth-4-face) fontified t) 4832 4841 (fontified t) 4841 4850 (face nix-attribute-face fontified t) 4850 4853 (fontified t) 4853 4854 (face font-lock-string-face nix-string-type 39 syntax-table (15) fontified t) 4854 5470 (face font-lock-string-face fontified t) 5470 5471 (face font-lock-string-face nix-string-type 39 syntax-table (15) fontified t) 5471 5477 (fontified t) 5477 5478 (face (rainbow-delimiters-depth-3-face) fontified t) 5478 5485 (fontified t) 5485 5511 (face font-lock-comment-face fontified t) 5511 5526 (fontified t) 5526 5527 (face (rainbow-delimiters-depth-3-face) fontified t) 5527 5533 (fontified t) 5533 5534 (face (rainbow-delimiters-depth-3-face) fontified t) 5534 5566 (fontified t) 5566 5567 (face (rainbow-delimiters-depth-2-face) fontified t) 5567 5569 (fontified t) 5569 5570 (face nix-antiquote-face fontified t)) . -1) (undo-tree-id0 . -4630) (undo-tree-id1 . -5569) (undo-tree-id2 . -5570) (undo-tree-id3 . -5570) (undo-tree-id4 . -5569) (undo-tree-id5 . -5570) (undo-tree-id6 . -5570) (undo-tree-id7 . -5570) (undo-tree-id8 . -5570) (undo-tree-id9 . -5570) (undo-tree-id10 . -5570) (undo-tree-id11 . -5570) (undo-tree-id12 . -5570) (undo-tree-id13 . -5570) (undo-tree-id14 . -5570) (undo-tree-id15 . -5570) (undo-tree-id16 . -5570) (undo-tree-id17 . -5570) (undo-tree-id18 . -5570) (undo-tree-id19 . -5570) (undo-tree-id20 . -5570) (undo-tree-id21 . -5570) (undo-tree-id22 . -5570) 5571 (t 27068 27112 376502 505000)) nil (27068 42290 475450 568000) 0 nil])
+([nil nil ((nil rear-nonsticky nil 4191 . 4192) (nil fontified nil 1 . 4192) (1 . 4192)) nil (27068 42290 475416 764000) 0 nil])
+([nil nil ((#("{
+  description = \"Shaul's NixOS Configuration\";
+
+  inputs = {
+    # Main NixOS packages (stable)
+    nixpkgs.url = \"github:NixOS/nixpkgs/nixos-25.11\";
+
+    # Unstable packages (for bleeding-edge software when needed)
+    nixpkgs-unstable.url = \"github:NixOS/nixpkgs/nixos-unstable\";
+
+    # Home Manager for user configuration
+    home-manager = {
+      url = \"github:nix-community/home-manager/release-25.11\";
+      inputs.nixpkgs.follows = \"nixpkgs\";
+    };
+
+    # Lix (your preferred Nix implementation)
+    lix-module = {
+      url = \"https://git.lix.systems/lix-project/nixos-module/archive/2.93.0.tar.gz\";
+      inputs.nixpkgs.follows = \"nixpkgs\";
+    };
+
+    # Emacs overlay (latest Emacs packages)
+    emacs-overlay = {
+      url = \"github:nix-community/emacs-overlay\";
+      inputs.nixpkgs.follows = \"nixpkgs\";
+    };
+  };
+
+  outputs = { 
+    self, 
+    nixpkgs, 
+    nixpkgs-unstable, 
+    home-manager, 
+    lix-module, 
+    emacs-overlay, 
+    ... 
+  }@inputs:
+  let
+    system = \"x86_64-linux\";
+
+    # Shared configuration values
+    myConfig = {
+      username = \"shaul\";
+      fullName = \"Shaul Khayyat\";
+      hostname = \"nixos\";
+      homeDir = \"/home/shaul\";
+      timezone = \"America/New_York\";
+      locale = \"en_US.UTF-8\";
+      seforimPath = \"/home/shaul/Documents/seforim\";
+    };
+
+    # Unstable packages
+    unstable = import nixpkgs-unstable {
+      inherit system;
+      config.allowUnfree = true;
+    };
+
+  in {
+    nixosConfigurations = {
+
+      # ════════════════════════════════════════════════════════════
+      # DESKTOP PROFILE
+      # Switch to this with: sudo nixos-rebuild switch --flake .#desktop
+      # ════════════════════════════════════════════════════════════
+
+      desktop = nixpkgs.lib.nixosSystem {
+        inherit system;
+        specialArgs = { 
+          inherit inputs myConfig unstable;
+        };
+        modules = [
+          # Nixpkgs configuration
+          {
+            nixpkgs.overlays = [ emacs-overlay.overlays.default ];
+            nixpkgs.config.allowUnfree = true;
+            nixpkgs.config.android_sdk.accept_license = true;
+          }
+
+          # Lix Nix implementation
+          lix-module.nixosModules.default
+
+          # System configuration
+          ./hosts/desktop/configuration.nix
+
+          # Home Manager integration
+          home-manager.nixosModules.home-manager
+          {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              backupFileExtension = \"hm-backup\";
+              users.${myConfig.username} = import ./home/desktop.nix;
+              extraSpecialArgs = { inherit inputs myConfig unstable; };
+            };
+          }
+        ];
+      };
+
+      # ════════════════════════════════════════════════════════════
+      # MINIMAL PROFILE
+      # Switch to this with: sudo nixos-rebuild switch --flake .#minimal
+      # ════════════════════════════════════════════════════════════
+
+      minimal = nixpkgs.lib.nixosSystem {
+        inherit system;
+        specialArgs = { inherit inputs myConfig; };
+        modules = [
+          {
+            nixpkgs.config.allowUnfree = true;
+          }
+          ./hosts/minimal/configuration.nix
+        ];
+      };
+
+    };
+
+    # ════════════════════════════════════════════════════════════
+    # DEVELOPMENT SHELL
+    # Enter with: nix develop
+    # ════════════════════════════════════════════════════════════
+
+    devShells.${system}.default = let
+      pkgs = import nixpkgs { inherit system; };
+    in pkgs.mkShell {
+      packages = with pkgs; [
+        nil
+        nixpkgs-fmt
+        statix
+        deadnix
+      ];
+
+      shellHook = ''
+        echo \"\"
+        echo \"══════════════════════════════════════════════════════\"
+        echo \"  NixOS Configuration Development Shell\"
+        echo \"══════════════════════════════════════════════════════\"
+        echo \"\"
+        echo \"  Rebuild:\"
+        echo \"    sudo nixos-rebuild switch --flake .#desktop\"
+        echo \"    sudo nixos-rebuild switch --flake .#minimal\"
+        echo \"\"
+      '';
+    };
+
+    # Formatter for 'nix fmt'
+    formatter.${system} = nixpkgs.legacyPackages.${system}.nixpkgs-fmt;
+  };
+}
+" 0 1 (face nix-antiquote-face fontified t) 1 4 (fontified t) 4 15 (face nix-attribute-face fontified t) 15 18 (fontified t) 18 19 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 19 46 (face font-lock-string-face fontified t) 46 47 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 47 52 (fontified t) 52 58 (face nix-attribute-face fontified t) 58 61 (fontified t) 61 62 (face (rainbow-delimiters-depth-2-face) fontified t) 62 67 (fontified t) 67 98 (face font-lock-comment-face fontified t) 98 102 (fontified t) 102 113 (face nix-attribute-face fontified t) 113 116 (fontified t) 116 117 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 117 149 (face font-lock-string-face fontified t) 149 150 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 150 157 (fontified t) 157 218 (face font-lock-comment-face fontified t) 218 222 (fontified t) 222 242 (face nix-attribute-face fontified t) 242 245 (fontified t) 245 246 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 246 281 (face font-lock-string-face fontified t) 281 282 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 282 289 (fontified t) 289 327 (face font-lock-comment-face fontified t) 327 331 (fontified t) 331 343 (face nix-attribute-face fontified t) 343 346 (fontified t) 346 347 (face (rainbow-delimiters-depth-3-face) fontified t) 347 354 (fontified t) 354 357 (face nix-attribute-face fontified t) 357 360 (fontified t) 360 361 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 361 408 (face font-lock-string-face fontified t) 408 409 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 409 417 (fontified t) 417 439 (face nix-attribute-face fontified t) 439 442 (fontified t) 442 443 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 443 450 (face font-lock-string-face fontified t) 450 451 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 451 457 (fontified t) 457 458 (face (rainbow-delimiters-depth-3-face) fontified t) 458 465 (fontified t) 465 507 (face font-lock-comment-face fontified t) 507 511 (fontified t) 511 521 (face nix-attribute-face fontified t) 521 524 (fontified t) 524 525 (face (rainbow-delimiters-depth-3-face) fontified t) 525 532 (fontified t) 532 535 (face nix-attribute-face fontified t) 535 538 (fontified t) 538 539 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 539 609 (face font-lock-string-face fontified t) 609 610 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 610 618 (fontified t) 618 640 (face nix-attribute-face fontified t) 640 643 (fontified t) 643 644 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 644 651 (face font-lock-string-face fontified t) 651 652 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 652 658 (fontified t) 658 659 (face (rainbow-delimiters-depth-3-face) fontified t) 659 666 (fontified t) 666 706 (face font-lock-comment-face fontified t) 706 710 (fontified t) 710 723 (face nix-attribute-face fontified t) 723 726 (fontified t) 726 727 (face (rainbow-delimiters-depth-3-face) fontified t) 727 734 (fontified t) 734 737 (face nix-attribute-face fontified t) 737 740 (fontified t) 740 741 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 741 775 (face font-lock-string-face fontified t) 775 776 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 776 784 (fontified t) 784 806 (face nix-attribute-face fontified t) 806 809 (fontified t) 809 810 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 810 817 (face font-lock-string-face fontified t) 817 818 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 818 824 (fontified t) 824 825 (face (rainbow-delimiters-depth-3-face) fontified t) 825 829 (fontified t) 829 830 (face (rainbow-delimiters-depth-2-face) fontified t) 830 835 (fontified t) 835 842 (face nix-attribute-face fontified t) 842 845 (fontified t) 845 846 (face (rainbow-delimiters-depth-2-face) fontified t) 846 963 (fontified t) 963 964 (face (rainbow-delimiters-depth-2-face) fontified t) 964 975 (fontified t) 975 978 (face nix-keyword-face fontified t) 978 983 (fontified t) 983 989 (face nix-attribute-face fontified t) 989 992 (fontified t) 992 993 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 993 1005 (face font-lock-string-face fontified t) 1005 1006 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1006 1013 (fontified t) 1013 1043 (face font-lock-comment-face fontified t) 1043 1047 (fontified t) 1047 1055 (face nix-attribute-face fontified t) 1055 1058 (fontified t) 1058 1059 (face (rainbow-delimiters-depth-2-face) fontified t) 1059 1066 (fontified t) 1066 1074 (face nix-attribute-face fontified t) 1074 1077 (fontified t) 1077 1078 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1078 1083 (face font-lock-string-face fontified t) 1083 1084 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1084 1092 (fontified t) 1092 1100 (face nix-attribute-face fontified t) 1100 1103 (fontified t) 1103 1104 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1104 1117 (face font-lock-string-face fontified t) 1117 1118 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1118 1126 (fontified t) 1126 1134 (face nix-attribute-face fontified t) 1134 1137 (fontified t) 1137 1138 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1138 1143 (face font-lock-string-face fontified t) 1143 1144 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1144 1152 (fontified t) 1152 1159 (face nix-attribute-face fontified t) 1159 1162 (fontified t) 1162 1163 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1163 1174 (face font-lock-string-face fontified t) 1174 1175 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1175 1183 (fontified t) 1183 1191 (face nix-attribute-face fontified t) 1191 1194 (fontified t) 1194 1195 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1195 1211 (face font-lock-string-face fontified t) 1211 1212 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1212 1220 (fontified t) 1220 1226 (face nix-attribute-face fontified t) 1226 1229 (fontified t) 1229 1230 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1230 1241 (face font-lock-string-face fontified t) 1241 1242 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1242 1250 (fontified t) 1250 1261 (face nix-attribute-face fontified t) 1261 1264 (fontified t) 1264 1265 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1265 1294 (face font-lock-string-face fontified t) 1294 1295 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 1295 1301 (fontified t) 1301 1302 (face (rainbow-delimiters-depth-2-face) fontified t) 1302 1309 (fontified t) 1309 1329 (face font-lock-comment-face fontified t) 1329 1333 (fontified t) 1333 1341 (face nix-attribute-face fontified t) 1341 1344 (fontified t) 1344 1350 (face nix-builtin-face fontified t) 1350 1368 (fontified t) 1368 1369 (face (rainbow-delimiters-depth-2-face) fontified t) 1369 1376 (fontified t) 1376 1383 (face nix-keyword-face fontified t) 1383 1398 (fontified t) 1398 1416 (face nix-attribute-face fontified t) 1416 1419 (fontified t) 1419 1423 (face nix-builtin-face fontified t) 1423 1429 (fontified t) 1429 1430 (face (rainbow-delimiters-depth-2-face) fontified t) 1430 1435 (fontified t) 1435 1437 (face nix-keyword-face fontified t) 1437 1438 (fontified t) 1438 1439 (face (rainbow-delimiters-depth-2-face) fontified t) 1439 1444 (fontified t) 1444 1463 (face nix-attribute-face fontified t) 1463 1466 (fontified t) 1466 1467 (face (rainbow-delimiters-depth-3-face) fontified t) 1467 1472 (fontified t) 1472 1475 (fontified t) 1475 1500 (face font-lock-comment-face fontified t) 1500 1538 (face font-lock-comment-face fontified t) 1538 1544 (fontified t) 1544 1562 (face font-lock-comment-face fontified t) 1562 1568 (fontified t) 1568 1635 (face font-lock-comment-face fontified t) 1635 1641 (fontified t) 1641 1704 (face font-lock-comment-face fontified t) 1704 1711 (fontified t) 1711 1718 (face nix-attribute-face fontified t) 1718 1745 (fontified t) 1745 1746 (face (rainbow-delimiters-depth-4-face) fontified t) 1746 1755 (fontified t) 1755 1762 (face nix-keyword-face fontified t) 1762 1779 (fontified t) 1779 1790 (face nix-attribute-face fontified t) 1790 1793 (fontified t) 1793 1794 (face (rainbow-delimiters-depth-5-face) fontified t) 1794 1806 (fontified t) 1806 1813 (face nix-keyword-face fontified t) 1813 1848 (fontified t) 1848 1849 (face (rainbow-delimiters-depth-5-face) fontified t) 1849 1859 (fontified t) 1859 1866 (face nix-attribute-face fontified t) 1866 1869 (fontified t) 1869 1870 (face (rainbow-delimiters-depth-5-face) fontified t) 1870 1881 (fontified t) 1881 1905 (face font-lock-comment-face fontified t) 1905 1915 (fontified t) 1915 1916 (face (rainbow-delimiters-depth-6-face) fontified t) 1916 1929 (fontified t) 1929 1945 (face nix-attribute-face fontified t) 1945 1948 (fontified t) 1948 1949 (face (rainbow-delimiters-depth-7-face) fontified t) 1949 1981 (fontified t) 1981 1982 (face (rainbow-delimiters-depth-7-face) fontified t) 1982 1996 (fontified t) 1996 2022 (face nix-attribute-face fontified t) 2022 2025 (fontified t) 2025 2029 (face nix-builtin-face fontified t) 2029 2043 (fontified t) 2043 2084 (face nix-attribute-face fontified t) 2084 2087 (fontified t) 2087 2091 (face nix-builtin-face fontified t) 2091 2103 (fontified t) 2103 2104 (face (rainbow-delimiters-depth-6-face) fontified t) 2104 2116 (fontified t) 2116 2141 (face font-lock-comment-face fontified t) 2141 2194 (fontified t) 2194 2217 (face font-lock-comment-face fontified t) 2217 2227 (fontified t) 2227 2260 (face nix-constant-face fontified t) 2260 2272 (fontified t) 2272 2299 (face font-lock-comment-face fontified t) 2299 2358 (fontified t) 2358 2359 (face (rainbow-delimiters-depth-6-face) fontified t) 2359 2372 (fontified t) 2372 2384 (face nix-attribute-face fontified t) 2384 2387 (fontified t) 2387 2388 (face (rainbow-delimiters-depth-7-face) fontified t) 2388 2403 (fontified t) 2403 2416 (face nix-attribute-face fontified t) 2416 2419 (fontified t) 2419 2423 (face nix-builtin-face fontified t) 2423 2439 (fontified t) 2439 2454 (face nix-attribute-face fontified t) 2454 2457 (fontified t) 2457 2461 (face nix-builtin-face fontified t) 2461 2477 (fontified t) 2477 2496 (face nix-attribute-face fontified t) 2496 2499 (fontified t) 2499 2500 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 2500 2509 (face font-lock-string-face fontified t) 2509 2510 (face font-lock-string-face nix-string-type 34 syntax-table (15) fontified t) 2510 2533 (fontified t) 2533 2534 (face (rainbow-delimiters-depth-8-face) fontified t) 2534 2551 (fontified t) 2551 2552 (face (rainbow-delimiters-depth-8-face) fontified t) 2552 2555 (fontified t) 2555 2561 (face nix-builtin-face fontified t) 2561 2562 (fontified t) 2562 2580 (face nix-constant-face fontified t) 2580 2596 (fontified t) 2596 2612 (face nix-attribute-face fontified t) 2612 2615 (fontified t) 2615 2616 (face (rainbow-delimiters-depth-8-face) fontified t) 2616 2617 (fontified t) 2617 2624 (face nix-keyword-face fontified t) 2624 2651 (fontified t) 2651 2652 (face (rainbow-delimiters-depth-8-face) fontified t) 2652 2666 (fontified t) 2666 2667 (face (rainbow-delimiters-depth-7-face) fontified t) 2667 2679 (fontified t) 2679 2680 (face (rainbow-delimiters-depth-6-face) fontified t) 2680 2689 (fontified t) 2689 2690 (face (rainbow-delimiters-depth-5-face) fontified t) 2690 2698 (fontified t) 2698 2699 (face (rainbow-delimiters-depth-4-face) fontified t) 2699 2708 (fontified t) 2708 2771 (face font-lock-comment-face fontified t) 2771 2777 (fontified t) 2777 2795 (face font-lock-comment-face fontified t) 2795 2801 (fontified t) 2801 2868 (face font-lock-comment-face fontified t) 2868 2874 (fontified t) 2874 2937 (face font-lock-comment-face fontified t) 2937 2944 (fontified t) 2944 2951 (face nix-attribute-face fontified t) 2951 2972 (fontified t) 2972 2978 (fontified t) 2978 2979 (face (rainbow-delimiters-depth-4-face) fontified t) 2979 2988 (fontified t) 2988 2995 (face nix-keyword-face fontified t) 2995 3012 (fontified t) 3012 3023 (face nix-attribute-face fontified t) 3023 3026 (fontified t) 3026 3027 (face (rainbow-delimiters-depth-5-face) fontified t) 3027 3028 (fontified t) 3028 3035 (face nix-keyword-face fontified t) 3035 3038 (fontified t) 3038 3053 (fontified t) 3053 3054 (face (rainbow-delimiters-depth-5-face) fontified t) 3054 3056 (fontified t) 3056 3311 (fontified nil) 3311 3315 (fontified t) 3315 3341 (face font-lock-comment-face fontified t) 3341 3345 (fontified t) 3345 3408 (face font-lock-comment-face fontified t) 3408 3424 (fontified t) 3424 3425 (face (rainbow-delimiters-depth-3-face) fontified t) 3425 3431 (fontified t) 3431 3432 (face (rainbow-delimiters-depth-3-face) fontified t) 3432 3433 (fontified t) 3433 3440 (face nix-attribute-face fontified t) 3440 3443 (fontified t) 3443 3446 (face nix-keyword-face fontified t) 3446 3453 (fontified t) 3453 3457 (face nix-attribute-face fontified t) 3457 3460 (fontified t) 3460 3466 (face nix-builtin-face fontified t) 3466 3475 (fontified t) 3475 3476 (face (rainbow-delimiters-depth-3-face) fontified t) 3476 3477 (fontified t) 3477 3484 (face nix-keyword-face fontified t) 3484 3493 (fontified t) 3493 3494 (face (rainbow-delimiters-depth-3-face) fontified t) 3494 3500 (fontified t) 3500 3502 (face nix-keyword-face fontified t) 3502 3516 (fontified t) 3516 3517 (face (rainbow-delimiters-depth-3-face) fontified t) 3517 3524 (fontified t) 3524 3532 (face nix-attribute-face fontified t) 3532 3535 (fontified t) 3535 3539 (face nix-keyword-face fontified t) 3539 3546 (fontified t) 3546 3547 (face (rainbow-delimiters-depth-4-face) fontified t) 3547 3617 (fontified t) 3617 3618 (face (rainbow-delimiters-depth-4-face) fontified t) 3618 3627 (fontified t) 3627 3636 (face nix-attribute-face fontified t) 3636 3639 (fontified t) 3639 3640 (face font-lock-string-face nix-string-type 39 syntax-table (15) fontified t) 3640 4044 (face font-lock-string-face fontified t) 4044 4045 (face font-lock-string-face nix-string-type 39 syntax-table (15) fontified t) 4045 4051 (fontified t) 4051 4052 (face (rainbow-delimiters-depth-3-face) fontified t) 4052 4059 (fontified t) 4059 4085 (face font-lock-comment-face fontified t) 4085 4100 (fontified t) 4100 4101 (face (rainbow-delimiters-depth-3-face) fontified t) 4101 4107 (fontified t) 4107 4108 (face (rainbow-delimiters-depth-3-face) fontified t) 4108 4135 (fontified t) 4135 4136 (face (rainbow-delimiters-depth-3-face) fontified t) 4136 4142 (fontified t) 4142 4143 (face (rainbow-delimiters-depth-3-face) fontified t) 4143 4159 (fontified t) 4159 4160 (face (rainbow-delimiters-depth-2-face) fontified t) 4160 4162 (fontified t) 4162 4163 (face (rainbow-delimiters-depth-1-face) fontified t) 4163 4164 (fontified t)) . 29) (undo-tree-id0 . -4163) (undo-tree-id1 . -4163) (undo-tree-id2 . -4163) (undo-tree-id3 . -4163) (undo-tree-id4 . -4163) (undo-tree-id5 . -4163) (undo-tree-id6 . -4163) (undo-tree-id7 . -4163) (undo-tree-id8 . -4163) (undo-tree-id9 . -4163) (undo-tree-id10 . -4163) (undo-tree-id11 . -4163) (undo-tree-id12 . -4163) (undo-tree-id13 . -4163) (undo-tree-id14 . -4163) (undo-tree-id15 . -4163) (undo-tree-id16 . -4163) (undo-tree-id17 . -4163) (undo-tree-id18 . -4163) (undo-tree-id19 . -4163) (undo-tree-id20 . -4163) (undo-tree-id21 . -4163) (undo-tree-id22 . -4163) (undo-tree-id23 . -4163) (undo-tree-id24 . -4163) (undo-tree-id25 . -4163) (undo-tree-id26 . -4163) (undo-tree-id27 . -4163) (undo-tree-id28 . -4163) (undo-tree-id29 . -4163) (undo-tree-id30 . -4163) (undo-tree-id31 . -4163) (undo-tree-id32 . -4163) (undo-tree-id33 . -4163) (undo-tree-id34 . -4163) (undo-tree-id35 . -4163) (undo-tree-id36 . -4163) (undo-tree-id37 . -4163) (undo-tree-id38 . -4163) (undo-tree-id39 . -4163) (undo-tree-id40 . -4163) (undo-tree-id41 . -4163) (undo-tree-id42 . -4163) (undo-tree-id43 . -4163) (undo-tree-id44 . -4163) (undo-tree-id45 . -4163) (undo-tree-id46 . -4163) (undo-tree-id47 . -4163) (undo-tree-id48 . -4163) (undo-tree-id49 . -4163) (undo-tree-id50 . -4163) (undo-tree-id51 . -4163) (undo-tree-id52 . -4163) (undo-tree-id53 . -4163) (undo-tree-id54 . -4163) (undo-tree-id55 . -4163) (undo-tree-id56 . -4163) (undo-tree-id57 . -4163) (undo-tree-id58 . -4163) (undo-tree-id59 . -4163) (undo-tree-id60 . -4163) (undo-tree-id61 . -4163) (undo-tree-id62 . -4163) (undo-tree-id63 . -4163) (undo-tree-id64 . -4163) (undo-tree-id65 . -4163) (undo-tree-id66 . -4163) (undo-tree-id67 . -4163) (undo-tree-id68 . -4163) (undo-tree-id69 . -4163) (undo-tree-id70 . -4163) (undo-tree-id71 . -4163) (undo-tree-id72 . -4163) (undo-tree-id73 . -4163) (undo-tree-id74 . -4163) (undo-tree-id75 . -4163) (undo-tree-id76 . -4163) (undo-tree-id77 . -4163) (undo-tree-id78 . -4163) (undo-tree-id79 . -4163) (undo-tree-id80 . -4163) (undo-tree-id81 . -4163) (undo-tree-id82 . -4163) (undo-tree-id83 . -4163) (undo-tree-id84 . -4163) (undo-tree-id85 . -4163) (undo-tree-id86 . -4163) (undo-tree-id87 . -4163) (undo-tree-id88 . -4163) (undo-tree-id89 . -4163) (undo-tree-id90 . -4163) (undo-tree-id91 . -4163) (undo-tree-id92 . -4163) (undo-tree-id93 . -4163) (undo-tree-id94 . -4163) (undo-tree-id95 . -4163) (undo-tree-id96 . -4163) (undo-tree-id97 . -4163) (undo-tree-id98 . -4163) (undo-tree-id99 . -4163) (undo-tree-id100 . -4163) (undo-tree-id101 . -4163) (undo-tree-id102 . -4164) (undo-tree-id103 . -4163) (undo-tree-id104 . -4163) (undo-tree-id105 . -4163) (undo-tree-id106 . -3311) (undo-tree-id107 . -4163) (undo-tree-id108 . -4163) (undo-tree-id109 . -4163) (undo-tree-id110 . -4163) (undo-tree-id111 . -4163) (undo-tree-id112 . -4163) (undo-tree-id113 . -4163) (undo-tree-id114 . -4163) (undo-tree-id115 . -4163) (undo-tree-id116 . -4163) (undo-tree-id117 . -4163) (undo-tree-id118 . -4163) (undo-tree-id119 . -4163) (undo-tree-id120 . -4163) (undo-tree-id121 . -4163) (undo-tree-id122 . -4163) (undo-tree-id123 . -4163) (undo-tree-id124 . -4163) (undo-tree-id125 . -4163) (undo-tree-id126 . -4163) (undo-tree-id127 . -4163) (undo-tree-id128 . -4163) (undo-tree-id129 . -4163) (undo-tree-id130 . -4163) (undo-tree-id131 . -4163) (undo-tree-id132 . -4163) (undo-tree-id133 . -4163) (undo-tree-id134 . -4163) (undo-tree-id135 . -4163) (undo-tree-id136 . -4163) (undo-tree-id137 . -4163) (undo-tree-id138 . -4163) (undo-tree-id139 . -4163) (undo-tree-id140 . -4163) (undo-tree-id141 . -4163) (undo-tree-id142 . -4163) (undo-tree-id143 . -4163) (undo-tree-id144 . -4163) (undo-tree-id145 . -4163) (undo-tree-id146 . -4163) (undo-tree-id147 . -4163) (undo-tree-id148 . -4163) (undo-tree-id149 . -4163) (undo-tree-id150 . -4163) (undo-tree-id151 . -4163) (undo-tree-id152 . -4163) (undo-tree-id153 . -4163) (undo-tree-id154 . -4163) (undo-tree-id155 . -4163) (undo-tree-id156 . -4163) (undo-tree-id157 . -4163) (undo-tree-id158 . -4163) (undo-tree-id159 . -4163) (undo-tree-id160 . -4164) (undo-tree-id161 . -4163) (undo-tree-id162 . -3311) (undo-tree-id163 . -4164) (undo-tree-id164 . -4164) (undo-tree-id165 . -4164) (undo-tree-id166 . -4164) (undo-tree-id167 . -4164) (undo-tree-id168 . -4164) (undo-tree-id169 . -4164) (undo-tree-id170 . -4164) (undo-tree-id171 . -4164) (undo-tree-id172 . -4164) (undo-tree-id173 . -4164) (undo-tree-id174 . -4164) (undo-tree-id175 . -4164) (undo-tree-id176 . -4164) (undo-tree-id177 . -4164) (undo-tree-id178 . -4164) (undo-tree-id179 . -4164) (undo-tree-id180 . -4164) (undo-tree-id181 . -4164) (undo-tree-id182 . -4164) (undo-tree-id183 . -4164) (undo-tree-id184 . -4164) (undo-tree-id185 . -4164) (undo-tree-id186 . -4164) (undo-tree-id187 . -4164) (undo-tree-id188 . -4164) (undo-tree-id189 . -4164) (undo-tree-id190 . -4164) (undo-tree-id191 . -4164) (undo-tree-id192 . -4164) (undo-tree-id193 . -4164) (undo-tree-id194 . -4164) (undo-tree-id195 . -4164) (undo-tree-id196 . -4164) (undo-tree-id197 . -4164) (undo-tree-id198 . -4164) (undo-tree-id199 . -4164) (undo-tree-id200 . -4164) (undo-tree-id201 . -4164) (undo-tree-id202 . -4164) (undo-tree-id203 . -4164) (undo-tree-id204 . -4164) (undo-tree-id205 . -4164) (undo-tree-id206 . -4164) (undo-tree-id207 . -4164) (undo-tree-id208 . -4164) (undo-tree-id209 . -4164) (undo-tree-id210 . -4164) (undo-tree-id211 . -4164) (undo-tree-id212 . -4164) (undo-tree-id213 . -4164) (undo-tree-id214 . -4164) (undo-tree-id215 . -4164) (undo-tree-id216 . -4164) (undo-tree-id217 . -4164) (undo-tree-id218 . -4164) (undo-tree-id219 . -4164) (undo-tree-id220 . -4164) (undo-tree-id221 . -4164) (undo-tree-id222 . -4164) (undo-tree-id223 . -4164) (undo-tree-id224 . -4164) (undo-tree-id225 . -4164) (undo-tree-id226 . -4164) (undo-tree-id227 . -4164) (undo-tree-id228 . -4164) (undo-tree-id229 . -4164) (undo-tree-id230 . -4164) (undo-tree-id231 . -4164) (undo-tree-id232 . -4164) (undo-tree-id233 . -4163) (undo-tree-id234 . -4164) (undo-tree-id235 . -4164) (undo-tree-id236 . -3341) (undo-tree-id237 . -4164) (undo-tree-id238 . -4164) (undo-tree-id239 . -4164) (undo-tree-id240 . -4164) (undo-tree-id241 . -4164) (undo-tree-id242 . -4164) (undo-tree-id243 . -4164) (undo-tree-id244 . -4164) (undo-tree-id245 . -4164) (undo-tree-id246 . -4164) (undo-tree-id247 . -4164) (undo-tree-id248 . -4164) (undo-tree-id249 . -4164) (undo-tree-id250 . -4164) (undo-tree-id251 . -4164) (undo-tree-id252 . -4164) (undo-tree-id253 . -4164) (undo-tree-id254 . -4164) (undo-tree-id255 . -4164) (undo-tree-id256 . -4164) (undo-tree-id257 . -4164) (undo-tree-id258 . -4164) (undo-tree-id259 . -4164) (undo-tree-id260 . -4164) (undo-tree-id261 . -4164) (undo-tree-id262 . -4164) (undo-tree-id263 . -4164) (undo-tree-id264 . -4164) (undo-tree-id265 . -4164) (undo-tree-id266 . -4164) (undo-tree-id267 . -4164) (undo-tree-id268 . -4164) (undo-tree-id269 . -4164) (undo-tree-id270 . -4164) (undo-tree-id271 . -4164) (undo-tree-id272 . -4164) (undo-tree-id273 . -4164) (undo-tree-id274 . -4164) (undo-tree-id275 . -4164) (undo-tree-id276 . -3341) (undo-tree-id277 . -4164) (undo-tree-id278 . -4164) (undo-tree-id279 . -4164) (undo-tree-id280 . -4164) (undo-tree-id281 . -4164) (undo-tree-id282 . -4164) (undo-tree-id283 . -4164) (undo-tree-id284 . -4164) (undo-tree-id285 . -4164) (undo-tree-id286 . -4164) (undo-tree-id287 . -4164) (undo-tree-id288 . -4164) (undo-tree-id289 . -4164) (undo-tree-id290 . -4164) (undo-tree-id291 . -4164) (undo-tree-id292 . -4164) (undo-tree-id293 . -4164) (undo-tree-id294 . -4164) (undo-tree-id295 . -4164) (undo-tree-id296 . -4164) (undo-tree-id297 . -4164) (undo-tree-id298 . -4164) (undo-tree-id299 . -4164) (undo-tree-id300 . -4164) (undo-tree-id301 . -4164) (undo-tree-id302 . -4164) (undo-tree-id303 . -4164) (undo-tree-id304 . -4164) (undo-tree-id305 . -4164) (undo-tree-id306 . -4164) (undo-tree-id307 . -4164) (undo-tree-id308 . -4164) (undo-tree-id309 . -4164) (undo-tree-id310 . -4164) (undo-tree-id311 . -4164) (undo-tree-id312 . -4164) (undo-tree-id313 . -4164) (undo-tree-id314 . -4164) (undo-tree-id315 . -4164) (undo-tree-id316 . -4164) (undo-tree-id317 . -4164) (undo-tree-id318 . -4164) (undo-tree-id319 . -4164) (undo-tree-id320 . -4164) (undo-tree-id321 . -4164) (undo-tree-id322 . -4164) (undo-tree-id323 . -4164) (undo-tree-id324 . -4164) (undo-tree-id325 . -4164) (undo-tree-id326 . -4164) (undo-tree-id327 . -4164) (undo-tree-id328 . -4164) (undo-tree-id329 . -4164) (undo-tree-id330 . -4164) (undo-tree-id331 . -4164) (undo-tree-id332 . -4164) (undo-tree-id333 . -4164) (undo-tree-id334 . -4164) (undo-tree-id335 . -4164) (undo-tree-id336 . -4164) (undo-tree-id337 . -4164) (undo-tree-id338 . -3341) (undo-tree-id339 . -4164) (undo-tree-id340 . -4164) (undo-tree-id341 . -4164) (undo-tree-id342 . -4164) (undo-tree-id343 . -4164) (undo-tree-id344 . -4164) (undo-tree-id345 . -4164) (undo-tree-id346 . -4164) (undo-tree-id347 . -4164) (undo-tree-id348 . -4164) (undo-tree-id349 . -4164) (undo-tree-id350 . -4164) (undo-tree-id351 . -4164) (undo-tree-id352 . -4164) (undo-tree-id353 . -4164) (undo-tree-id354 . -4164) (undo-tree-id355 . -4164) (undo-tree-id356 . -4164) (undo-tree-id357 . -4164) (undo-tree-id358 . -4164) (undo-tree-id359 . -4164) (undo-tree-id360 . -4164) (undo-tree-id361 . -4164) (undo-tree-id362 . -4164) (undo-tree-id363 . -4164) (undo-tree-id364 . -4164) (undo-tree-id365 . -4164) (undo-tree-id366 . -4164) (undo-tree-id367 . -4164) (undo-tree-id368 . -4164) (undo-tree-id369 . -4164) (undo-tree-id370 . -4164) (undo-tree-id371 . -4164) (undo-tree-id372 . -4164) (undo-tree-id373 . -4164) (undo-tree-id374 . -4164) (undo-tree-id375 . -4164) (undo-tree-id376 . -4164) (undo-tree-id377 . -4164) (undo-tree-id378 . -4164) (undo-tree-id379 . -4164) (undo-tree-id380 . -4164) (undo-tree-id381 . -4164) (undo-tree-id382 . -4164) (undo-tree-id383 . -3341) (undo-tree-id384 . -4164) (undo-tree-id385 . -4164) (undo-tree-id386 . -4164) (undo-tree-id387 . -4164) (undo-tree-id388 . -4164) (undo-tree-id389 . -4164) (undo-tree-id390 . -4164) (undo-tree-id391 . -4164) (undo-tree-id392 . -4164) (undo-tree-id393 . -4164) (undo-tree-id394 . -4164) (undo-tree-id395 . -4164) (undo-tree-id396 . -4164) (undo-tree-id397 . -4164) (undo-tree-id398 . -4164) (undo-tree-id399 . -4164) (undo-tree-id400 . -4164) (undo-tree-id401 . -4164) (undo-tree-id402 . -4164) (undo-tree-id403 . -4164) (undo-tree-id404 . -4164) (undo-tree-id405 . -4164) (undo-tree-id406 . -4164) (undo-tree-id407 . -4164) (undo-tree-id408 . -4164) (undo-tree-id409 . -4164) (undo-tree-id410 . -4164) (undo-tree-id411 . -4164) (undo-tree-id412 . -4164) (undo-tree-id413 . -4164) (undo-tree-id414 . -4164) (undo-tree-id415 . -4164) (undo-tree-id416 . -4164) (undo-tree-id417 . -4164) (undo-tree-id418 . -4164) (undo-tree-id419 . -4164) (undo-tree-id420 . -3341) (undo-tree-id421 . -4164) (undo-tree-id422 . -4164) (undo-tree-id423 . -4164) (undo-tree-id424 . -4164) (undo-tree-id425 . -4164) (undo-tree-id426 . -4164) (undo-tree-id427 . -4164) (undo-tree-id428 . -4164) (undo-tree-id429 . -4164) (undo-tree-id430 . -4164) (undo-tree-id431 . -4164) (undo-tree-id432 . -4164) (undo-tree-id433 . -4164) (undo-tree-id434 . -4164) (undo-tree-id435 . -4164) (undo-tree-id436 . -3341) (undo-tree-id437 . -4164) (undo-tree-id438 . -4164) (undo-tree-id439 . -4164) (undo-tree-id440 . -4164) (undo-tree-id441 . -4164) (undo-tree-id442 . -4164) (undo-tree-id443 . -4164) (undo-tree-id444 . -4164) (undo-tree-id445 . -4164) (undo-tree-id446 . -4164) (undo-tree-id447 . -4164) (undo-tree-id448 . -4164) (undo-tree-id449 . -4164) (undo-tree-id450 . -4164) (undo-tree-id451 . -4164) (undo-tree-id452 . -4164) (undo-tree-id453 . -4164) (undo-tree-id454 . -4164) (undo-tree-id455 . -4164) (undo-tree-id456 . -4164) (undo-tree-id457 . -4164) (undo-tree-id458 . -4164) (undo-tree-id459 . -4164) (undo-tree-id460 . -4164) (undo-tree-id461 . -4164) (undo-tree-id462 . -4164) (undo-tree-id463 . -4164) (undo-tree-id464 . -4164) (undo-tree-id465 . -4164) (undo-tree-id466 . -4164) (undo-tree-id467 . -4164) (undo-tree-id468 . -4164) (undo-tree-id469 . -4164) (undo-tree-id470 . -4164) (undo-tree-id471 . -4164) (undo-tree-id472 . -4164) (undo-tree-id473 . -4164) (undo-tree-id474 . -4164) (undo-tree-id475 . -4164) (undo-tree-id476 . -4164) (undo-tree-id477 . -4164) (undo-tree-id478 . -4164) (undo-tree-id479 . -4164) (undo-tree-id480 . -4164) (undo-tree-id481 . -3341) (undo-tree-id482 . -4164) (undo-tree-id483 . -4164) (undo-tree-id484 . -4164) (undo-tree-id485 . -4164) (undo-tree-id486 . -4164) (undo-tree-id487 . -4164) (undo-tree-id488 . -4164) (undo-tree-id489 . -4164) (undo-tree-id490 . -4164) (undo-tree-id491 . -4164) (undo-tree-id492 . -4164) (undo-tree-id493 . -4164) (undo-tree-id494 . -4164) (undo-tree-id495 . -4164) (undo-tree-id496 . -4164) (undo-tree-id497 . -4164) (undo-tree-id498 . -4164) (undo-tree-id499 . -4164) (undo-tree-id500 . -4164) (undo-tree-id501 . -4164) (undo-tree-id502 . -4164) (undo-tree-id503 . -4164) (undo-tree-id504 . -4164) (undo-tree-id505 . -4164) (undo-tree-id506 . -4164) (undo-tree-id507 . -4164) (undo-tree-id508 . -4164) (undo-tree-id509 . -4164) (undo-tree-id510 . -4164) (undo-tree-id511 . -4164) (undo-tree-id512 . -4164) (undo-tree-id513 . -4164) (undo-tree-id514 . -4164) (undo-tree-id515 . -4164) (undo-tree-id516 . -4164) (undo-tree-id517 . -4164) (undo-tree-id518 . -4164) (undo-tree-id519 . -4164) (undo-tree-id520 . -4164) (undo-tree-id521 . -4164) (undo-tree-id522 . -4164) (undo-tree-id523 . -4164) (undo-tree-id524 . -4164) (undo-tree-id525 . -4164) (undo-tree-id526 . -4164) (undo-tree-id527 . -4164) (undo-tree-id528 . -4164) (undo-tree-id529 . -4164) (undo-tree-id530 . -4164) (undo-tree-id531 . -4164) (undo-tree-id532 . -4164) (undo-tree-id533 . -4164) (undo-tree-id534 . -4164) (undo-tree-id535 . -4164) (undo-tree-id536 . -4164) (undo-tree-id537 . -4164) (undo-tree-id538 . -4164) (undo-tree-id539 . -4164) (undo-tree-id540 . -4164) (undo-tree-id541 . -4164) (undo-tree-id542 . -4164) (undo-tree-id543 . -4164) (undo-tree-id544 . -4164) (undo-tree-id545 . -4164) (undo-tree-id546 . -3341) (undo-tree-id547 . -4163) (t 27068 42290 478330 260000)) nil (27068 42401 512675 553000) 0 nil])
+([nil nil ((nil rear-nonsticky nil 3747 . 3748) (nil fontified nil 29 . 3748) (29 . 3748)) nil (27068 42401 511927 539000) 0 nil])
+([nil current ((3748 . 3749)) nil (27068 42401 511923 37000) 0 nil])
+nil

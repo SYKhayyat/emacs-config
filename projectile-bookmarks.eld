@@ -1,1 +1,1 @@
-("~/.emacs.d/")
+("~/nixos-config/" "~/.emacs.d/" "~/config/")

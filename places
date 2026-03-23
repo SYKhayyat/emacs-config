@@ -1,10 +1,43 @@
 ;;; -*- coding: utf-8; mode: lisp-data -*-
-(("/home/shaul/.emacs.d/readMe.org" . 71956)
- ("/home/shaul/.emacs.d/config.org" . 62488)
- ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/e_sichsa_deshai/b_moed_sichsa_deshai/i_taanis/taanis_yerushalmi.org"
-  . 11658)
+(("/home/shaul/.emacs.d/config.org" . 158018)
+ ("/home/shaul/nixos-config/modules/system/cli-tools.nix" . 2180)
+ ("/home/shaul/nixos-config/home/common.nix" . 2743)
+ ("/home/shaul/nixos-config/flake.nix" . 3748)
+ ("/home/shaul/Documents/seforim/תלמוד בבלי/סדר זרעים/ברכות.org"
+  . 13017)
  ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/e_kodshim/b_menachos/six_menachos.org"
   . 26592)
+ ("/home/shaul/Documents/otzarias/html2org_combined.py" . 9319)
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/b_moed/c_pesachim/"
+  (dired-filename
+   . "/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/b_moed/c_pesachim/six_pesachim.org"))
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/b_moed/c_pesachim/six_pesachim.org"
+  . 11688)
+ ("/home/shaul/Documents/"
+  (dired-filename . "/home/shaul/Documents/siach_shai"))
+ ("/home/shaul/Documents/siach_shai/"
+  (dired-filename . "/home/shaul/Documents/siach_shai/b_typed"))
+ ("/home/shaul/Documents/siach_shai/b_typed/"
+  (dired-filename
+   . "/home/shaul/Documents/siach_shai/b_typed/a_siach_shai"))
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/"
+  (dired-filename
+   . "/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai"))
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/"
+  (dired-filename
+   . "/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas"))
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/"
+  (dired-filename
+   . "/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai"))
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/"
+  (dired-filename
+   . "/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/b_moed"))
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/b_moed/"
+  (dired-filename
+   . "/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/b_moed/c_pesachim"))
+ ("/home/shaul/.emacs.d/readMe.org" . 71956)
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/e_sichsa_deshai/b_moed_sichsa_deshai/i_taanis/taanis_yerushalmi.org"
+  . 11658)
  ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/d_shear_sichos_shai/"
   (dired-filename
    . "/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/d_shear_sichos_shai/marginalia_hebrew.org"))
@@ -16,8 +49,6 @@
  ("/home/shaul/Downloads/badbm/lcmbadbm/src/edu/touro/mco152/bm/ui/package-info.java"
   . 271)
  ("/home/shaul/Documents/org/inbox.org" . 34)
- ("/home/shaul/config/configuration.nix" . 613)
- ("/home/shaul/config/seforim.nix" . 1493)
  ("/home/shaul/Documents/seforim/תלמוד בבלי/סדר זרעים/"
   (dired-filename
    . "/home/shaul/Documents/seforim/תלמוד בבלי/סדר זרעים/ברכות.org"))
@@ -25,7 +56,6 @@
   (dired-filename
    . "/home/shaul/Documents/seforim/תלמוד בבלי/סדר זרעים"))
  ("/home/shaul/Documents/otzarias/html2org.py" . 8496)
- ("/home/shaul/Documents/otzarias/html2org_combined.py" . 9319)
  ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/b_moed/b_eiruvin/six_eiruvin.org"
   . 42798)
  ("/home/shaul/.config/libreoffice/4/user/backup/six_eiruvin.docx.bak"
