@@ -1,0 +1,92 @@
+#+TITLE: 15-hydras Module
+#+STARTUP: overview
+
+* Purpose
+
+Quick access menus using Hydra:
+- Direction & spell control
+- Org-roam navigation
+- Seforim library
+- Rich footnotes
+- Document templates
+
+* Hydra Menus
+
+** Direction & Spell (~C-c D~)
+
+#+begin_example
+Direction: r: RTL  l: LTR  t: toggle  B: bidi
+Spell:     h: Hebrew  e: English  b: both
+Writing:   w: focused  W: width
+#+end_example
+
+** Org-roam (~C-c N~)
+
+#+begin_example
+Roam: f: find  i: insert  c: capture  l: buffer
+      d: daily  D: date  g: graph  u: UI
+      h: hebrew  R: research  t: tag
+#+end_example
+
+** Seforim (~C-c S~)
+
+#+begin_example
+Seforim: f: find  r: recent  s: search  b: browse
+         o: outline  d: daf  D: daf (current)
+         I: reindex  ?: status
+#+end_example
+
+** Rich Footnotes (~C-c F~)
+
+#+begin_example
+Insert:   l: LaTeX    t: Typst      c: ConTeXt
+Preamble: p: LaTeX    T: Typst      C: ConTeXt
+#+end_example
+
+** Documents (~C-c P~)
+
+#+begin_example
+Preambles: p: LaTeX Hebrew  t: Typst Hebrew  c: ConTeXt Hebrew
+Rich FN:   l: LaTeX Rich    T: Typst Rich    C: ConTeXt Rich
+Create:    n: New document
+#+end_example
+
+* How Hydras Work
+
+1. Press the hydra key (e.g., ~C-c D~)
+2. Menu appears at bottom
+3. Press a letter to execute command
+4. Press ~q~ to quit without action
+
+Blue hydras (these) exit after one command.
+
+* Adding Custom Hydras
+
+#+begin_src emacs-lisp :tangle no
+(defhydra hydra-example (:color blue :hint nil)
+  "
+My Menu: _a_: action1  _b_: action2
+"
+  ("a" some-function)
+  ("b" other-function)
+  ("q" nil))
+
+(global-set-key (kbd "C-c X") #'hydra-example/body)
+#+end_src
+
+* Dependencies
+
+- 00-core
+- hydra package
+- Functions from other modules
+
+* Troubleshooting
+
+** Hydra not appearing
+
+Check hydra loaded: ~M-: (featurep 'hydra)~
+
+** Command in hydra not working
+
+The underlying function may not be defined.
+Check: ~M-x function-name~

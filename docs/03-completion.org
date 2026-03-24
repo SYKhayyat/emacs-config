@@ -1,0 +1,114 @@
+#+TITLE: 03-completion Module
+#+STARTUP: overview
+
+* Purpose
+
+Modern completion framework:
+- Vertical completion (Vertico)
+- Fuzzy matching (Orderless)
+- Rich annotations (Marginalia)
+- Search and navigation (Consult)
+- In-buffer completion (Corfu)
+- Actions on candidates (Embark)
+- Spell checking (Jinx)
+
+* Packages Used
+
+| Package        | Purpose                         |
+|----------------+---------------------------------|
+| vertico        | Vertical completion UI          |
+| orderless      | Fuzzy/flexible matching         |
+| marginalia     | Annotations in minibuffer       |
+| consult        | Enhanced search commands        |
+| corfu          | Popup completion in buffer      |
+| embark         | Actions on completion candidates|
+| embark-consult | Embark + Consult integration    |
+| which-key      | Show available keybindings      |
+| helpful        | Better help buffers             |
+| jinx           | Fast spell checker              |
+
+* Key Bindings
+
+** Search & Navigation (Consult)
+
+| Key       | Command              | Description            |
+|-----------+----------------------+------------------------|
+| ~C-s~     | consult-line         | Search in buffer       |
+| ~C-x b~   | consult-buffer       | Switch buffer          |
+| ~M-g g~   | consult-goto-line    | Go to line             |
+| ~M-g o~   | consult-outline      | Jump to heading        |
+| ~M-s r~   | consult-ripgrep      | Search in project      |
+| ~M-s f~   | consult-fd           | Find file              |
+| ~M-y~     | consult-yank-pop     | Paste from kill ring   |
+| ~C-x r b~ | consult-bookmark     | Jump to bookmark       |
+
+** Actions (Embark)
+
+| Key       | Command              | Description            |
+|-----------+----------------------+------------------------|
+| ~C-.~     | embark-act           | Actions menu           |
+| ~C-;~     | embark-dwim          | Default action         |
+| ~C-h B~   | embark-bindings      | Show all bindings      |
+
+** Help (Helpful)
+
+| Key               | Command            |
+|-------------------+--------------------|
+| ~C-h f~           | helpful-callable   |
+| ~C-h v~           | helpful-variable   |
+| ~C-h k~           | helpful-key        |
+
+** Spell Check (Jinx)
+
+| Key       | Command              | Description            |
+|-----------+----------------------+------------------------|
+| ~M-$~     | jinx-correct         | Correct word at point  |
+
+* Functions
+
+** Spell Language Switching
+
+| Function         | Language           |
+|------------------+--------------------|
+| my/spell-hebrew  | Hebrew only        |
+| my/spell-english | English only       |
+| my/spell-both    | Hebrew + English   |
+
+Access via ~C-c D~ (Direction hydra).
+
+* Configuration Options
+
+** Vertico count
+
+#+begin_src emacs-lisp :tangle no
+(setq vertico-count 20)  ; Show 20 candidates (default 15)
+#+end_src
+
+** Corfu auto-completion
+
+#+begin_src emacs-lisp :tangle no
+(setq corfu-auto-delay 0.5)   ; Wait 0.5s before popup
+(setq corfu-auto-prefix 3)    ; Need 3 chars to trigger
+#+end_src
+
+* Dependencies
+
+- 00-core
+- 01-ui
+
+* Troubleshooting
+
+** Completion not showing
+
+Check vertico is active: ~M-: vertico-mode~
+
+** Ripgrep not working
+
+Ensure ripgrep is installed: ~which rg~
+
+** Spell check errors
+
+Jinx needs dictionaries. Check:
+~M-: jinx-languages~
+
+Should show ~"en_US he_IL"~.

@@ -1,0 +1,109 @@
+#+TITLE: 11-programming Module
+#+STARTUP: overview
+
+* Purpose
+
+Programming language support:
+- LSP via Eglot
+- Language-specific modes
+- Snippets
+- EditorConfig
+
+* Packages Used
+
+| Package           | Purpose                |
+|-------------------+------------------------|
+| eglot             | LSP client             |
+| eglot-java        | Java LSP integration   |
+| rust-mode         | Rust support           |
+| cargo             | Cargo commands         |
+| nix-mode          | Nix support            |
+| markdown-mode     | Markdown support       |
+| yasnippet         | Snippets               |
+| yasnippet-snippets| Snippet collection     |
+| editorconfig      | EditorConfig support   |
+| envrc             | Direnv integration     |
+
+* Languages Supported
+
+| Language | Mode          | LSP Server       |
+|----------|---------------|------------------|
+| Python   | python-mode   | pyright          |
+| Rust     | rust-mode     | rust-analyzer    |
+| Java     | java-mode     | jdt-ls           |
+| Nix      | nix-mode      | nil              |
+| Markdown | markdown-mode | -                |
+
+* Key Bindings
+
+Eglot bindings (in LSP-enabled buffers):
+
+| Key         | Command                | Description          |
+|-------------+------------------------+----------------------|
+| ~C-c l r~   | eglot-rename           | Rename symbol        |
+| ~C-c l a~   | eglot-code-actions     | Code actions         |
+| ~C-c l f~   | eglot-format           | Format buffer        |
+| ~M-.~       | xref-find-definitions  | Go to definition     |
+| ~M-?~       | xref-find-references   | Find references      |
+
+Rust (Cargo):
+
+| Key         | Command                | Description          |
+|-------------+------------------------+----------------------|
+| ~C-c C-c b~ | cargo-process-build    | Build                |
+| ~C-c C-c r~ | cargo-process-run      | Run                  |
+| ~C-c C-c t~ | cargo-process-test     | Test                 |
+
+* Snippets
+
+Trigger snippets by typing keyword and pressing ~TAB~.
+
+View available: ~M-x yas-describe-tables~
+
+* EditorConfig
+
+Automatically reads ~.editorconfig~ files for:
+- Indent style
+- Indent size
+- Line endings
+
+* Envrc (Direnv)
+
+Automatically loads ~.envrc~ files for:
+- Environment variables
+- PATH modifications
+- Nix shells
+
+* Configuration Options
+
+** Disable auto-format on save (Rust)
+
+#+begin_src emacs-lisp :tangle no
+(setq rust-format-on-save nil)
+#+end_src
+
+** Add LSP server
+
+#+begin_src emacs-lisp :tangle no
+(add-to-list 'eglot-server-programs
+             '(your-mode . ("your-lsp-server")))
+#+end_src
+
+* Dependencies
+
+- 00-core
+- Language servers (system packages)
+
+* Troubleshooting
+
+** LSP not starting
+
+Check server installed: ~which rust-analyzer~
+
+Manual start: ~M-x eglot~
+
+** Snippets not expanding
+
+Check yasnippet: ~M-: yas-minor-mode~
+
+Reload: ~M-x yas-reload-all~

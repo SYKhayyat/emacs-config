@@ -1,0 +1,76 @@
+;;; 11-programming.el --- Programming modes and LSP -*- lexical-binding: t; -*-
+
+;; Eglot - LSP client
+(use-package eglot
+  :hook ((python-mode . eglot-ensure)
+         (rust-mode . eglot-ensure)
+         (java-mode . eglot-ensure)
+         (nix-mode . eglot-ensure))
+  :config
+  (setq eglot-autoshutdown t
+        eglot-send-changes-idle-time 0.5)
+  (with-eval-after-load 'typst-ts-mode
+    (add-to-list 'eglot-server-programs '(typst-ts-mode . ("tinymist")))
+    (add-hook 'typst-ts-mode-hook #'eglot-ensure)))
+
+;; Python
+(use-package python
+  :mode ("\\.py\\'" . python-mode)
+  :config
+  (setq python-indent-offset 4))
+
+;; Rust
+(use-package rust-mode
+  :mode "\\.rs\\'"
+  :config
+  (setq rust-format-on-save t))
+
+(use-package cargo
+  :hook (rust-mode . cargo-minor-mode))
+
+;; Java
+(use-package eglot-java
+  :hook (java-mode . eglot-java-mode))
+
+;; Nix
+(use-package nix-mode
+  :mode "\\.nix\\'"
+  :config
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-server-programs '(nix-mode . ("nil")))))
+
+;; Markdown
+(use-package markdown-mode
+  :mode (("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :hook (markdown-mode . my/setup-rtl-mode)
+  :config
+  (setq markdown-command "pandoc"))
+
+;; Snippets
+(use-package yasnippet
+  :diminish yas-minor-mode
+  :hook ((prog-mode . yas-minor-mode)
+         (text-mode . yas-minor-mode))
+  :config
+  (yas-reload-all))
+
+(use-package yasnippet-snippets
+  :after yasnippet)
+
+;; EditorConfig
+(use-package editorconfig
+  :diminish
+  :demand t
+  :config
+  (editorconfig-mode 1))
+
+;; Environment variables
+(use-package envrc
+  :diminish
+  :demand t
+  :config
+  (envrc-global-mode 1))
+
+(provide '11-programming)
+;;; 11-programming.el ends here

@@ -1,0 +1,76 @@
+#+TITLE: 08-typst Module
+#+STARTUP: overview
+
+* Purpose
+
+Typst document editing:
+- Tree-sitter syntax highlighting
+- Compilation
+- LSP support (tinymist)
+- Hebrew support
+
+* Packages Used
+
+| Package       | Purpose                  |
+|---------------+--------------------------|
+| typst-ts-mode | Typst major mode         |
+| treesit-auto  | Auto tree-sitter setup   |
+
+* Key Bindings
+
+| Key         | Command                  | Description          |
+|-------------+--------------------------+----------------------|
+| ~C-c C-c~   | my/typst-compile         | Compile to PDF       |
+| ~C-c C-w~   | my/typst-watch           | Watch and compile    |
+| ~C-c C-v~   | my/typst-view            | View PDF             |
+| ~C-c t h~   | my/insert-typst-hebrew-preamble | Hebrew setup  |
+
+* Hebrew Preamble
+
+Insert with: ~C-c t h~ or ~M-x my/insert-typst-hebrew-preamble~
+
+#+begin_example
+#set text(lang: "he", font: "David CLM")
+#set page(flipped: true)
+#set heading(numbering: "1.1.1")
+#+end_example
+
+* LSP Support
+
+Uses tinymist language server.
+
+Features:
+- Completion
+- Diagnostics
+- Formatting
+
+Ensure tinymist is installed: ~which tinymist~
+
+* Configuration Options
+
+** Disable LSP
+
+#+begin_src emacs-lisp :tangle no
+(remove-hook 'typst-ts-mode-hook #'eglot-ensure)
+#+end_src
+
+* Dependencies
+
+- 00-core
+- 02-hebrew
+- typst (system package)
+- tinymist (system package)
+- tree-sitter
+
+* Troubleshooting
+
+** No syntax highlighting
+
+Tree-sitter grammar may be missing.
+Check: ~M-x treesit-install-language-grammar~
+
+** LSP not working
+
+Check tinymist: ~which tinymist~
+
+Check eglot: ~M-x eglot~

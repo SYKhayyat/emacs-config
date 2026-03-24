@@ -1,0 +1,225 @@
+#+TITLE: Seforim Library
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Seforim Library System
+
+#+begin_src emacs-lisp
+;;; 13-seforim.el --- Jewish texts library management -*- lexical-binding: t; -*-
+
+(defgroup seforim nil "Seforim library." :group 'applications)
+
+(defcustom seforim-directory "~/Documents/seforim/"
+  "Seforim directory."
+  :type 'directory
+  :group 'seforim)
+
+(defcustom seforim-extensions '("org" "pdf" "epub" "docx" "doc" "odt")
+  "File extensions to search."
+  :type '(repeat string)
+  :group 'seforim)
+
+(defcustom seforim-plocate-db "/var/cache/locatedb"
+  "Plocate database path."
+  :type 'file
+  :group 'seforim)
+
+(defvar seforim-masechtot
+  '("Berakhot" "Shabbat" "Eruvin" "Pesachim" "Shekalim" "Yoma" "Sukkah" "Beitzah"
+    "Rosh Hashanah" "Taanit" "Megillah" "Moed Katan" "Chagigah" "Yevamot" "Ketubot"
+    "Nedarim" "Nazir" "Sotah" "Gittin" "Kiddushin" "Bava Kamma" "Bava Metzia"
+    "Bava Batra" "Sanhedrin" "Makkot" "Shevuot" "Avodah Zarah" "Horayot" "Zevachim"
+    "Menachot" "Chullin" "Bekhorot" "Arakhin" "Temurah" "Keritot" "Meilah" "Kinnim"
+    "Tamid" "Middot" "Niddah"))
+
+(defun seforim--executable-p (name)
+  "Check if executable NAME exists."
+  (executable-find name))
+
+(defun seforim--plocate-available-p ()
+  "Check if plocate is available."
+  (and (seforim--executable-p "plocate")
+       (file-readable-p seforim-plocate-db)))
+
+(defun seforim--run-plocate (query)
+  "Run plocate with QUERY."
+  (let ((buf (generate-new-buffer " *plocate*")))
+    (unwind-protect
+        (progn
+          (call-process "plocate" nil buf nil "--database" seforim-plocate-db "-i" query)
+          (with-current-buffer buf (split-string (buffer-string) "\n" t)))
+      (kill-buffer buf))))
+
+(defun seforim--filter-files (files)
+  "Filter FILES to only those in seforim directory with correct extensions."
+  (let ((root (expand-file-name seforim-directory)))
+    (seq-filter
+     (lambda (f)
+       (and (string-prefix-p root f)
+            (member (downcase (or (file-name-extension f) "")) seforim-extensions)
+            (file-exists-p f)))
+     files)))
+
+(defun seforim--make-candidates (files)
+  "Make completion candidates from FILES."
+  (let ((root (expand-file-name seforim-directory)))
+    (mapcar (lambda (f) (cons (file-relative-name f root) f)) files)))
+
+(defun seforim-find ()
+  "Find seforim files by name."
+  (interactive)
+  (let* ((query (read-string "Find sefer: "))
+         (files (if (seforim--plocate-available-p)
+                    (seforim--run-plocate query)
+                  (split-string
+                   (shell-command-to-string
+                    (format "fd -i -t f %s %s"
+                            (shell-quote-argument query)
+                            (shell-quote-argument (expand-file-name seforim-directory))))
+                   "\n" t)))
+         (filtered (seforim--filter-files files))
+         (candidates (seforim--make-candidates filtered)))
+    (if candidates
+        (let* ((choice (completing-read "Select: " candidates nil t))
+               (file (cdr (assoc choice candidates))))
+          (when file (find-file file)))
+      (user-error "No matches: %s" query))))
+
+(defun seforim-find-recent ()
+  "Find recently accessed seforim."
+  (interactive)
+  (let* ((root (expand-file-name seforim-directory))
+         (files (seq-filter (lambda (f) (string-prefix-p root f)) recentf-list))
+         (candidates (seforim--make-candidates files)))
+    (if candidates
+        (let* ((choice (completing-read "Recent: " candidates nil t))
+               (file (cdr (assoc choice candidates))))
+          (when file (find-file file)))
+      (user-error "No recent seforim"))))
+
+(defun seforim-search ()
+  "Search content of seforim."
+  (interactive)
+  (let* ((query (read-string "Search: "))
+         (root (expand-file-name seforim-directory)))
+    (if (seforim--executable-p "recoll")
+        (seforim--search-recoll query root)
+      (consult-ripgrep root query))))
+
+(defun seforim--search-recoll (query dir)
+  "Search with recoll."
+  (let* ((cmd (format "recoll -t -q %s dir:%s 2>/dev/null"
+                      (shell-quote-argument query)
+                      (shell-quote-argument dir)))
+         (output (shell-command-to-string cmd))
+         (candidates (seforim--parse-recoll output dir)))
+    (if candidates
+        (let* ((choice (completing-read (format "「%s」: " query) candidates nil t))
+               (file (cdr (assoc choice candidates))))
+          (when file
+            (find-file file)
+            (goto-char (point-min))
+            (search-forward query nil t)))
+      (user-error "No results: %s" query))))
+
+(defun seforim--parse-recoll (output dir)
+  "Parse recoll output."
+  (let ((results nil) (seen (make-hash-table :test 'equal)))
+    (dolist (line (split-string output "\n" t))
+      (when (string-match "\\(/[^[:cntrl:]]+\\)" line)
+        (let* ((file (match-string 1 line))
+               (ext (downcase (or (file-name-extension file) ""))))
+          (when (and (member ext seforim-extensions)
+                     (file-exists-p file)
+                     (string-prefix-p dir (expand-file-name file))
+                     (not (gethash file seen)))
+            (puthash file t seen)
+            (push (cons (file-relative-name file dir) file) results)))))
+    (nreverse results)))
+
+(defun seforim--number-to-hebrew (num)
+  "Convert NUM to Hebrew letters."
+  (let ((ones '("" "א" "ב" "ג" "ד" "ה" "ו" "ז" "ח" "ט"))
+        (tens '("" "י" "כ" "ל" "מ" "נ" "ס" "ע" "פ" "צ"))
+        (hundreds '("" "ק" "ר" "ש" "ת"))
+        (h (/ num 100)) (t-val (/ (mod num 100) 10)) (o (mod num 10)))
+    (cond
+     ((= (mod num 100) 15) (concat (nth h hundreds) "טו"))
+     ((= (mod num 100) 16) (concat (nth h hundreds) "טז"))
+     (t (concat (nth h hundreds) (nth t-val tens) (nth o ones))))))
+
+(defun seforim-goto-daf ()
+  "Go to specific daf in a masechet."
+  (interactive)
+  (let* ((masechet (completing-read "Masechet: " seforim-masechtot nil t))
+         (daf-num (read-number "Daf: " 2))
+         (daf-side (completing-read "Side: " '("א" "ב") nil t))
+         (daf-heading (format "דף %s ע\"%s" (seforim--number-to-hebrew daf-num) daf-side))
+         (file (expand-file-name (concat "Bavli/" masechet ".org") seforim-directory)))
+    (if (file-exists-p file)
+        (progn
+          (find-file file)
+          (goto-char (point-min))
+          (if (re-search-forward (format "^\\*+ %s" (regexp-quote daf-heading)) nil t)
+              (progn (org-reveal) (recenter))
+            (user-error "Daf %s not found" daf-heading)))
+      (user-error "File not found: %s" file))))
+
+(defun seforim-goto-daf-current ()
+  "Go to daf in current file."
+  (interactive)
+  (unless (and buffer-file-name (string-match-p "Bavli" buffer-file-name))
+    (user-error "Not in Bavli file"))
+  (let* ((daf-num (read-number "Daf: " 2))
+         (daf-side (completing-read "Side: " '("א" "ב") nil t))
+         (daf-heading (format "דף %s ע\"%s" (seforim--number-to-hebrew daf-num) daf-side)))
+    (goto-char (point-min))
+    (if (re-search-forward (format "^\\*+ %s" (regexp-quote daf-heading)) nil t)
+        (progn (org-reveal) (recenter))
+      (user-error "Daf %s not found" daf-heading))))
+
+(defun seforim-browse ()
+  "Browse seforim directory."
+  (interactive)
+  (dired seforim-directory))
+
+(defun seforim-outline ()
+  "Show outline of current sefer."
+  (interactive)
+  (consult-outline))
+
+(defun seforim-reindex ()
+  "Reindex seforim with recoll."
+  (interactive)
+  (when (seforim--executable-p "recollindex")
+    (start-process "recollindex" "*seforim-index*" "recollindex"))
+  (message "Indexing started"))
+
+(defun seforim-status ()
+  "Show seforim library status."
+  (interactive)
+  (with-current-buffer (get-buffer-create "*Seforim Status*")
+    (erase-buffer)
+    (insert "Seforim Library Status\n======================\n\n")
+    (insert (format "Directory: %s\n" seforim-directory))
+    (insert (format "Extensions: %s\n\n" (string-join seforim-extensions ", ")))
+    (insert "Tools:\n")
+    (dolist (tool '("plocate" "recoll" "rga" "fd"))
+      (insert (format "  %s: %s\n" tool (if (seforim--executable-p tool) "✓" "✗"))))
+    (insert (format "\nPlocate DB: %s\n"
+                    (if (file-readable-p seforim-plocate-db) "✓" "✗")))
+    (display-buffer (current-buffer))))
+
+;; Keybindings
+(global-set-key (kbd "C-c s f") #'seforim-find)
+(global-set-key (kbd "C-c s r") #'seforim-find-recent)
+(global-set-key (kbd "C-c s s") #'seforim-search)
+(global-set-key (kbd "C-c s b") #'seforim-browse)
+(global-set-key (kbd "C-c s o") #'seforim-outline)
+(global-set-key (kbd "C-c s d") #'seforim-goto-daf)
+(global-set-key (kbd "C-c s D") #'seforim-goto-daf-current)
+(global-set-key (kbd "C-c s I") #'seforim-reindex)
+(global-set-key (kbd "C-c s ?") #'seforim-status)
+
+(provide '13-seforim)
+;;; 13-seforim.el ends here
+#+end_src

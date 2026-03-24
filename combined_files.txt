@@ -1,0 +1,1875 @@
+==> ./modules/16-utils.org <==
+#+TITLE: Utilities
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Miscellaneous Utilities
+
+#+begin_src emacs-lisp
+;;; 16-utils.el --- Utility functions -*- lexical-binding: t; -*-
+
+;; Config management
+(defun my/open-config ()
+  "Open the main config.org file."
+  (interactive)
+  (find-file (expand-file-name "config.org" user-emacs-directory)))
+
+(defun my/reload-config ()
+  "Reload the Emacs configuration."
+  (interactive)
+  (load-file (expand-file-name "init.el" user-emacs-directory))
+  (message "Config reloaded"))
+
+(global-set-key (kbd "C-c e i") #'my/open-config)
+(global-set-key (kbd "C-c e r") #'my/reload-config)
+
+(use-package restart-emacs
+  :bind ("C-c e R" . restart-emacs))
+
+;; Window splitting
+(defun my/split-and-follow-h ()
+  "Split window horizontally and move to new window."
+  (interactive)
+  (split-window-below)
+  (balance-windows)
+  (other-window 1))
+
+(defun my/split-and-follow-v ()
+  "Split window vertically and move to new window."
+  (interactive)
+  (split-window-right)
+  (balance-windows)
+  (other-window 1))
+
+(global-set-key (kbd "C-x 2") #'my/split-and-follow-h)
+(global-set-key (kbd "C-x 3") #'my/split-and-follow-v)
+
+;; Server
+(use-package server
+  :config
+  (unless (server-running-p)
+    (server-start)))
+
+;; Startup message
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (message "Emacs ready in %.2f seconds"
+                     (float-time (time-subtract after-init-time before-init-time)))))
+
+(provide '16-utils)
+;;; 16-utils.el ends here
+#+end_src
+
+==> ./modules/11-programming.org <==
+#+TITLE: Programming
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Programming Language Support
+
+#+begin_src emacs-lisp
+;;; 11-programming.el --- Programming modes and LSP -*- lexical-binding: t; -*-
+
+;; Eglot - LSP client
+(use-package eglot
+  :hook ((python-mode . eglot-ensure)
+         (rust-mode . eglot-ensure)
+         (java-mode . eglot-ensure)
+         (nix-mode . eglot-ensure))
+  :config
+  (setq eglot-autoshutdown t
+        eglot-send-changes-idle-time 0.5)
+  (with-eval-after-load 'typst-ts-mode
+    (add-to-list 'eglot-server-programs '(typst-ts-mode . ("tinymist")))
+    (add-hook 'typst-ts-mode-hook #'eglot-ensure)))
+
+;; Python
+(use-package python
+  :mode ("\\.py\\'" . python-mode)
+  :config
+  (setq python-indent-offset 4))
+
+;; Rust
+(use-package rust-mode
+  :mode "\\.rs\\'"
+  :config
+  (setq rust-format-on-save t))
+
+(use-package cargo
+  :hook (rust-mode . cargo-minor-mode))
+
+;; Java
+(use-package eglot-java
+  :hook (java-mode . eglot-java-mode))
+
+;; Nix
+(use-package nix-mode
+  :mode "\\.nix\\'"
+  :config
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-server-programs '(nix-mode . ("nil")))))
+
+;; Markdown
+(use-package markdown-mode
+  :mode (("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :hook (markdown-mode . my/setup-rtl-mode)
+  :config
+  (setq markdown-command "pandoc"))
+
+;; Snippets
+(use-package yasnippet
+  :diminish yas-minor-mode
+  :hook ((prog-mode . yas-minor-mode)
+         (text-mode . yas-minor-mode))
+  :config
+  (yas-reload-all))
+
+(use-package yasnippet-snippets
+  :after yasnippet)
+
+;; EditorConfig
+(use-package editorconfig
+  :diminish
+  :demand t
+  :config
+  (editorconfig-mode 1))
+
+;; Environment variables
+(use-package envrc
+  :diminish
+  :demand t
+  :config
+  (envrc-global-mode 1))
+
+(provide '11-programming)
+;;; 11-programming.el ends here
+#+end_src
+
+==> ./modules/15-hydras.org <==
+#+TITLE: Hydras
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Hydra Menus
+
+#+begin_src emacs-lisp
+;;; 15-hydras.el --- Hydra definitions -*- lexical-binding: t; -*-
+
+(use-package hydra
+  :demand t
+  :config
+
+  ;; Direction and spell hydra
+  (defhydra hydra-direction (:color blue :hint nil)
+    "
+Direction: _r_: RTL  _l_: LTR  _t_: toggle  _B_: bidi
+Spell:     _h_: Hebrew  _e_: English  _b_: both
+Writing:   _w_: focused  _W_: width
+"
+    ("r" my/set-rtl)
+    ("l" my/set-ltr)
+    ("t" my/toggle-direction)
+    ("B" my/toggle-bidi-reordering)
+    ("h" my/spell-hebrew)
+    ("e" my/spell-english)
+    ("b" my/spell-both)
+    ("w" my/toggle-focused-writing)
+    ("W" my/set-focused-width)
+    ("q" nil))
+
+  (global-set-key (kbd "C-c D") #'hydra-direction/body)
+
+  ;; Org-roam hydra
+  (defhydra hydra-roam (:color blue :hint nil)
+    "
+Roam: _f_: find  _i_: insert  _c_: capture  _l_: buffer
+      _d_: daily  _D_: date  _g_: graph  _u_: UI
+      _h_: hebrew  _R_: research  _t_: tag
+"
+    ("f" org-roam-node-find)
+    ("i" org-roam-node-insert)
+    ("c" org-roam-capture)
+    ("l" org-roam-buffer-toggle)
+    ("d" org-roam-dailies-goto-today)
+    ("D" org-roam-dailies-goto-date)
+    ("g" org-roam-graph)
+    ("u" org-roam-ui-mode)
+    ("h" my/org-roam-find-hebrew)
+    ("R" my/org-roam-find-research)
+    ("t" org-roam-tag-add)
+    ("q" nil))
+
+  (global-set-key (kbd "C-c N") #'hydra-roam/body)
+
+  ;; Seforim hydra
+  (defhydra hydra-seforim (:color blue :hint nil)
+    "
+Seforim: _f_: find  _r_: recent  _s_: search  _b_: browse
+         _o_: outline  _d_: daf  _D_: daf (current)
+         _I_: reindex  _?_: status
+"
+    ("f" seforim-find)
+    ("r" seforim-find-recent)
+    ("s" seforim-search)
+    ("b" seforim-browse)
+    ("o" seforim-outline)
+    ("d" seforim-goto-daf)
+    ("D" seforim-goto-daf-current)
+    ("I" seforim-reindex)
+    ("?" seforim-status)
+    ("q" nil))
+
+  (global-set-key (kbd "C-c S") #'hydra-seforim/body)
+
+  ;; Rich footnotes hydra
+  (defhydra hydra-rich-footnotes (:color blue :hint nil)
+    "
+Rich Footnotes
+Insert:   _l_: LaTeX    _t_: Typst      _c_: ConTeXt
+Preamble: _p_: LaTeX    _T_: Typst      _C_: ConTeXt
+"
+    ("l" my/insert-rich-footnote-latex)
+    ("t" my/insert-rich-footnote-typst)
+    ("c" my/insert-rich-footnote-context)
+    ("p" my/insert-latex-rich-footnotes-preamble)
+    ("T" my/insert-typst-rich-footnotes-preamble)
+    ("C" my/insert-context-rich-footnotes-preamble)
+    ("q" nil))
+
+  (global-set-key (kbd "C-c F") #'hydra-rich-footnotes/body)
+
+  ;; Document hydra
+  (defhydra hydra-document (:color blue :hint nil)
+    "
+Documents
+Preambles: _p_: LaTeX Hebrew  _t_: Typst Hebrew  _c_: ConTeXt Hebrew
+Rich FN:   _l_: LaTeX Rich    _T_: Typst Rich    _C_: ConTeXt Rich
+Create:    _n_: New document
+"
+    ("p" my/insert-latex-hebrew-preamble)
+    ("t" my/insert-typst-hebrew-preamble)
+    ("c" my/insert-context-hebrew-preamble)
+    ("l" my/insert-latex-rich-footnotes-preamble)
+    ("T" my/insert-typst-rich-footnotes-preamble)
+    ("C" my/insert-context-rich-footnotes-preamble)
+    ("n" my/create-hebrew-document)
+    ("q" nil))
+
+  (global-set-key (kbd "C-c P") #'hydra-document/body))
+
+(provide '15-hydras)
+;;; 15-hydras.el ends here
+#+end_src
+
+==> ./modules/07-org-roam.org <==
+#+TITLE: Org-Roam
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Org-Roam Configuration
+
+#+begin_src emacs-lisp
+;;; 07-org-roam.el --- Org-roam for notes -*- lexical-binding: t; -*-
+
+(use-package org-roam
+  :demand t
+  :custom
+  (org-roam-directory "~/Documents/roam/")
+  (org-roam-completion-everywhere t)
+  (org-roam-dailies-directory "daily/")
+  :bind (("C-c n f" . org-roam-node-find)
+         ("C-c n i" . org-roam-node-insert)
+         ("C-c n l" . org-roam-buffer-toggle)
+         ("C-c n c" . org-roam-capture)
+         ("C-c n g" . org-roam-graph)
+         ("C-c n t" . org-roam-tag-add)
+         ("C-c n d" . org-roam-dailies-goto-today)
+         ("C-c n D" . org-roam-dailies-goto-date))
+  :config
+  (org-roam-db-autosync-mode 1)
+
+  (setq org-roam-capture-templates
+        '(("d" "default" plain "%?"
+           :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                              "#+title: ${title}\n#+date: %U\n#+filetags: \n\n")
+           :unnarrowed t)
+          ("h" "hebrew" plain "%?"
+           :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                              "#+title: ${title}\n#+date: %U\n#+filetags: hebrew\n\n")
+           :unnarrowed t)
+          ("r" "research" plain "%?"
+           :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                              "#+title: ${title}\n#+date: %U\n#+filetags: research\n\n* Source\n\n* Notes\n\n")
+           :unnarrowed t)))
+
+  (setq org-roam-dailies-capture-templates
+        '(("d" "default" entry "* %<%H:%M> %?"
+           :target (file+head "%<%Y-%m-%d>.org"
+                              "#+title: %<%Y-%m-%d>\n#+filetags: daily\n\n")))))
+
+(use-package org-roam-ui
+  :after org-roam
+  :config
+  (setq org-roam-ui-sync-theme t
+        org-roam-ui-follow t
+        org-roam-ui-update-on-save t)
+  :bind ("C-c n u" . org-roam-ui-mode))
+
+(defun my/org-roam-find-hebrew ()
+  "Find Hebrew-tagged org-roam nodes."
+  (interactive)
+  (org-roam-node-find nil nil
+                      (lambda (node) (member "hebrew" (org-roam-node-tags node)))))
+
+(defun my/org-roam-find-research ()
+  "Find research-tagged org-roam nodes."
+  (interactive)
+  (org-roam-node-find nil nil
+                      (lambda (node) (member "research" (org-roam-node-tags node)))))
+
+(global-set-key (kbd "C-c n h") #'my/org-roam-find-hebrew)
+(global-set-key (kbd "C-c n R") #'my/org-roam-find-research)
+
+(provide '07-org-roam)
+;;; 07-org-roam.el ends here
+#+end_src
+
+==> ./modules/12-magit.org <==
+#+TITLE: Version Control
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Magit and Git Tools
+
+#+begin_src emacs-lisp
+;;; 12-magit.el --- Magit and git integration -*- lexical-binding: t; -*-
+
+(use-package magit
+  :bind (("C-x g" . magit-status)
+         ("C-x M-g" . magit-dispatch)
+         ("C-c v g" . magit-file-dispatch)))
+
+(use-package git-gutter
+  :diminish
+  :hook (prog-mode . git-gutter-mode)
+  :config
+  (setq git-gutter:update-interval 0.5))
+
+(use-package git-timemachine
+  :bind ("C-c v t" . git-timemachine))
+
+(provide '12-magit)
+;;; 12-magit.el ends here
+#+end_src
+
+==> ./modules/13-seforim.org <==
+#+TITLE: Seforim Library
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Seforim Library System
+
+#+begin_src emacs-lisp
+;;; 13-seforim.el --- Jewish texts library management -*- lexical-binding: t; -*-
+
+(defgroup seforim nil "Seforim library." :group 'applications)
+
+(defcustom seforim-directory "~/Documents/seforim/"
+  "Seforim directory."
+  :type 'directory
+  :group 'seforim)
+
+(defcustom seforim-extensions '("org" "pdf" "epub" "docx" "doc" "odt")
+  "File extensions to search."
+  :type '(repeat string)
+  :group 'seforim)
+
+(defcustom seforim-plocate-db "/var/cache/locatedb"
+  "Plocate database path."
+  :type 'file
+  :group 'seforim)
+
+(defvar seforim-masechtot
+  '("Berakhot" "Shabbat" "Eruvin" "Pesachim" "Shekalim" "Yoma" "Sukkah" "Beitzah"
+    "Rosh Hashanah" "Taanit" "Megillah" "Moed Katan" "Chagigah" "Yevamot" "Ketubot"
+    "Nedarim" "Nazir" "Sotah" "Gittin" "Kiddushin" "Bava Kamma" "Bava Metzia"
+    "Bava Batra" "Sanhedrin" "Makkot" "Shevuot" "Avodah Zarah" "Horayot" "Zevachim"
+    "Menachot" "Chullin" "Bekhorot" "Arakhin" "Temurah" "Keritot" "Meilah" "Kinnim"
+    "Tamid" "Middot" "Niddah"))
+
+(defun seforim--executable-p (name)
+  "Check if executable NAME exists."
+  (executable-find name))
+
+(defun seforim--plocate-available-p ()
+  "Check if plocate is available."
+  (and (seforim--executable-p "plocate")
+       (file-readable-p seforim-plocate-db)))
+
+(defun seforim--run-plocate (query)
+  "Run plocate with QUERY."
+  (let ((buf (generate-new-buffer " *plocate*")))
+    (unwind-protect
+        (progn
+          (call-process "plocate" nil buf nil "--database" seforim-plocate-db "-i" query)
+          (with-current-buffer buf (split-string (buffer-string) "\n" t)))
+      (kill-buffer buf))))
+
+(defun seforim--filter-files (files)
+  "Filter FILES to only those in seforim directory with correct extensions."
+  (let ((root (expand-file-name seforim-directory)))
+    (seq-filter
+     (lambda (f)
+       (and (string-prefix-p root f)
+            (member (downcase (or (file-name-extension f) "")) seforim-extensions)
+            (file-exists-p f)))
+     files)))
+
+(defun seforim--make-candidates (files)
+  "Make completion candidates from FILES."
+  (let ((root (expand-file-name seforim-directory)))
+    (mapcar (lambda (f) (cons (file-relative-name f root) f)) files)))
+
+(defun seforim-find ()
+  "Find seforim files by name."
+  (interactive)
+  (let* ((query (read-string "Find sefer: "))
+         (files (if (seforim--plocate-available-p)
+                    (seforim--run-plocate query)
+                  (split-string
+                   (shell-command-to-string
+                    (format "fd -i -t f %s %s"
+                            (shell-quote-argument query)
+                            (shell-quote-argument (expand-file-name seforim-directory))))
+                   "\n" t)))
+         (filtered (seforim--filter-files files))
+         (candidates (seforim--make-candidates filtered)))
+    (if candidates
+        (let* ((choice (completing-read "Select: " candidates nil t))
+               (file (cdr (assoc choice candidates))))
+          (when file (find-file file)))
+      (user-error "No matches: %s" query))))
+
+(defun seforim-find-recent ()
+  "Find recently accessed seforim."
+  (interactive)
+  (let* ((root (expand-file-name seforim-directory))
+         (files (seq-filter (lambda (f) (string-prefix-p root f)) recentf-list))
+         (candidates (seforim--make-candidates files)))
+    (if candidates
+        (let* ((choice (completing-read "Recent: " candidates nil t))
+               (file (cdr (assoc choice candidates))))
+          (when file (find-file file)))
+      (user-error "No recent seforim"))))
+
+(defun seforim-search ()
+  "Search content of seforim."
+  (interactive)
+  (let* ((query (read-string "Search: "))
+         (root (expand-file-name seforim-directory)))
+    (if (seforim--executable-p "recoll")
+        (seforim--search-recoll query root)
+      (consult-ripgrep root query))))
+
+(defun seforim--search-recoll (query dir)
+  "Search with recoll."
+  (let* ((cmd (format "recoll -t -q %s dir:%s 2>/dev/null"
+                      (shell-quote-argument query)
+                      (shell-quote-argument dir)))
+         (output (shell-command-to-string cmd))
+         (candidates (seforim--parse-recoll output dir)))
+    (if candidates
+        (let* ((choice (completing-read (format "「%s」: " query) candidates nil t))
+               (file (cdr (assoc choice candidates))))
+          (when file
+            (find-file file)
+            (goto-char (point-min))
+            (search-forward query nil t)))
+      (user-error "No results: %s" query))))
+
+(defun seforim--parse-recoll (output dir)
+  "Parse recoll output."
+  (let ((results nil) (seen (make-hash-table :test 'equal)))
+    (dolist (line (split-string output "\n" t))
+      (when (string-match "\\(/[^[:cntrl:]]+\\)" line)
+        (let* ((file (match-string 1 line))
+               (ext (downcase (or (file-name-extension file) ""))))
+          (when (and (member ext seforim-extensions)
+                     (file-exists-p file)
+                     (string-prefix-p dir (expand-file-name file))
+                     (not (gethash file seen)))
+            (puthash file t seen)
+            (push (cons (file-relative-name file dir) file) results)))))
+    (nreverse results)))
+
+(defun seforim--number-to-hebrew (num)
+  "Convert NUM to Hebrew letters."
+  (let ((ones '("" "א" "ב" "ג" "ד" "ה" "ו" "ז" "ח" "ט"))
+        (tens '("" "י" "כ" "ל" "מ" "נ" "ס" "ע" "פ" "צ"))
+        (hundreds '("" "ק" "ר" "ש" "ת"))
+        (h (/ num 100)) (t-val (/ (mod num 100) 10)) (o (mod num 10)))
+    (cond
+     ((= (mod num 100) 15) (concat (nth h hundreds) "טו"))
+     ((= (mod num 100) 16) (concat (nth h hundreds) "טז"))
+     (t (concat (nth h hundreds) (nth t-val tens) (nth o ones))))))
+
+(defun seforim-goto-daf ()
+  "Go to specific daf in a masechet."
+  (interactive)
+  (let* ((masechet (completing-read "Masechet: " seforim-masechtot nil t))
+         (daf-num (read-number "Daf: " 2))
+         (daf-side (completing-read "Side: " '("א" "ב") nil t))
+         (daf-heading (format "דף %s ע\"%s" (seforim--number-to-hebrew daf-num) daf-side))
+         (file (expand-file-name (concat "Bavli/" masechet ".org") seforim-directory)))
+    (if (file-exists-p file)
+        (progn
+          (find-file file)
+          (goto-char (point-min))
+          (if (re-search-forward (format "^\\*+ %s" (regexp-quote daf-heading)) nil t)
+              (progn (org-reveal) (recenter))
+            (user-error "Daf %s not found" daf-heading)))
+      (user-error "File not found: %s" file))))
+
+(defun seforim-goto-daf-current ()
+  "Go to daf in current file."
+  (interactive)
+  (unless (and buffer-file-name (string-match-p "Bavli" buffer-file-name))
+    (user-error "Not in Bavli file"))
+  (let* ((daf-num (read-number "Daf: " 2))
+         (daf-side (completing-read "Side: " '("א" "ב") nil t))
+         (daf-heading (format "דף %s ע\"%s" (seforim--number-to-hebrew daf-num) daf-side)))
+    (goto-char (point-min))
+    (if (re-search-forward (format "^\\*+ %s" (regexp-quote daf-heading)) nil t)
+        (progn (org-reveal) (recenter))
+      (user-error "Daf %s not found" daf-heading))))
+
+(defun seforim-browse ()
+  "Browse seforim directory."
+  (interactive)
+  (dired seforim-directory))
+
+(defun seforim-outline ()
+  "Show outline of current sefer."
+  (interactive)
+  (consult-outline))
+
+(defun seforim-reindex ()
+  "Reindex seforim with recoll."
+  (interactive)
+  (when (seforim--executable-p "recollindex")
+    (start-process "recollindex" "*seforim-index*" "recollindex"))
+  (message "Indexing started"))
+
+(defun seforim-status ()
+  "Show seforim library status."
+  (interactive)
+  (with-current-buffer (get-buffer-create "*Seforim Status*")
+    (erase-buffer)
+    (insert "Seforim Library Status\n======================\n\n")
+    (insert (format "Directory: %s\n" seforim-directory))
+    (insert (format "Extensions: %s\n\n" (string-join seforim-extensions ", ")))
+    (insert "Tools:\n")
+    (dolist (tool '("plocate" "recoll" "rga" "fd"))
+      (insert (format "  %s: %s\n" tool (if (seforim--executable-p tool) "✓" "✗"))))
+    (insert (format "\nPlocate DB: %s\n"
+                    (if (file-readable-p seforim-plocate-db) "✓" "✗")))
+    (display-buffer (current-buffer))))
+
+;; Keybindings
+(global-set-key (kbd "C-c s f") #'seforim-find)
+(global-set-key (kbd "C-c s r") #'seforim-find-recent)
+(global-set-key (kbd "C-c s s") #'seforim-search)
+(global-set-key (kbd "C-c s b") #'seforim-browse)
+(global-set-key (kbd "C-c s o") #'seforim-outline)
+(global-set-key (kbd "C-c s d") #'seforim-goto-daf)
+(global-set-key (kbd "C-c s D") #'seforim-goto-daf-current)
+(global-set-key (kbd "C-c s I") #'seforim-reindex)
+(global-set-key (kbd "C-c s ?") #'seforim-status)
+
+(provide '13-seforim)
+;;; 13-seforim.el ends here
+#+end_src
+
+==> ./modules/06-org.org <==
+#+TITLE: Org Mode
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Org Mode Configuration
+
+#+begin_src emacs-lisp
+;;; 06-org.el --- Org mode settings -*- lexical-binding: t; -*-
+
+(use-package org
+  :hook ((org-mode . visual-line-mode)
+         (org-mode . my/setup-rtl-mode))
+  :config
+  (setq org-startup-indented t
+        org-hide-leading-stars t
+        org-ellipsis " ▾"
+        org-pretty-entities t
+        org-src-fontify-natively t
+        org-src-tab-acts-natively t
+        org-confirm-babel-evaluate nil
+        org-edit-src-content-indentation 0
+        org-n-level-faces 20
+        org-cycle-level-faces t
+        org-list-indent-offset 2
+        org-list-allow-alphabetical t
+        org-list-demote-modify-bullet '(("+" . "-") ("-" . "+") ("*" . "-"))
+        org-return-follows-link t
+        org-log-done 'time
+        org-todo-keywords
+        '((sequence "TODO(t)" "IN-PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)"))
+        org-directory "~/Documents/org/"
+        org-agenda-files '("~/Documents/org/")
+        org-tag-alist
+        '(("research" . ?r) ("hebrew" . ?h) ("english" . ?e)
+          ("urgent" . ?u) ("writing" . ?w) ("reading" . ?R))))
+
+;; Babel languages
+(with-eval-after-load 'org
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (shell . t)
+     (python . t)
+     (latex . t))))
+
+(use-package org-modern
+  :hook (org-mode . org-modern-mode)
+  :config
+  (setq org-modern-star '("◉" "○" "◈" "◇" "✦" "✧" "✶" "✷")))
+
+;; Capture templates
+(with-eval-after-load 'org
+  (setq org-capture-templates
+        '(("t" "Todo" entry (file+headline "~/Documents/org/inbox.org" "Tasks")
+           "* TODO %?\n  %i\n  %a")
+          ("n" "Note" entry (file+headline "~/Documents/org/inbox.org" "Notes")
+           "* %?\n  %i\n  %a")
+          ("h" "Hebrew Note" entry (file+headline "~/Documents/org/inbox.org" "Notes")
+           "* %?\n  :PROPERTIES:\n  :LANG: hebrew\n  :END:\n  %i")
+          ("j" "Journal" entry (file+datetree "~/Documents/org/journal.org")
+           "* %?\n  Entered on %U\n  %i")
+          ("r" "Research" entry (file+headline "~/Documents/org/research.org" "Inbox")
+           "* %?\n  :PROPERTIES:\n  :SOURCE: \n  :END:\n  %i\n  %a"))))
+
+(global-set-key (kbd "C-c a") #'org-agenda)
+(global-set-key (kbd "C-c c") #'org-capture)
+
+(use-package org-download
+  :after org
+  :hook (org-mode . org-download-enable)
+  :config
+  (setq org-download-method 'directory
+        org-download-image-dir "./images"
+        org-download-heading-lvl nil))
+
+;; RTL footnote fix
+(with-eval-after-load 'org
+  (advice-add 'org-footnote-new :after
+              (lambda (&rest _)
+                (when (eq bidi-paragraph-direction 'right-to-left)
+                  (insert ?\x200F)))))
+
+(defun my/org-fix-all-footnotes-rtl ()
+  "Fix all footnotes for RTL."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (let ((count 0))
+      (while (re-search-forward "^\\(\\[fn:[^]]+\\]\\)" nil t)
+        (unless (looking-at (char-to-string ?\x200F))
+          (insert ?\x200F)
+          (cl-incf count)))
+      (message "Fixed %d footnotes" count))))
+
+(global-set-key (kbd "C-c h f") #'my/org-fix-all-footnotes-rtl)
+
+;; LaTeX export for Hebrew
+(with-eval-after-load 'ox-latex
+  (setq org-latex-compiler "lualatex")
+  (setq org-latex-pdf-process
+        '("latexmk -pdflatex='lualatex -shell-escape -interaction nonstopmode' -pdf -bibtex -f %f"))
+  (setq org-latex-packages-alist
+        '(("" "fontspec" t)
+          ("bidi=basic" "babel" t)
+          ("" "bigfoot" t)
+          ("" "titlesec" t)
+          ("" "enumitem" t)))
+  (add-to-list 'org-latex-classes
+               '("article-hebrew"
+                 "\\documentclass[11pt]{article}
+[NO-DEFAULT-PACKAGES]
+[PACKAGES]
+\\babelprovide[main, import]{hebrew}
+\\babelprovide[import]{english}
+\\babelfont{rm}{David CLM}
+\\babelfont{sf}{Nachlieli CLM}
+\\babelfont{tt}{Miriam Mono CLM}
+\\DeclareNewFootnote{default}
+\\DeclareNewFootnote{B}
+\\DeclareNewFootnote{C}
+\\DeclareNewFootnote{D}
+\\DeclareNewFootnote{E}
+\\setcounter{secnumdepth}{10}
+\\setcounter{tocdepth}{10}
+\\setlistdepth{20}
+\\renewlist{itemize}{itemize}{20}
+\\renewlist{enumerate}{enumerate}{20}
+[EXTRA]"
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+  (setq org-latex-default-class "article-hebrew"))
+
+;; Auto-tangle config
+(defun my/tangle-config ()
+  "Tangle config.org when saved."
+  (when (string-equal (buffer-file-name)
+                      (expand-file-name "config.org" user-emacs-directory))
+    (let ((org-confirm-babel-evaluate nil))
+      (org-babel-tangle))))
+
+(add-hook 'org-mode-hook
+          (lambda ()
+            (add-hook 'after-save-hook #'my/tangle-config nil t)))
+
+(provide '06-org)
+;;; 06-org.el ends here
+#+end_src
+
+==> ./modules/04-editing.org <==
+#+TITLE: Editing Enhancements
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Editing Tools
+
+#+begin_src emacs-lisp
+;;; 04-editing.el --- Advanced editing features -*- lexical-binding: t; -*-
+
+;; Undo tree
+(use-package undo-tree
+  :diminish
+  :demand t
+  :config
+  (setq undo-tree-auto-save-history t
+        undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo-tree-history/"))
+        undo-limit (* 80 1024 1024)
+        undo-strong-limit (* 120 1024 1024)
+        undo-outer-limit (* 300 1024 1024))
+  (global-undo-tree-mode 1)
+  :bind (("C-x u" . undo-tree-visualize)
+         ("C-/" . undo-tree-undo)
+         ("C-?" . undo-tree-redo)))
+
+(use-package goto-last-change
+  :bind ("C-c ;" . goto-last-change))
+
+(use-package beginend
+  :diminish beginend-global-mode
+  :demand t
+  :config
+  (beginend-global-mode 1))
+
+(use-package anzu
+  :diminish
+  :demand t
+  :config
+  (global-anzu-mode 1)
+  :bind (([remap query-replace] . anzu-query-replace)
+         ([remap query-replace-regexp] . anzu-query-replace-regexp)
+         ("M-s %" . anzu-query-replace-at-cursor)))
+
+(use-package multiple-cursors
+  :bind (("C->" . mc/mark-next-like-this)
+         ("C-<" . mc/mark-previous-like-this)
+         ("C-c C-<" . mc/mark-all-like-this)
+         ("C-S-c C-S-c" . mc/edit-lines)))
+
+(use-package expand-region
+  :bind ("C-=" . er/expand-region))
+
+(use-package move-text
+  :bind (("M-<up>" . move-text-up)
+         ("M-<down>" . move-text-down)))
+
+(global-set-key (kbd "C-c C-d") #'duplicate-dwim)
+
+(use-package crux
+  :bind (("C-a" . crux-move-beginning-of-line)
+         ("C-k" . crux-smart-kill-line)
+         ("C-S-<return>" . crux-smart-open-line-above)
+         ("S-<return>" . crux-smart-open-line)))
+
+(use-package visual-regexp
+  :bind (("C-c q" . vr/query-replace)
+         ("C-c M" . vr/mc-mark)))
+
+(use-package wgrep
+  :config
+  (setq wgrep-auto-save-buffer t))
+
+(add-hook 'prog-mode-hook #'electric-pair-local-mode)
+
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
+
+;; Focused writing
+(use-package visual-fill-column
+  :config
+  (setq-default visual-fill-column-width 80
+                visual-fill-column-center-text t))
+
+(defvar-local my/focused-writing nil)
+
+(defun my/toggle-focused-writing ()
+  "Toggle focused writing mode."
+  (interactive)
+  (if my/focused-writing
+      (progn
+        (visual-fill-column-mode -1)
+        (visual-line-mode -1)
+        (setq my/focused-writing nil)
+        (message "Focused: OFF"))
+    (visual-line-mode 1)
+    (visual-fill-column-mode 1)
+    (setq my/focused-writing t)
+    (message "Focused: ON")))
+
+(defun my/set-focused-width (width)
+  "Set focused writing width."
+  (interactive "nWidth: ")
+  (setq visual-fill-column-width width)
+  (when visual-fill-column-mode
+    (visual-fill-column-adjust)))
+
+(global-set-key (kbd "C-c w") #'my/toggle-focused-writing)
+(global-set-key (kbd "C-c W") #'my/set-focused-width)
+
+(provide '04-editing)
+;;; 04-editing.el ends here
+#+end_src
+
+==> ./modules/test.org <==
+#+TITLE: Test Module
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Test
+
+#+begin_src emacs-lisp
+;;; 00-test.el --- Test module -*- lexical-binding: t; -*-
+
+(message "✓ TEST MODULE LOADED SUCCESSFULLY!")
+
+(provide '00-test)
+;;; 00-test.el ends here
+#+end_src
+
+==> ./modules/00-core.el <==
+;;; 00-core.el --- Core settings and package configuration -*- lexical-binding: t; -*-
+
+;; Package archives (fallback only - packages come from Nix)
+(require 'package)
+(setq package-archives
+      '(("melpa" . "https://melpa.org/packages/")
+        ("gnu" . "https://elpa.gnu.org/packages/")
+        ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
+
+;; Use-package - packages come from Nix, so :ensure nil
+(require 'use-package)
+(setq use-package-always-ensure nil
+      use-package-always-defer t
+      use-package-expand-minimally t)
+
+;; Diminish for cleaner mode-line
+(use-package diminish
+  :demand t)
+
+;; Garbage Collection Magic Hack
+(use-package gcmh
+  :demand t
+  :config
+  (setq gcmh-idle-delay 5
+        gcmh-high-cons-threshold (* 64 1024 1024)
+        gcmh-low-cons-threshold (* 16 1024 1024))
+  (gcmh-mode 1))
+
+;; Process performance
+(setq read-process-output-max (* 1024 1024)
+      process-adaptive-read-buffering nil
+      auto-window-vscroll nil
+      fast-but-imprecise-scrolling t
+      jit-lock-defer-time 0)
+
+;; Bidi performance (critical for Hebrew)
+(setq-default bidi-paragraph-direction 'left-to-right)
+(setq bidi-inhibit-bpa t)
+
+;; So-long mode for large files
+(global-so-long-mode 1)
+
+(provide '00-core)
+;;; 00-core.el ends here
+
+==> ./modules/08-latex.org <==
+#+TITLE: LaTeX/AUCTeX
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* LaTeX Configuration
+
+#+begin_src emacs-lisp
+;;; 08-latex.el --- LaTeX and AUCTeX settings -*- lexical-binding: t; -*-
+
+(use-package tex
+  :ensure auctex
+  :mode ("\\.tex\\'" . LaTeX-mode)
+  :hook ((LaTeX-mode . my/setup-rtl-mode)
+         (LaTeX-mode . TeX-source-correlate-mode)
+         (LaTeX-mode . turn-on-reftex)
+         (LaTeX-mode . LaTeX-math-mode)
+         (LaTeX-mode . visual-line-mode)
+         (LaTeX-mode . electric-pair-local-mode))
+  :config
+  (setq TeX-auto-save t
+        TeX-parse-self t
+        TeX-master nil
+        TeX-engine 'luatex
+        TeX-PDF-mode t
+        TeX-view-program-selection '((output-pdf "PDF Tools"))
+        TeX-source-correlate-start-server t
+        reftex-plug-into-AUCTeX t)
+  (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer))
+
+(defun my/latex-word-count ()
+  "Count words in LaTeX buffer."
+  (interactive)
+  (if (executable-find "detex")
+      (let* ((file (buffer-file-name))
+             (result (if file
+                         (shell-command-to-string
+                          (format "detex %s 2>/dev/null | wc -w"
+                                  (shell-quote-argument file)))
+                       (let ((temp-file (make-temp-file "latex-wc" nil ".tex")))
+                         (write-region (point-min) (point-max) temp-file)
+                         (prog1
+                             (shell-command-to-string
+                              (format "detex %s 2>/dev/null | wc -w"
+                                      (shell-quote-argument temp-file)))
+                           (delete-file temp-file))))))
+        (message "Words: %s" (string-trim result)))
+    (message "detex not found")))
+
+(with-eval-after-load 'latex
+  (define-key LaTeX-mode-map (kbd "C-c C-w") #'my/latex-word-count))
+
+;; Footnote shortcuts
+(defun my/insert-footnote-1 () (interactive) (insert "\\footnote{}") (backward-char 1))
+(defun my/insert-footnote-2 () (interactive) (insert "\\footnoteB{}") (backward-char 1))
+(defun my/insert-footnote-3 () (interactive) (insert "\\footnoteC{}") (backward-char 1))
+(defun my/insert-footnote-4 () (interactive) (insert "\\footnoteD{}") (backward-char 1))
+(defun my/insert-footnote-5 () (interactive) (insert "\\footnoteE{}") (backward-char 1))
+
+(with-eval-after-load 'latex
+  (define-key LaTeX-mode-map (kbd "C-c f 1") #'my/insert-footnote-1)
+  (define-key LaTeX-mode-map (kbd "C-c f 2") #'my/insert-footnote-2)
+  (define-key LaTeX-mode-map (kbd "C-c f 3") #'my/insert-footnote-3)
+  (define-key LaTeX-mode-map (kbd "C-c f 4") #'my/insert-footnote-4)
+  (define-key LaTeX-mode-map (kbd "C-c f 5") #'my/insert-footnote-5))
+
+;; Preamble templates
+(defvar my/doc-latex-hebrew-preamble
+  "\\babelprovide[main, import]{hebrew}
+\\babelprovide[import]{english}
+\\babelfont{rm}{David CLM}
+\\babelfont{sf}{Nachlieli CLM}
+\\babelfont{tt}{Miriam Mono CLM}")
+
+(defun my/insert-latex-hebrew-preamble ()
+  (interactive)
+  (insert my/doc-latex-hebrew-preamble))
+
+(provide '08-latex)
+;;; 08-latex.el ends here
+#+end_src
+
+==> ./modules/05-navigation.org <==
+#+TITLE: Navigation
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Navigation Tools
+
+#+begin_src emacs-lisp
+;;; 05-navigation.el --- Avy, Ace-window, Winner, Tab-bar -*- lexical-binding: t; -*-
+
+(use-package avy
+  :bind (("M-j" . avy-goto-char-timer)
+         ("M-g j" . avy-goto-line)
+         ("M-g w" . avy-goto-word-1))
+  :config
+  (setq avy-timeout-seconds 0.3
+        avy-background t))
+
+(use-package ace-window
+  :bind ("M-o" . ace-window)
+  :config
+  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)
+        aw-scope 'frame))
+
+(use-package winner
+  :demand t
+  :config
+  (winner-mode 1)
+  :bind (("C-c <left>" . winner-undo)
+         ("C-c <right>" . winner-redo)))
+
+(use-package tab-bar
+  :config
+  (setq tab-bar-show 1
+        tab-bar-close-button-show nil
+        tab-bar-new-tab-choice "*scratch*"
+        tab-bar-tab-hints t
+        tab-bar-format '(tab-bar-format-tabs tab-bar-separator))
+  (tab-bar-mode 1)
+  :bind (("C-<tab>" . tab-bar-switch-to-next-tab)
+         ("C-S-<tab>" . tab-bar-switch-to-prev-tab)
+         ("C-x t n" . tab-bar-new-tab)
+         ("C-x t k" . tab-bar-close-tab)
+         ("C-x t r" . tab-bar-rename-tab)))
+
+;; Buffer management
+(defun my/kill-current-buffer ()
+  "Kill current buffer."
+  (interactive)
+  (kill-buffer (current-buffer)))
+
+(defun my/kill-other-buffers ()
+  "Kill all other buffers."
+  (interactive)
+  (let ((kept 0) (killed 0))
+    (dolist (buf (buffer-list))
+      (let ((name (buffer-name buf)))
+        (cond
+         ((eq buf (current-buffer)) (cl-incf kept))
+         ((string-prefix-p " " name) (cl-incf kept))
+         ((string-prefix-p "*" name) (cl-incf kept))
+         (t (kill-buffer buf) (cl-incf killed)))))
+    (message "Killed %d, kept %d" killed kept)))
+
+(defun my/revert-buffer-no-confirm ()
+  "Revert buffer without confirmation."
+  (interactive)
+  (revert-buffer t t)
+  (message "Reverted"))
+
+(global-set-key (kbd "C-x K") #'my/kill-current-buffer)
+(global-set-key (kbd "C-c k") #'my/kill-other-buffers)
+(global-set-key (kbd "C-c R") #'my/revert-buffer-no-confirm)
+
+(use-package ibuffer
+  :bind ("C-x C-b" . ibuffer)
+  :config
+  (setq ibuffer-saved-filter-groups
+        '(("default"
+           ("Org" (mode . org-mode))
+           ("LaTeX" (or (mode . latex-mode) (mode . LaTeX-mode)))
+           ("Typst" (mode . typst-ts-mode))
+           ("Seforim" (filename . "seforim"))
+           ("Roam" (filename . "roam"))
+           ("Dired" (mode . dired-mode))
+           ("PDF" (mode . pdf-view-mode))
+           ("Magit" (name . "^magit"))
+           ("Help" (or (mode . help-mode) (mode . helpful-mode)))
+           ("Emacs" (or (name . "^\\*scratch\\*$") (name . "^\\*Messages\\*$"))))))
+  (add-hook 'ibuffer-mode-hook
+            (lambda () (ibuffer-switch-to-saved-filter-groups "default"))))
+
+(provide '05-navigation)
+;;; 05-navigation.el ends here
+#+end_src
+
+==> ./modules/01-ui.org <==
+#+TITLE: User Interface
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* User Interface Settings
+
+#+begin_src emacs-lisp
+;;; 01-ui.el --- User interface settings -*- lexical-binding: t; -*-
+
+;; Startup
+(setq inhibit-startup-message t
+      initial-scratch-message nil
+      ring-bell-function 'ignore)
+
+;; Remove UI bars
+(scroll-bar-mode -1)
+(tool-bar-mode -1)
+(tooltip-mode -1)
+(menu-bar-mode -1)
+(set-fringe-mode 10)
+
+;; Line numbers
+(setq display-line-numbers-type 'relative
+      display-line-numbers-width 3)
+
+(add-hook 'prog-mode-hook #'display-line-numbers-mode)
+(add-hook 'text-mode-hook #'display-line-numbers-mode)
+(add-hook 'conf-mode-hook #'display-line-numbers-mode)
+
+(dolist (mode '(org-mode-hook term-mode-hook shell-mode-hook
+                eshell-mode-hook vterm-mode-hook pdf-view-mode-hook))
+  (add-hook mode (lambda () (display-line-numbers-mode 0))))
+
+;; Visual aids
+(global-hl-line-mode 1)
+(show-paren-mode 1)
+(setq show-paren-delay 0)
+(column-number-mode 1)
+(fset 'yes-or-no-p 'y-or-n-p)
+(save-place-mode 1)
+(global-auto-revert-mode 1)
+(setq global-auto-revert-non-file-buffers t)
+
+;; Scrolling
+(setq scroll-conservatively 101
+      scroll-margin 3
+      scroll-preserve-screen-position t)
+
+;; Frame
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
+;; Files and backups
+(setq make-backup-files nil
+      auto-save-default nil
+      create-lockfiles nil)
+
+;; Encoding
+(set-default-coding-systems 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
+
+;; Recent files
+(use-package recentf
+  :config
+  (setq recentf-max-saved-items 200
+        recentf-max-menu-items 15
+        recentf-auto-cleanup 'never)
+  (add-to-list 'recentf-exclude "\\.?cache")
+  (add-to-list 'recentf-exclude ".*\\.elc$")
+  (add-to-list 'recentf-exclude "/nix/store/")
+  (recentf-mode 1))
+
+;; Save history
+(use-package savehist
+  :config
+  (setq history-length 1000
+        savehist-additional-variables
+        '(search-ring regexp-search-ring kill-ring compile-command))
+  (savehist-mode 1))
+
+;; Dired extras
+(with-eval-after-load 'dired
+  (require 'dired-x))
+
+;; Theme
+(use-package doom-themes
+  :demand t
+  :config
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italic t)
+  (load-theme 'doom-one t)
+  (doom-themes-visual-bell-config)
+  (doom-themes-org-config))
+
+(use-package nerd-icons :demand t)
+
+;; Mode line
+(use-package doom-modeline
+  :demand t
+  :after nerd-icons
+  :config
+  (setq doom-modeline-height 28
+        doom-modeline-buffer-encoding t
+        doom-modeline-input-method t
+        doom-modeline-minor-modes nil
+        doom-modeline-buffer-file-name-style 'truncate-upto-project)
+  (doom-modeline-mode 1))
+
+;; Icons
+(use-package all-the-icons
+  :if (display-graphic-p))
+
+(use-package all-the-icons-dired
+  :after all-the-icons
+  :hook (dired-mode . all-the-icons-dired-mode)
+  :config
+  (setq all-the-icons-dired-monochrome nil))
+
+;; Pulse line
+(use-package pulsar
+  :demand t
+  :config
+  (setq pulsar-pulse t
+        pulsar-delay 0.04
+        pulsar-iterations 8
+        pulsar-face 'pulsar-magenta)
+  (pulsar-global-mode 1)
+  (add-hook 'next-error-hook #'pulsar-pulse-line))
+
+;; Fonts
+(when (display-graphic-p)
+  (set-face-attribute 'default nil
+                      :family "JetBrains Mono"
+                      :height 105
+                      :weight 'regular)
+
+  (set-fontset-font t 'hebrew (font-spec :family "David CLM"))
+  (set-fontset-font t 'hebrew (font-spec :family "Noto Sans Hebrew") nil 'append)
+  (set-fontset-font t 'unicode (font-spec :family "DejaVu Sans") nil 'append)
+
+  (set-face-attribute 'mode-line nil :height 95)
+  (set-face-attribute 'mode-line-inactive nil :height 95))
+
+(provide '01-ui)
+;;; 01-ui.el ends here
+#+end_src
+
+==> ./modules/10-pdf.org <==
+#+TITLE: PDF Tools
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* PDF Viewing
+
+#+begin_src emacs-lisp
+;;; 10-pdf.el --- PDF Tools configuration -*- lexical-binding: t; -*-
+
+(use-package pdf-tools
+  :mode ("\\.pdf\\'" . pdf-view-mode)
+  :magic ("%PDF" . pdf-view-mode)
+  :config
+  (pdf-tools-install :no-query)
+  (setq pdf-view-display-size 'fit-page
+        pdf-view-resize-factor 1.1
+        pdf-view-use-scaling t)
+  (add-hook 'pdf-view-mode-hook #'auto-revert-mode)
+  (add-hook 'pdf-view-mode-hook
+            (lambda ()
+              (pdf-view-midnight-minor-mode 1)
+              (display-line-numbers-mode 0))))
+
+(provide '10-pdf)
+;;; 10-pdf.el ends here
+#+end_src
+
+==> ./modules/03-completion.org <==
+#+TITLE: Completion Framework
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Completion and Search
+
+#+begin_src emacs-lisp
+;;; 03-completion.el --- Vertico, Consult, Corfu, Embark -*- lexical-binding: t; -*-
+
+;; Vertico - vertical completion
+(use-package vertico
+  :demand t
+  :config
+  (setq vertico-count 15
+        vertico-resize nil)
+  (vertico-mode 1))
+
+;; Orderless - flexible completion style
+(use-package orderless
+  :demand t
+  :config
+  (setq completion-styles '(orderless basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion)))))
+
+;; Marginalia - rich annotations
+(use-package marginalia
+  :demand t
+  :config
+  (marginalia-mode 1))
+
+;; Consult - enhanced commands
+(use-package consult
+  :bind (("C-s" . consult-line)
+         ("C-x b" . consult-buffer)
+         ("C-x 4 b" . consult-buffer-other-window)
+         ("M-g g" . consult-goto-line)
+         ("M-g M-g" . consult-goto-line)
+         ("M-g o" . consult-outline)
+         ("M-s r" . consult-ripgrep)
+         ("M-s f" . consult-fd)
+         ("M-y" . consult-yank-pop)
+         ("C-x r b" . consult-bookmark))
+  :config
+  (setq consult-narrow-key "<"
+        consult-preview-key '(:debounce 0.2 any)))
+
+;; Corfu - completion overlay
+(use-package corfu
+  :demand t
+  :custom
+  (corfu-cycle t)
+  (corfu-auto t)
+  (corfu-auto-delay 0.2)
+  (corfu-auto-prefix 2)
+  (corfu-popupinfo-delay '(0.5 . 0.2))
+  :config
+  (global-corfu-mode 1)
+  (corfu-popupinfo-mode 1))
+
+;; Embark - action menu
+(use-package embark
+  :bind (("C-." . embark-act)
+         ("C-;" . embark-dwim)
+         ("C-h B" . embark-bindings))
+  :config
+  (setq prefix-help-command #'embark-prefix-help-command))
+
+(use-package embark-consult
+  :after (embark consult)
+  :hook (embark-collect-mode . consult-preview-at-point-mode))
+
+;; Which-key - keybinding help
+(use-package which-key
+  :diminish
+  :demand t
+  :config
+  (setq which-key-idle-delay 0.5
+        which-key-prefix-prefix "◉ ")
+  (which-key-mode 1))
+
+;; Helpful - better help
+(use-package helpful
+  :bind (([remap describe-function] . helpful-callable)
+         ([remap describe-command] . helpful-command)
+         ([remap describe-variable] . helpful-variable)
+         ([remap describe-key] . helpful-key)))
+
+;; Jinx - spell checking
+(use-package jinx
+  :hook ((text-mode . jinx-mode)
+         (org-mode . jinx-mode))
+  :bind ("M-$" . jinx-correct)
+  :config
+  (setq jinx-languages "en_US he_IL"))
+
+(defun my/spell-hebrew ()
+  "Set spell check to Hebrew."
+  (interactive)
+  (setq-local jinx-languages "he_IL")
+  (jinx-mode 1)
+  (message "Spell: Hebrew"))
+
+(defun my/spell-english ()
+  "Set spell check to English."
+  (interactive)
+  (setq-local jinx-languages "en_US")
+  (jinx-mode 1)
+  (message "Spell: English"))
+
+(defun my/spell-both ()
+  "Set spell check to both Hebrew and English."
+  (interactive)
+  (setq-local jinx-languages "en_US he_IL")
+  (jinx-mode 1)
+  (message "Spell: Both"))
+
+(provide '03-completion)
+;;; 03-completion.el ends here
+#+end_src
+
+==> ./modules/08-typst.org <==
+#+TITLE: Typst Support
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Typst Configuration
+
+#+begin_src emacs-lisp
+;;; 09-typst.el --- Typst mode configuration -*- lexical-binding: t; -*-
+
+(use-package treesit-auto
+  :demand t
+  :config
+  (setq treesit-auto-install 'prompt)
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode 1))
+
+(use-package typst-ts-mode
+  :mode "\\.typ\\'"
+  :hook ((typst-ts-mode . my/setup-rtl-mode)
+         (typst-ts-mode . electric-pair-local-mode))
+  :config
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-server-programs '(typst-ts-mode . ("tinymist")))))
+
+(defun my/typst-compile ()
+  "Compile current Typst file."
+  (interactive)
+  (compile (format "typst compile %s" (shell-quote-argument buffer-file-name))))
+
+(defun my/typst-watch ()
+  "Watch and compile Typst file."
+  (interactive)
+  (async-shell-command (format "typst watch %s" (shell-quote-argument buffer-file-name))))
+
+(defun my/typst-view ()
+  "View compiled PDF."
+  (interactive)
+  (let ((pdf (concat (file-name-sans-extension buffer-file-name) ".pdf")))
+    (if (file-exists-p pdf)
+        (find-file-other-window pdf)
+      (message "PDF not found"))))
+
+(defun my/insert-typst-hebrew-preamble ()
+  "Insert Hebrew preamble for Typst."
+  (interactive)
+  (insert "#set text(lang: \"he\", font: \"David CLM\")
+#set page(flipped: true)
+#set heading(numbering: \"1.1.1\")
+
+"))
+
+(with-eval-after-load 'typst-ts-mode
+  (when (boundp 'typst-ts-mode-map)
+    (define-key typst-ts-mode-map (kbd "C-c C-c") #'my/typst-compile)
+    (define-key typst-ts-mode-map (kbd "C-c C-w") #'my/typst-watch)
+    (define-key typst-ts-mode-map (kbd "C-c C-v") #'my/typst-view)
+    (define-key typst-ts-mode-map (kbd "C-c t h") #'my/insert-typst-hebrew-preamble)))
+
+(provide '09-typst)
+;;; 09-typst.el ends here
+#+end_src
+
+==> ./modules/14-rich-footnotes.org <==
+#+TITLE: Rich Footnotes System
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Rich Footnotes - Full Document Capability in Footnotes
+
+#+begin_src emacs-lisp
+;;; 14-rich-footnotes.el --- Complete rich footnote system -*- lexical-binding: t; -*-
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; RICH FOOTNOTE PREAMBLES
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defvar my/latex-rich-footnotes-preamble
+  "% ══════════════════════════════════════════════════════════════
+% RICH FOOTNOTES SYSTEM
+% ══════════════════════════════════════════════════════════════
+
+% Base: bigfoot for nesting
+\\usepackage{bigfoot}
+\\DeclareNewFootnote{default}
+\\DeclareNewFootnote{B}
+\\DeclareNewFootnote{C}
+\\DeclareNewFootnote{D}
+\\DeclareNewFootnote{E}
+\\DeclareNewFootnote{F}
+\\DeclareNewFootnote{G}
+\\DeclareNewFootnote{H}
+\\DeclareNewFootnote{I}
+\\DeclareNewFootnote{J}
+
+% Shortcuts
+\\newcommand{\\rfn}[1]{\\footnote{#1}}
+\\newcommand{\\rfnB}[1]{\\footnoteB{#1}}
+\\newcommand{\\rfnC}[1]{\\footnoteC{#1}}
+
+% Headings in footnotes
+\\newcommand{\\fnh}[2]{%
+  \\ifcase#1\\relax
+  \\or\\par\\medskip{\\bfseries\\Large #2}\\par\\smallskip% 1
+  \\or\\par\\smallskip{\\bfseries\\large #2}\\par\\smallskip% 2
+  \\or\\par\\smallskip{\\bfseries #2}\\par\\smallskip% 3
+  \\else\\par{\\bfseries #2}\\par% fallback
+  \\fi
+}
+
+% Lists in footnotes
+\\usepackage{enumitem}
+\\setlistdepth{20}
+\\newlist{fnitemize}{itemize}{20}
+\\setlist[fnitemize]{nosep,leftmargin=*}
+
+% Tables in footnotes
+\\usepackage{tabularx}
+\\newcounter{fntablecounter}
+\\NewDocumentEnvironment{fntab}{m O{}}{%
+  \\par\\smallskip
+  \\refstepcounter{fntablecounter}%
+  \\IfValueTF{#2}{\\noindent\\textbf{Table~\\thefntablecounter:} #2\\par\\smallskip}{}%
+  \\centering\\begin{tabular}{#1}%
+}{\\end{tabular}\\par\\smallskip}
+
+% Code blocks
+\\usepackage{listings}
+\\NewDocumentEnvironment{fncode}{O{}}{%
+  \\par\\smallskip\\lstset{language=#1}\\begin{lstlisting}%
+}{\\end{lstlisting}\\par\\smallskip}
+\\newcommand{\\fnc}[1]{\\texttt{#1}}"
+  "LaTeX preamble for rich footnotes.")
+
+(defvar my/typst-rich-footnotes-preamble
+  "// Rich footnotes for Typst
+#let fnh(level, body) = {
+  let sizes = (1.3em, 1.2em, 1.1em, 1em)
+  let idx = calc.min(level - 1, 3)
+  text(size: sizes.at(idx), weight: \"bold\", body)
+}
+
+#let rfn(body) = footnote(body)
+
+#let fn-table-counter = counter(\"fn-table\")
+#let fn-table(caption: none, ..args) = {
+  fn-table-counter.step()
+  block[
+    #if caption != none [*Table #fn-table-counter.display():* #caption #v(0.3em)]
+    #table(..args)
+  ]
+}
+
+#let fn-code(lang: none, body) = {
+  block(fill: luma(245), inset: 5pt, radius: 2pt, raw(body.text, lang: lang))
+}"
+  "Typst preamble for rich footnotes.")
+
+(defvar my/context-rich-footnotes-preamble
+  "% Rich footnotes for ConTeXt
+\\definenote[RFN]
+\\definestartstop[startRFN][commands={\\startnote[RFN]},after={\\stopnote}]
+
+\\define[2]\\fnh{%
+  \\ifnum#1=1 \\blank[small]{\\bfc #2}\\blank[small]\\fi
+  \\ifnum#1=2 \\blank[small]{\\bfb #2}\\blank[small]\\fi
+  \\ifnum#1=3 \\blank[small]{\\bfa #2}\\blank[small]\\fi
+}
+
+\\setupitemize[each][packed]
+\\definetyping[fncode][bodyfont=small\\tt]"
+  "ConTeXt preamble for rich footnotes.")
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; ORG PREPROCESSOR
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defvar my/richfn-debug nil "Enable debug messages.")
+
+(defun my/richfn--has-rich-content-p (text)
+  "Check if TEXT contains rich org content."
+  (and text
+       (string-match-p
+        (rx (or (seq bol (+ "*") " ")
+                (seq bol (* space) (any "-+") " ")
+                (seq bol (* space) (+ digit) (any ".)") " ")
+                (seq bol (* space) "|")
+                (seq bol (* space) "#+begin_src")))
+        text)))
+
+(defun my/richfn--org-to-latex (text)
+  "Convert org TEXT to LaTeX."
+  (with-temp-buffer
+    (insert text)
+    ;; Convert headings
+    (goto-char (point-min))
+    (while (re-search-forward "^\\(\\*+\\) \\(.*\\)$" nil t)
+      (let ((level (min 20 (length (match-string 1))))
+            (title (match-string 2)))
+        (replace-match (format "\\\\fnh{%d}{%s}" level title) t t)))
+    ;; Convert lists
+    (goto-char (point-min))
+    (while (re-search-forward "^\\([ \t]*\\)[-+] \\(.*\\)$" nil t)
+      (replace-match "\\1\\\\item \\2" t nil))
+    (goto-char (point-min))
+    (while (re-search-forward "\\(\\\\item.*\n\\)+" nil t)
+      (let ((items (match-string 0)))
+        (replace-match (format "\\begin{fnitemize}\n%s\\end{fnitemize}\n" items))))
+    (buffer-string)))
+
+(defun my/richfn-preprocess-buffer (backend)
+  "Preprocess rich footnotes before export."
+  (when (memq backend '(latex beamer))
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "^\\[fn:\\([^]]+\\)\\][ \t]*\n\\(.*?\\)\n\n" nil t)
+        (let ((id (match-string 1))
+              (content (match-string 2)))
+          (when (my/richfn--has-rich-content-p content)
+            (let ((converted (my/richfn--org-to-latex content)))
+              (replace-match (format "[fn:%s] %s\n\n" id converted) t t))))))))
+
+(with-eval-after-load 'ox
+  (add-hook 'org-export-before-processing-hook #'my/richfn-preprocess-buffer))
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; INSERTION HELPERS
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defun my/insert-latex-rich-footnotes-preamble ()
+  "Insert LaTeX rich footnotes preamble."
+  (interactive)
+  (insert my/latex-rich-footnotes-preamble))
+
+(defun my/insert-typst-rich-footnotes-preamble ()
+  "Insert Typst rich footnotes preamble."
+  (interactive)
+  (insert my/typst-rich-footnotes-preamble))
+
+(defun my/insert-context-rich-footnotes-preamble ()
+  "Insert ConTeXt rich footnotes preamble."
+  (interactive)
+  (insert my/context-rich-footnotes-preamble))
+
+(defun my/insert-rich-footnote-latex ()
+  "Insert LaTeX rich footnote template."
+  (interactive)
+  (insert "\\rfn{%
+  \\fnh{1}{Heading}
+  
+  \\begin{fnitemize}
+    \\item First item
+  \\end{fnitemize}
+  
+  \\begin{fntab}{|l|l|}[Caption]
+    \\hline
+    A & B \\\\
+    \\hline
+  \\end{fntab}
+}")
+  (search-backward "Heading"))
+
+(defun my/insert-rich-footnote-typst ()
+  "Insert Typst rich footnote template."
+  (interactive)
+  (insert "#rfn[
+  #fnh(1)[Heading]
+  
+  - Item 1
+  
+  #fn-table(caption: \"Caption\", columns: 2, [A], [B])
+]")
+  (search-backward "Heading"))
+
+(defun my/insert-rich-footnote-context ()
+  "Insert ConTeXt rich footnote template."
+  (interactive)
+  (insert "\\startRFN
+\\fnh{1}{Heading}
+
+\\startitemize[packed]
+\\item First item
+\\stopitemize
+\\stopRFN")
+  (search-backward "Heading"))
+
+(provide '14-rich-footnotes)
+;;; 14-rich-footnotes.el ends here
+#+end_src
+
+==> ./modules/02-hebrew.org <==
+#+TITLE: Hebrew and RTL Support
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Hebrew Language Support
+
+#+begin_src emacs-lisp
+;;; 02-hebrew.el --- Hebrew and RTL support -*- lexical-binding: t; -*-
+
+(setq-default bidi-display-reordering t)
+(setq-default bidi-paragraph-direction nil)
+(setq bidi-inhibit-bpa t)
+
+(defvar-local my/bidi-direction 'right-to-left)
+
+(defun my/set-rtl ()
+  "Set buffer to RTL."
+  (interactive)
+  (setq-local bidi-paragraph-direction 'right-to-left)
+  (setq-local my/bidi-direction 'right-to-left)
+  (message "Direction: RTL"))
+
+(defun my/set-ltr ()
+  "Set buffer to LTR."
+  (interactive)
+  (setq-local bidi-paragraph-direction 'left-to-right)
+  (setq-local my/bidi-direction 'left-to-right)
+  (message "Direction: LTR"))
+
+(defun my/toggle-direction ()
+  "Toggle RTL/LTR."
+  (interactive)
+  (if (eq bidi-paragraph-direction 'right-to-left)
+      (my/set-ltr)
+    (my/set-rtl)))
+
+(defun my/toggle-bidi-reordering ()
+  "Toggle bidi reordering."
+  (interactive)
+  (setq bidi-display-reordering (not bidi-display-reordering))
+  (message "Bidi: %s" (if bidi-display-reordering "ON" "OFF")))
+
+(defun my/setup-rtl-mode ()
+  "Setup RTL for prose."
+  (setq-local bidi-paragraph-direction 'right-to-left))
+
+(defun my/setup-ltr-mode ()
+  "Setup LTR for code."
+  (setq-local bidi-paragraph-direction 'left-to-right))
+
+(dolist (hook '(org-mode-hook text-mode-hook markdown-mode-hook))
+  (add-hook hook #'my/setup-rtl-mode))
+
+(add-hook 'prog-mode-hook #'my/setup-ltr-mode)
+
+(defun my/toggle-hebrew-input ()
+  "Toggle Hebrew input."
+  (interactive)
+  (if current-input-method
+      (deactivate-input-method)
+    (set-input-method "hebrew")))
+
+(defun my/large-file-hook ()
+  "Optimize large files."
+  (when (> (buffer-size) (* 5 1024 1024))
+    (setq-local bidi-display-reordering nil)
+    (font-lock-mode -1)
+    (message "Large file mode")))
+
+(add-hook 'find-file-hook #'my/large-file-hook)
+
+;; Keybindings
+(global-set-key (kbd "<f9>") #'my/toggle-hebrew-input)
+(global-set-key (kbd "C-c d") #'my/toggle-direction)
+(global-set-key (kbd "C-c r") #'my/set-rtl)
+(global-set-key (kbd "C-c l") #'my/set-ltr)
+(global-set-key (kbd "C-c B") #'my/toggle-bidi-reordering)
+
+;; Hebrew-specific editing
+(defun my/insert-hebrew-quotes ()
+  "Insert Hebrew quotes (״)."
+  (interactive)
+  (insert "״")
+  (save-excursion (insert "״")))
+
+(defun my/insert-hebrew-parens ()
+  "Insert Hebrew parentheses ()( in reverse order)."
+  (interactive)
+  (insert ")")
+  (save-excursion (insert "(")))
+
+(defun my/count-hebrew-words ()
+  "Count Hebrew words in buffer."
+  (interactive)
+  (let ((count 0))
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "[א-ת]+" nil t)
+        (cl-incf count)))
+    (message "Hebrew words: %d" count)))
+
+(global-set-key (kbd "C-c h q") #'my/insert-hebrew-quotes)
+(global-set-key (kbd "C-c h p") #'my/insert-hebrew-parens)
+(global-set-key (kbd "C-c h c") #'my/count-hebrew-words)
+
+(defun my/create-hebrew-document ()
+  "Create a new Hebrew document."
+  (interactive)
+  (let* ((type (completing-read "Type: " '("org" "latex" "typst" "context")))
+         (file (read-file-name (format "New %s file: " type))))
+    (find-file file)
+    (pcase type
+      ("org" (insert (format "#+TITLE: כותרת
+#+AUTHOR: שאול
+#+DATE: %s
+#+LATEX_CLASS: article-hebrew
+" (format-time-string "%Y-%m-%d"))))
+      ("latex" (insert "\\documentclass{article}
+\\usepackage{fontspec}
+\\usepackage[bidi=basic]{babel}
+\\babelprovide[main, import]{hebrew}
+\\babelfont{rm}{David CLM}
+
+\\begin{document}
+
+\\section{מבוא}
+
+\\end{document}
+"))
+      ("typst" (insert "#set text(lang: \"he\", font: \"David CLM\")
+#set page(flipped: true)
+
+= כותרת
+
+"))
+      ("context" (insert "\\mainlanguage[he]
+\\setupalign[r2l]
+\\definefontfamily[hebrew][rm][David CLM]
+
+\\starttext
+
+\\startsection[title={כותרת}]
+\\stopsection
+
+\\stoptext")))))
+
+(global-set-key (kbd "C-c h n") #'my/create-hebrew-document)
+
+(provide '02-hebrew)
+;;; 02-hebrew.el ends here
+#+end_src
+
+==> ./modules/00-core.org <==
+#+TITLE: Core Settings
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Core Configuration
+
+#+begin_src emacs-lisp
+;;; 00-core.el --- Core settings and package configuration -*- lexical-binding: t; -*-
+
+;; Package archives (fallback only - packages come from Nix)
+(require 'package)
+(setq package-archives
+      '(("melpa" . "https://melpa.org/packages/")
+        ("gnu" . "https://elpa.gnu.org/packages/")
+        ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
+
+;; Use-package - packages come from Nix, so :ensure nil
+(require 'use-package)
+(setq use-package-always-ensure nil
+      use-package-always-defer t
+      use-package-expand-minimally t)
+
+;; Diminish for cleaner mode-line
+(use-package diminish
+  :demand t)
+
+;; Garbage Collection Magic Hack
+(use-package gcmh
+  :demand t
+  :config
+  (setq gcmh-idle-delay 5
+        gcmh-high-cons-threshold (* 64 1024 1024)
+        gcmh-low-cons-threshold (* 16 1024 1024))
+  (gcmh-mode 1))
+
+;; Process performance
+(setq read-process-output-max (* 1024 1024)
+      process-adaptive-read-buffering nil
+      auto-window-vscroll nil
+      fast-but-imprecise-scrolling t
+      jit-lock-defer-time 0)
+
+;; Bidi performance (critical for Hebrew)
+(setq-default bidi-paragraph-direction 'left-to-right)
+(setq bidi-inhibit-bpa t)
+
+;; So-long mode for large files
+(global-so-long-mode 1)
+
+(provide '00-core)
+;;; 00-core.el ends here
+#+end_src

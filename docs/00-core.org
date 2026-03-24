@@ -1,0 +1,62 @@
+#+TITLE: 00-core Module
+#+STARTUP: overview
+
+* Purpose
+
+Core settings and performance optimizations. This module loads first and sets up:
+- Package system configuration
+- Garbage collection optimization
+- Process performance
+- Bidirectional text performance
+
+* Packages Used
+
+| Package  | Purpose                              |
+|----------+--------------------------------------|
+| diminish | Hide minor modes from modeline       |
+| gcmh     | Garbage Collection Magic Hack        |
+
+* Key Settings
+
+** Garbage Collection
+
+#+begin_example
+gcmh-idle-delay: 5 seconds
+gcmh-high-cons-threshold: 64 MB
+gcmh-low-cons-threshold: 16 MB
+#+end_example
+
+Garbage collection runs when Emacs is idle, not during editing.
+
+** Process Performance
+
+#+begin_example
+read-process-output-max: 1 MB
+#+end_example
+
+Improves LSP and external process performance.
+
+** Bidi Performance
+
+#+begin_example
+bidi-paragraph-direction: left-to-right (default)
+bidi-inhibit-bpa: t
+#+end_example
+
+Critical for Hebrew text performance. Per-buffer RTL is set in ~02-hebrew~.
+
+* Configuration Options
+
+None user-configurable. These are optimal defaults.
+
+* Dependencies
+
+None. This is the first module to load.
+
+* Troubleshooting
+
+** Emacs feels slow
+
+Check if gcmh is running: ~M-: gcmh-mode~
+
+Should return ~t~.

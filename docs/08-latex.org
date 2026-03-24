@@ -1,0 +1,102 @@
+#+TITLE: 08-latex Module
+#+STARTUP: overview
+
+* Purpose
+
+LaTeX editing with AUCTeX:
+- Syntax highlighting
+- Compilation
+- PDF sync
+- Hebrew support
+- Multiple footnote levels
+
+* Packages Used
+
+| Package | Purpose                    |
+|---------+----------------------------|
+| auctex  | LaTeX editing              |
+| reftex  | Reference management       |
+
+* Key Bindings
+
+| Key         | Command                | Description          |
+|-------------+------------------------+----------------------|
+| ~C-c C-c~   | TeX-command-master     | Compile              |
+| ~C-c C-v~   | TeX-view               | View PDF             |
+| ~C-c C-w~   | my/latex-word-count    | Count words          |
+| ~C-c f 1~   | my/insert-footnote-1   | Insert \footnote{}   |
+| ~C-c f 2~   | my/insert-footnote-2   | Insert \footnoteB{}  |
+| ~C-c f 3~   | my/insert-footnote-3   | Insert \footnoteC{}  |
+| ~C-c f 4~   | my/insert-footnote-4   | Insert \footnoteD{}  |
+| ~C-c f 5~   | my/insert-footnote-5   | Insert \footnoteE{}  |
+
+* Settings
+
+| Setting        | Value     |
+|----------------+-----------|
+| Engine         | LuaLaTeX  |
+| PDF mode       | Yes       |
+| Source correlate| Yes      |
+| RefTeX         | Enabled   |
+
+* Hebrew Preamble
+
+Insert with: ~M-x my/insert-latex-hebrew-preamble~
+
+Or via hydra: ~C-c P p~
+
+#+begin_example
+\babelprovide[main, import]{hebrew}
+\babelprovide[import]{english}
+\babelfont{rm}{David CLM}
+\babelfont{sf}{Nachlieli CLM}
+\babelfont{tt}{Miriam Mono CLM}
+#+end_example
+
+* Multiple Footnotes
+
+Uses bigfoot package for nested footnotes:
+
+| Command      | Level |
+|--------------|-------|
+| \footnote{}  | 1     |
+| \footnoteB{} | 2     |
+| \footnoteC{} | 3     |
+| \footnoteD{} | 4     |
+| \footnoteE{} | 5     |
+
+* Configuration Options
+
+** Change default engine
+
+#+begin_src emacs-lisp :tangle no
+(setq TeX-engine 'xetex)  ; or 'luatex, 'default
+#+end_src
+
+** Change PDF viewer
+
+#+begin_src emacs-lisp :tangle no
+(setq TeX-view-program-selection '((output-pdf "Zathura")))
+#+end_src
+
+* Dependencies
+
+- 00-core
+- 02-hebrew
+- texlive (system package)
+- pdf-tools (10-pdf module)
+
+* Troubleshooting
+
+** Compilation fails
+
+Check log: ~C-c C-l~
+
+Common issues:
+- Missing packages: Install via texlive
+- Font not found: Check ~fc-list | grep David~
+
+** PDF not syncing
+
+Ensure TeX-source-correlate-mode is on.
+Check: ~M-: TeX-source-correlate-mode~

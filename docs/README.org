@@ -1,0 +1,151 @@
+#+TITLE: Emacs Configuration Documentation
+#+AUTHOR: Shaul
+#+STARTUP: overview
+
+* Overview
+
+This is a modular Emacs configuration designed for:
+- Hebrew/RTL text editing
+- Academic writing (LaTeX, Typst, Org)
+- Jewish texts (Seforim library)
+- Programming (Rust, Python, Nix, Java)
+
+* How It Works
+
+** File Structure
+
+#+begin_example
+~/.config/emacs/
+├── init.el              # Bootstrap (managed by Nix)
+├── early-init.el        # Pre-package optimizations (managed by Nix)
+├── modules/             # Configuration modules
+│   ├── 00-core.org      # Core settings
+│   ├── 01-ui.org        # User interface
+│   ├── 02-hebrew.org    # Hebrew/RTL support
+│   ├── ...              # Other modules
+│   ├── 00-core.el       # Tangled elisp (auto-generated)
+│   ├── 01-ui.el         # Tangled elisp (auto-generated)
+│   └── ...
+└── docs/                # This documentation
+#+end_example
+
+** Load Order
+
+Modules load in numerical order:
+
+| Order | Module             | Purpose                    |
+|-------+--------------------+----------------------------|
+|    00 | core               | Package system, performance |
+|    01 | ui                 | Theme, fonts, appearance   |
+|    02 | hebrew             | RTL, Hebrew input          |
+|    03 | completion         | Vertico, Corfu, Consult    |
+|    04 | editing            | Undo, multiple cursors     |
+|    05 | navigation         | Avy, Ace-window, tabs      |
+|    06 | org                | Org mode settings          |
+|    07 | org-roam           | Note-taking system         |
+|    08 | latex              | LaTeX/AUCTeX               |
+|    08 | typst              | Typst support              |
+|    10 | pdf                | PDF viewing                |
+|    11 | programming        | LSP, languages             |
+|    12 | magit              | Git integration            |
+|    13 | seforim            | Jewish texts library       |
+|    14 | rich-footnotes     | Advanced footnotes         |
+|    15 | hydras             | Quick menus                |
+|    16 | utils              | Utility functions          |
+
+** Tangling
+
+Each ~.org~ file contains elisp code in source blocks. On startup, Emacs:
+1. Checks if ~.el~ is older than ~.org~
+2. If so, tangles (extracts) the elisp to ~.el~
+3. Loads the ~.el~ file
+
+** Editing Modules
+
+To modify a module:
+
+1. Edit the ~.org~ file (not the ~.el~)
+2. Delete the ~.el~ file: ~rm ~/.config/emacs/modules/XX-name.el~
+3. Restart Emacs (it will retangle)
+
+Or manually retangle:
+- Open the ~.org~ file
+- Run ~M-x org-babel-tangle~
+
+** Adding New Modules
+
+1. Create ~~/.config/emacs/modules/XX-name.org~
+2. Use this template:
+
+#+begin_example
+,#+TITLE: Module Name
+,#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+,* Section Name
+
+,#+begin_src emacs-lisp
+;;; XX-name.el --- Description -*- lexical-binding: t; -*-
+
+;; Your code here
+
+(provide 'XX-name)
+;;; XX-name.el ends here
+,#+end_src
+#+end_example
+
+3. Add ~"XX-name"~ to the modules list in ~default.nix~ (init.el section)
+4. Rebuild: ~home-manager switch~
+
+* Key Bindings Summary
+
+** Global
+
+| Key       | Command                  | Module     |
+|-----------+--------------------------+------------|
+| ~C-c d~   | Toggle RTL/LTR           | 02-hebrew  |
+| ~C-c r~   | Set RTL                  | 02-hebrew  |
+| ~C-c l~   | Set LTR                  | 02-hebrew  |
+| ~C-c w~   | Toggle focused writing   | 04-editing |
+| ~C-c W~   | Set focused width        | 04-editing |
+| ~C-x g~   | Magit status             | 12-magit   |
+| ~F9~      | Toggle Hebrew input      | 02-hebrew  |
+
+** Hydras (Quick Menus)
+
+| Key       | Menu                     |
+|-----------+--------------------------|
+| ~C-c D~   | Direction & Spell        |
+| ~C-c N~   | Org-roam notes           |
+| ~C-c S~   | Seforim library          |
+| ~C-c F~   | Rich footnotes           |
+| ~C-c P~   | Document preambles       |
+
+* Troubleshooting
+
+** Module fails to load
+
+Check ~*Messages*~ buffer (~C-h e~) for errors.
+
+Common causes:
+- Missing closing parenthesis in ~.org~ file
+- Package not installed (add to ~default.nix~)
+- Tangled ~.el~ file is corrupted
+
+Fix: Delete the ~.el~ file and restart Emacs.
+
+** Keybinding not working
+
+1. Check if module loaded: ~M-: (featurep 'XX-name)~
+2. Check binding: ~C-h k~ then press the key
+3. Check function exists: ~M-x function-name~
+
+** Fonts not applied
+
+1. Check font exists: ~M-: (font-info "Font Name")~
+2. Ensure ~(display-graphic-p)~ is true (not in terminal)
+
+** Performance issues
+
+- Large files: ~M-x so-long-mode~
+- Hebrew files: Already optimized with ~bidi-inhibit-bpa~
+- Startup: Check ~*Messages*~ for slow packages

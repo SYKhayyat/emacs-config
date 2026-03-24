@@ -1,0 +1,5 @@
+;;; -*- coding: utf-8; mode: lisp-data -*-
+(("/home/shaul/.config/emacs/modules/01-ui.org" . 3684)
+ ("/home/shaul/.config/emacs/modules/04-editing.el" . 91)
+ ("/home/shaul/.config/emacs/modules/04-editing.org" . 659)
+ ("/home/shaul/.config/emacs/modules/03-completion.org" . 2957))

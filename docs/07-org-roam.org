@@ -1,0 +1,93 @@
+#+TITLE: 07-org-roam Module
+#+STARTUP: overview
+
+* Purpose
+
+Personal knowledge management:
+- Zettelkasten-style notes
+- Bidirectional links
+- Daily notes
+- Graph visualization
+
+* Packages Used
+
+| Package      | Purpose                    |
+|--------------+----------------------------|
+| org-roam     | Note-taking system         |
+| org-roam-ui  | Graph visualization        |
+
+* Key Bindings
+
+| Key       | Command                  | Description            |
+|-----------+--------------------------+------------------------|
+| ~C-c n f~ | org-roam-node-find       | Find/create note       |
+| ~C-c n i~ | org-roam-node-insert     | Insert link to note    |
+| ~C-c n l~ | org-roam-buffer-toggle   | Show backlinks         |
+| ~C-c n c~ | org-roam-capture         | Capture new note       |
+| ~C-c n g~ | org-roam-graph           | Show graph             |
+| ~C-c n t~ | org-roam-tag-add         | Add tag                |
+| ~C-c n d~ | org-roam-dailies-goto-today | Today's daily note  |
+| ~C-c n D~ | org-roam-dailies-goto-date  | Specific daily note |
+| ~C-c n u~ | org-roam-ui-mode         | Open graph in browser  |
+| ~C-c n h~ | my/org-roam-find-hebrew  | Find Hebrew notes      |
+| ~C-c n R~ | my/org-roam-find-research| Find research notes    |
+
+Also available via Hydra: ~C-c N~
+
+* Capture Templates
+
+| Key | Name     | Description              |
+|-----|----------|--------------------------|
+| d   | Default  | Standard note            |
+| h   | Hebrew   | Note tagged "hebrew"     |
+| r   | Research | Note with source section |
+
+* File Location
+
+Notes stored in: ~~/Documents/roam/~
+
+Daily notes in: ~~/Documents/roam/daily/~
+
+* Org-roam UI
+
+Interactive graph in browser.
+
+Start: ~C-c n u~ or ~M-x org-roam-ui-mode~
+
+Opens at: http://localhost:35901
+
+* Configuration Options
+
+** Change roam directory
+
+#+begin_src emacs-lisp :tangle no
+(setq org-roam-directory "~/notes/roam/")
+#+end_src
+
+** Add capture template
+
+#+begin_src emacs-lisp :tangle no
+(add-to-list 'org-roam-capture-templates
+             '("p" "project" plain "%?"
+               :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                  "#+title: ${title}\n#+filetags: project\n\n")
+               :unnarrowed t))
+#+end_src
+
+* Dependencies
+
+- 00-core
+- 06-org
+- sqlite (system package)
+
+* Troubleshooting
+
+** Database errors
+
+Rebuild database: ~M-x org-roam-db-sync~
+
+** Graph not showing
+
+Check graphviz: ~which dot~
+
+For UI, check browser console for errors.

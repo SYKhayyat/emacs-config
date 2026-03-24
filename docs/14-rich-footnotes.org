@@ -1,0 +1,84 @@
+#+TITLE: 14-rich-footnotes Module
+#+STARTUP: overview
+
+* Purpose
+
+Advanced footnote system for academic writing:
+- Multiple footnote levels
+- Headings in footnotes
+- Lists in footnotes
+- Tables in footnotes
+- Code in footnotes
+
+Supports: LaTeX, Typst, ConTeXt
+
+* Key Bindings
+
+Via Hydra ~C-c F~:
+
+| Key | Command                              |
+|-----|--------------------------------------|
+| l   | Insert LaTeX rich footnote template  |
+| t   | Insert Typst rich footnote template  |
+| c   | Insert ConTeXt rich footnote template|
+| p   | Insert LaTeX preamble                |
+| T   | Insert Typst preamble                |
+| C   | Insert ConTeXt preamble              |
+
+* LaTeX Commands
+
+After adding preamble:
+
+| Command           | Purpose               |
+|-------------------+-----------------------|
+| \rfn{...}         | Level 1 footnote      |
+| \rfnB{...}        | Level 2 footnote      |
+| \rfnC{...}        | Level 3 footnote      |
+| \fnh{1}{Title}    | Heading (level 1-3)   |
+| \begin{fnitemize} | List in footnote      |
+| \begin{fntab}     | Table in footnote     |
+| \begin{fncode}    | Code in footnote      |
+
+* Typst Functions
+
+| Function               | Purpose               |
+|------------------------+-----------------------|
+| #rfn[...]              | Footnote              |
+| #fnh(1)[Title]         | Heading               |
+| #fn-table(...)         | Table                 |
+| #fn-code(lang: "x")[..]| Code block            |
+
+* ConTeXt Commands
+
+| Command           | Purpose               |
+|-------------------+-----------------------|
+| \startRFN...\stopRFN | Rich footnote       |
+| \fnh{1}{Title}    | Heading               |
+
+* Org Export
+
+The module includes an org export preprocessor that converts
+rich org content in footnotes to LaTeX.
+
+* Preambles
+
+Insert via:
+- ~C-c F p~ (LaTeX)
+- ~C-c F T~ (Typst)  
+- ~C-c F C~ (ConTeXt)
+
+Or via Document hydra: ~C-c P~
+
+* Dependencies
+
+- 00-core
+- 08-latex or 08-typst
+- bigfoot package (LaTeX)
+
+* Troubleshooting
+
+** Footnotes not rendering
+
+Ensure preamble is included in document.
+
+Check bigfoot package: ~kpsewhich bigfoot.sty~

@@ -1,0 +1,110 @@
+#+TITLE: Editing Enhancements
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Editing Tools
+
+#+begin_src emacs-lisp
+;;; 04-editing.el --- Advanced editing features -*- lexical-binding: t; -*-
+
+;; Undo tree
+(use-package undo-tree
+  :diminish
+  :demand t
+  :config
+  (setq undo-tree-auto-save-history t
+        undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo-tree-history/"))
+        undo-limit (* 80 1024 1024)
+        undo-strong-limit (* 120 1024 1024)
+        undo-outer-limit (* 300 1024 1024))
+  (global-undo-tree-mode 1)
+  :bind (("C-x u" . undo-tree-visualize)
+         ("C-/" . undo-tree-undo)
+         ("C-?" . undo-tree-redo)))
+
+(use-package goto-last-change
+  :bind ("C-c ;" . goto-last-change))
+
+(use-package beginend
+  :diminish beginend-global-mode
+  :demand t
+  :config
+  (beginend-global-mode 1))
+
+(use-package anzu
+  :diminish
+  :demand t
+  :config
+  (global-anzu-mode 1)
+  :bind (([remap query-replace] . anzu-query-replace)
+         ([remap query-replace-regexp] . anzu-query-replace-regexp)
+         ("M-s %" . anzu-query-replace-at-cursor)))
+
+(use-package multiple-cursors
+  :bind (("C->" . mc/mark-next-like-this)
+         ("C-<" . mc/mark-previous-like-this)
+         ("C-c C-<" . mc/mark-all-like-this)
+         ("C-S-c C-S-c" . mc/edit-lines)))
+
+(use-package expand-region
+  :bind ("C-=" . er/expand-region))
+
+(use-package move-text
+  :bind (("M-<up>" . move-text-up)
+         ("M-<down>" . move-text-down)))
+
+(global-set-key (kbd "C-c C-d") #'duplicate-dwim)
+
+(use-package crux
+  :bind (("C-a" . crux-move-beginning-of-line)
+         ("C-k" . crux-smart-kill-line)
+         ("C-S-<return>" . crux-smart-open-line-above)
+         ("S-<return>" . crux-smart-open-line)))
+
+(use-package visual-regexp
+  :bind (("C-c q" . vr/query-replace)
+         ("C-c M" . vr/mc-mark)))
+
+(use-package wgrep
+  :config
+  (setq wgrep-auto-save-buffer t))
+
+(add-hook 'prog-mode-hook #'electric-pair-local-mode)
+
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
+
+;; Focused writing
+(use-package visual-fill-column
+  :config
+  (setq-default visual-fill-column-width 80
+                visual-fill-column-center-text t))
+
+(defvar-local my/focused-writing nil)
+
+(defun my/toggle-focused-writing ()
+  "Toggle focused writing mode."
+  (interactive)
+  (if my/focused-writing
+      (progn
+        (visual-fill-column-mode -1)
+        (visual-line-mode -1)
+        (setq my/focused-writing nil)
+        (message "Focused: OFF"))
+    (visual-line-mode 1)
+    (visual-fill-column-mode 1)
+    (setq my/focused-writing t)
+    (message "Focused: ON")))
+
+(defun my/set-focused-width (width)
+  "Set focused writing width."
+  (interactive "nWidth: ")
+  (setq visual-fill-column-width width)
+  (when visual-fill-column-mode
+    (visual-fill-column-adjust)))
+
+(global-set-key (kbd "C-c w") #'my/toggle-focused-writing)
+(global-set-key (kbd "C-c W") #'my/set-focused-width)
+
+(provide '04-editing)
+;;; 04-editing.el ends here
+#+end_src

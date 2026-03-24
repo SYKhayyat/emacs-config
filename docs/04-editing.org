@@ -1,0 +1,127 @@
+#+TITLE: 04-editing Module
+#+STARTUP: overview
+
+* Purpose
+
+Advanced editing features:
+- Undo tree visualization
+- Multiple cursors
+- Expand region
+- Move text
+- Focused writing mode
+- Smart editing commands
+
+* Packages Used
+
+| Package           | Purpose                      |
+|-------------------+------------------------------|
+| undo-tree         | Visual undo history          |
+| goto-last-change  | Jump to last edit            |
+| beginend          | Smart M-< and M->            |
+| anzu              | Show match count             |
+| multiple-cursors  | Edit multiple places         |
+| expand-region     | Expand selection smartly     |
+| move-text         | Move lines up/down           |
+| crux              | Smart editing commands       |
+| visual-regexp     | Visual regexp replace        |
+| wgrep             | Edit grep results            |
+| rainbow-delimiters| Colorful parentheses         |
+| visual-fill-column| Centered writing             |
+
+* Key Bindings
+
+** Undo
+
+| Key       | Command              | Description            |
+|-----------+----------------------+------------------------|
+| ~C-/~     | undo-tree-undo       | Undo                   |
+| ~C-?~     | undo-tree-redo       | Redo                   |
+| ~C-x u~   | undo-tree-visualize  | Visual undo tree       |
+| ~C-c ;~   | goto-last-change     | Jump to last edit      |
+
+** Multiple Cursors
+
+| Key         | Command                | Description          |
+|-------------+------------------------+----------------------|
+| ~C->~       | mc/mark-next-like-this | Add cursor at next match |
+| ~C-<~       | mc/mark-previous-like-this | Add cursor at prev match |
+| ~C-c C-<~   | mc/mark-all-like-this  | Cursor at all matches|
+| ~C-S-c C-S-c~ | mc/edit-lines        | Cursor on each line  |
+
+** Text Movement
+
+| Key         | Command              | Description            |
+|-------------+----------------------+------------------------|
+| ~M-<up>~    | move-text-up         | Move line up           |
+| ~M-<down>~  | move-text-down       | Move line down         |
+| ~C-c C-d~   | duplicate-dwim       | Duplicate line/region  |
+
+** Smart Editing (Crux)
+
+| Key           | Command                    | Description          |
+|---------------+----------------------------+----------------------|
+| ~C-a~         | crux-move-beginning-of-line| Smart home           |
+| ~C-k~         | crux-smart-kill-line       | Smart kill line      |
+| ~S-<return>~  | crux-smart-open-line       | Open line below      |
+| ~C-S-<return>~| crux-smart-open-line-above | Open line above      |
+
+** Selection
+
+| Key       | Command              | Description            |
+|-----------+----------------------+------------------------|
+| ~C-=~     | er/expand-region     | Expand selection       |
+
+** Search & Replace
+
+| Key       | Command              | Description            |
+|-----------+----------------------+------------------------|
+| ~C-c q~   | vr/query-replace     | Visual regexp replace  |
+| ~C-c M~   | vr/mc-mark           | Mark matches with MC   |
+
+** Focused Writing
+
+| Key       | Command                  | Description            |
+|-----------+--------------------------+------------------------|
+| ~C-c w~   | my/toggle-focused-writing| Toggle centered mode   |
+| ~C-c W~   | my/set-focused-width     | Set column width       |
+
+* Focused Writing Mode
+
+Centers text at 80 columns (configurable). Good for prose writing.
+
+Toggle: ~C-c w~
+
+Change width: ~C-c W~ then enter number (e.g., 100)
+
+* Configuration Options
+
+** Undo limits
+
+#+begin_src emacs-lisp :tangle no
+(setq undo-limit (* 80 1024 1024))         ; 80 MB
+(setq undo-strong-limit (* 120 1024 1024)) ; 120 MB
+#+end_src
+
+** Focused writing width
+
+#+begin_src emacs-lisp :tangle no
+(setq-default visual-fill-column-width 100)
+#+end_src
+
+* Dependencies
+
+- 00-core
+- 01-ui
+- visual-fill-column package
+
+* Troubleshooting
+
+** Focused writing not working
+
+Check package: ~M-: (featurep 'visual-fill-column)~
+
+If nil, add to ~default.nix~ and rebuild.
+
+** Undo tree history not saving
+
+Check directory exists: ~ls ~/.cache/emacs/undo-tree-history/~

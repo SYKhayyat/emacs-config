@@ -1,0 +1,26 @@
+;;; early-init.el --- Early startup optimizations -*- lexical-binding: t; -*-
+
+;; This runs before package.el and before init.el
+;; No packages are loaded here - just performance tweaks
+
+(setq package-enable-at-startup nil)
+(setq load-prefer-newer t)
+
+;; Performance tuning
+(setq gc-cons-threshold most-positive-fixnum
+      gc-cons-percentage 0.6)
+
+;; Native compilation
+(setq native-comp-async-report-warnings-errors 'silent
+      native-comp-jit-compilation t)
+
+;; Silence warnings
+(setq warning-suppress-types '((comp) (bytecomp)))
+
+;; Defer file-name-handler for speed
+(defvar my--file-name-handler-alist file-name-handler-alist)
+(setq file-name-handler-alist nil)
+(add-hook 'emacs-startup-hook
+          (lambda () (setq file-name-handler-alist my--file-name-handler-alist)))
+
+;;; early-init.el ends here

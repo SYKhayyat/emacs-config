@@ -1,0 +1,18 @@
+;;; 12-magit.el --- Magit and git integration -*- lexical-binding: t; -*-
+
+(use-package magit
+  :bind (("C-x g" . magit-status)
+         ("C-x M-g" . magit-dispatch)
+         ("C-c v g" . magit-file-dispatch)))
+
+(use-package git-gutter
+  :diminish
+  :hook (prog-mode . git-gutter-mode)
+  :config
+  (setq git-gutter:update-interval 0.5))
+
+(use-package git-timemachine
+  :bind ("C-c v t" . git-timemachine))
+
+(provide '12-magit)
+;;; 12-magit.el ends here

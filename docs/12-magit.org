@@ -1,0 +1,84 @@
+#+TITLE: 12-magit Module
+#+STARTUP: overview
+
+* Purpose
+
+Git integration:
+- Magit (full Git interface)
+- Git gutter (show changes)
+- Time machine (browse history)
+
+* Packages Used
+
+| Package        | Purpose                |
+|----------------+------------------------|
+| magit          | Git interface          |
+| git-gutter     | Show line changes      |
+| git-timemachine| Browse file history    |
+
+* Key Bindings
+
+| Key         | Command              | Description            |
+|-------------+----------------------+------------------------|
+| ~C-x g~     | magit-status         | Open Magit             |
+| ~C-x M-g~   | magit-dispatch       | Magit command menu     |
+| ~C-c v g~   | magit-file-dispatch  | File-specific commands |
+| ~C-c v t~   | git-timemachine      | Browse file history    |
+
+* Magit Status Bindings
+
+In Magit status buffer:
+
+| Key   | Command              | Description          |
+|-------+----------------------+----------------------|
+| ~s~   | Stage                | Stage file/hunk      |
+| ~u~   | Unstage              | Unstage file/hunk    |
+| ~c~   | Commit               | Start commit         |
+| ~P~   | Push                 | Push menu            |
+| ~F~   | Pull                 | Pull menu            |
+| ~b~   | Branch               | Branch menu          |
+| ~l~   | Log                  | Log menu             |
+| ~d~   | Diff                 | Diff menu            |
+| ~z~   | Stash                | Stash menu           |
+| ~g~   | Refresh              | Refresh status       |
+| ~q~   | Quit                 | Close Magit          |
+
+* Git Gutter
+
+Shows in the fringe:
+- Added lines (green)
+- Modified lines (yellow)
+- Deleted lines (red)
+
+* Git Timemachine
+
+Navigate file history:
+
+| Key   | Command              | Description          |
+|-------+----------------------+----------------------|
+| ~p~   | Previous revision    |                      |
+| ~n~   | Next revision        |                      |
+| ~g~   | Go to revision       | By number            |
+| ~q~   | Quit                 |                      |
+
+* Configuration Options
+
+** Disable git-gutter
+
+#+begin_src emacs-lisp :tangle no
+(remove-hook 'prog-mode-hook 'git-gutter-mode)
+#+end_src
+
+* Dependencies
+
+- 00-core
+- git (system package)
+
+* Troubleshooting
+
+** Magit slow
+
+Large repos can be slow. Try:
+#+begin_src emacs-lisp :tangle no
+(setq magit-refresh-status-buffer nil)
+#+end_src

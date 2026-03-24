@@ -1,0 +1,107 @@
+#+TITLE: 05-navigation Module
+#+STARTUP: overview
+
+* Purpose
+
+Navigation and window management:
+- Jump anywhere (Avy)
+- Window switching (Ace-window)
+- Window layout history (Winner)
+- Tab bar
+- Buffer management
+
+* Packages Used
+
+| Package     | Purpose                    |
+|-------------+----------------------------|
+| avy         | Jump to visible text       |
+| ace-window  | Quick window switching     |
+| winner      | Undo/redo window layouts   |
+| ibuffer     | Better buffer list         |
+
+* Key Bindings
+
+** Avy (Jump)
+
+| Key       | Command              | Description            |
+|-----------+----------------------+------------------------|
+| ~M-j~     | avy-goto-char-timer  | Jump to char(s)        |
+| ~M-g j~   | avy-goto-line        | Jump to line           |
+| ~M-g w~   | avy-goto-word-1      | Jump to word           |
+
+** Ace-window
+
+| Key       | Command              | Description            |
+|-----------+----------------------+------------------------|
+| ~M-o~     | ace-window           | Switch window          |
+
+** Winner (Layout History)
+
+| Key           | Command        | Description            |
+|---------------+----------------+------------------------|
+| ~C-c <left>~  | winner-undo    | Previous layout        |
+| ~C-c <right>~ | winner-redo    | Next layout            |
+
+** Tab Bar
+
+| Key           | Command                  | Description        |
+|---------------+--------------------------+--------------------|
+| ~C-<tab>~     | tab-bar-switch-to-next-tab | Next tab         |
+| ~C-S-<tab>~   | tab-bar-switch-to-prev-tab | Previous tab     |
+| ~C-x t n~     | tab-bar-new-tab          | New tab            |
+| ~C-x t k~     | tab-bar-close-tab        | Close tab          |
+| ~C-x t r~     | tab-bar-rename-tab       | Rename tab         |
+
+** Buffer Management
+
+| Key       | Command                  | Description            |
+|-----------+--------------------------+------------------------|
+| ~C-x C-b~ | ibuffer                  | Buffer list            |
+| ~C-x K~   | my/kill-current-buffer   | Kill this buffer       |
+| ~C-c k~   | my/kill-other-buffers    | Kill other buffers     |
+| ~C-c R~   | my/revert-buffer-no-confirm | Reload file         |
+
+* Ibuffer Groups
+
+Buffers are automatically grouped:
+- Org
+- LaTeX
+- Typst
+- Seforim
+- Roam
+- Dired
+- PDF
+- Magit
+- Help
+- Emacs
+
+* Configuration Options
+
+** Avy timeout
+
+#+begin_src emacs-lisp :tangle no
+(setq avy-timeout-seconds 0.5)  ; Wait longer for input
+#+end_src
+
+** Ace-window keys
+
+#+begin_src emacs-lisp :tangle no
+(setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+#+end_src
+
+* Dependencies
+
+- 00-core
+- 01-ui
+
+* Troubleshooting
+
+** Avy not jumping
+
+Make sure target is visible on screen. Avy only jumps to visible text.
+
+** Winner mode not working
+
+Check: ~M-: winner-mode~
+
+Should return ~t~.

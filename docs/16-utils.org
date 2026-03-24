@@ -1,0 +1,74 @@
+#+TITLE: 16-utils Module
+#+STARTUP: overview
+
+* Purpose
+
+Utility functions:
+- Config management
+- Window splitting
+- Server mode
+- Startup timing
+
+* Key Bindings
+
+| Key         | Command              | Description            |
+|-------------+----------------------+------------------------|
+| ~C-c e i~   | my/open-config       | Open config.org        |
+| ~C-c e r~   | my/reload-config     | Reload configuration   |
+| ~C-c e R~   | restart-emacs        | Restart Emacs          |
+| ~C-x 2~     | my/split-and-follow-h| Split below & switch   |
+| ~C-x 3~     | my/split-and-follow-v| Split right & switch   |
+
+* Functions
+
+** Config Management
+
+| Function         | Description                  |
+|------------------+------------------------------|
+| my/open-config   | Open main config file        |
+| my/reload-config | Reload init.el               |
+
+** Window Splitting
+
+| Function              | Description                |
+|-----------------------+----------------------------|
+| my/split-and-follow-h | Split below, move to new   |
+| my/split-and-follow-v | Split right, move to new   |
+
+These replace default ~C-x 2~ and ~C-x 3~ to automatically
+move cursor to the new window.
+
+* Server Mode
+
+Emacs server starts automatically.
+
+Use ~emacsclient~ to open files in running Emacs:
+#+begin_example
+emacsclient -c file.txt    # New frame
+emacsclient -n file.txt    # No wait
+emacsclient -t file.txt    # Terminal
+#+end_example
+
+* Startup Timing
+
+On startup, shows: "Emacs ready in X.XX seconds"
+
+Check in ~*Messages*~ buffer.
+
+* Dependencies
+
+- 00-core
+- restart-emacs package
+
+* Troubleshooting
+
+** Server not starting
+
+Check: ~M-: (server-running-p)~
+
+Manual start: ~M-x server-start~
+
+** Slow startup
+
+Check ~*Messages*~ for timing.
+Remove ~:demand t~ from slow packages.

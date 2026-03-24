@@ -1,0 +1,1 @@
+/nix/store/samxa2alxikwl12nqfmlmc8r0gnpvlin-home-manager-files/.config/emacs/init.el

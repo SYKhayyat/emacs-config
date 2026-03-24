@@ -1,0 +1,110 @@
+#+TITLE: 13-seforim Module
+#+STARTUP: overview
+
+* Purpose
+
+Jewish texts library management:
+- Find seforim by name
+- Full-text search
+- Daf navigation (Talmud)
+- Integration with plocate and recoll
+
+* Key Bindings
+
+| Key         | Command              | Description            |
+|-------------+----------------------+------------------------|
+| ~C-c s f~   | seforim-find         | Find by name           |
+| ~C-c s r~   | seforim-find-recent  | Find recent            |
+| ~C-c s s~   | seforim-search       | Full-text search       |
+| ~C-c s b~   | seforim-browse       | Browse directory       |
+| ~C-c s o~   | seforim-outline      | Show outline           |
+| ~C-c s d~   | seforim-goto-daf     | Go to daf (any masechet)|
+| ~C-c s D~   | seforim-goto-daf-current | Go to daf (current)|
+| ~C-c s I~   | seforim-reindex      | Reindex with recoll    |
+| ~C-c s ?~   | seforim-status       | Show status            |
+
+Also available via Hydra: ~C-c S~
+
+* File Location
+
+Default: ~~/Documents/seforim/~
+
+Change in ~default.nix~: ~myConfig.seforimPath~
+
+* Supported Formats
+
+- org
+- pdf
+- epub
+- docx
+- doc
+- odt
+
+* Search Tools
+
+| Tool    | Purpose              | Speed   |
+|---------+----------------------+---------|
+| plocate | File name search     | Fast    |
+| recoll  | Full-text search     | Medium  |
+| ripgrep | Text search (fallback)| Fast   |
+| fd      | File search (fallback)| Fast   |
+
+* Daf Navigation
+
+For Bavli files in ~seforim/Bavli/~:
+
+Format: ~Masechet.org~ with headings like ~* דף ב ע"א~
+
+Usage:
+1. ~C-c s d~ - prompted for masechet and daf
+2. ~C-c s D~ - in current Bavli file, just enter daf
+
+* Recoll Configuration
+
+Recoll config in ~$/.recoll/recoll.conf~ (managed by Nix).
+
+Reindex: ~C-c s I~ or ~recollindex~ in terminal.
+
+* Configuration Options
+
+** Change seforim directory
+
+In ~default.nix~:
+#+begin_src nix :tangle no
+myConfig.seforimPath = "/path/to/seforim";
+#+end_src
+
+** Add file extensions
+
+In ~13-seforim.org~:
+#+begin_src emacs-lisp :tangle no
+(setq seforim-extensions '("org" "pdf" "epub" "txt"))
+#+end_src
+
+* Dependencies
+
+- 00-core
+- 03-completion (for consult)
+- plocate (optional, system)
+- recoll (optional, system)
+- ripgrep (fallback, system)
+
+* Troubleshooting
+
+** Search not finding files
+
+Check status: ~C-c s ?~
+
+Ensure plocate or fd is installed.
+
+** Full-text search not working
+
+Check recoll: ~which recoll~
+
+Reindex: ~C-c s I~
+
+** Daf not found
+
+Check heading format matches: ~דף X ע"Y~
+
+Hebrew numerals: א=1, ב=2, etc.

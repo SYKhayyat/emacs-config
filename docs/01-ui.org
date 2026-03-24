@@ -1,0 +1,90 @@
+#+TITLE: 01-ui Module
+#+STARTUP: overview
+
+* Purpose
+
+User interface settings:
+- Theme and colors
+- Fonts (including Hebrew)
+- Modeline
+- Line numbers
+- Visual aids
+
+* Packages Used
+
+| Package            | Purpose                    |
+|--------------------+----------------------------|
+| doom-themes        | Color theme (doom-one)     |
+| doom-modeline      | Modern modeline            |
+| nerd-icons         | Icons for modeline         |
+| all-the-icons      | Icons for dired            |
+| all-the-icons-dired| Dired icons integration    |
+| pulsar             | Pulse current line         |
+| recentf            | Recent files tracking      |
+| savehist           | Save minibuffer history    |
+
+* Key Settings
+
+** Fonts
+
+| Element     | Font           | Size |
+|-------------+----------------+------|
+| Default     | JetBrains Mono | 120  |
+| Hebrew      | David CLM      | -    |
+| Hebrew (alt)| Noto Sans Hebrew| -   |
+| Modeline    | (default)      | 100  |
+| Minibuffer  | (default)      | 100  |
+
+Size is in 1/10 pt (120 = 12pt).
+
+** Line Numbers
+
+- Style: Relative
+- Enabled in: prog-mode, text-mode, conf-mode
+- Disabled in: org, term, shell, pdf
+
+** Visual Aids
+
+- Highlight current line: Yes
+- Show matching parens: Yes (no delay)
+- Column number in modeline: Yes
+
+* Configuration Options
+
+To change fonts, edit ~01-ui.org~:
+
+#+begin_src emacs-lisp :tangle no
+(set-face-attribute 'default nil
+                    :family "Your Font"
+                    :height 140)  ; 14pt
+#+end_src
+
+To change theme:
+
+#+begin_src emacs-lisp :tangle no
+(load-theme 'doom-dracula t)  ; or any doom-theme
+#+end_src
+
+Available themes: ~M-x counsel-load-theme~ or ~M-x consult-theme~
+
+* Dependencies
+
+- 00-core (must load first)
+
+* Troubleshooting
+
+** Theme not loading
+
+Check: ~M-: (featurep 'doom-themes)~
+
+If nil, package not installed. Add to ~default.nix~.
+
+** Hebrew font not showing
+
+Check font exists: ~M-: (font-info "David CLM")~
+
+If nil, install Hebrew fonts in NixOS config.
+
+** Icons not showing
+
+Run: ~M-x nerd-icons-install-fonts~

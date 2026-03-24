@@ -1,0 +1,79 @@
+#+TITLE: LaTeX/AUCTeX
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* LaTeX Configuration
+
+#+begin_src emacs-lisp
+;;; 08-latex.el --- LaTeX and AUCTeX settings -*- lexical-binding: t; -*-
+
+(use-package tex
+  :ensure auctex
+  :mode ("\\.tex\\'" . LaTeX-mode)
+  :hook ((LaTeX-mode . my/setup-rtl-mode)
+         (LaTeX-mode . TeX-source-correlate-mode)
+         (LaTeX-mode . turn-on-reftex)
+         (LaTeX-mode . LaTeX-math-mode)
+         (LaTeX-mode . visual-line-mode)
+         (LaTeX-mode . electric-pair-local-mode))
+  :config
+  (setq TeX-auto-save t
+        TeX-parse-self t
+        TeX-master nil
+        TeX-engine 'luatex
+        TeX-PDF-mode t
+        TeX-view-program-selection '((output-pdf "PDF Tools"))
+        TeX-source-correlate-start-server t
+        reftex-plug-into-AUCTeX t)
+  (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer))
+
+(defun my/latex-word-count ()
+  "Count words in LaTeX buffer."
+  (interactive)
+  (if (executable-find "detex")
+      (let* ((file (buffer-file-name))
+             (result (if file
+                         (shell-command-to-string
+                          (format "detex %s 2>/dev/null | wc -w"
+                                  (shell-quote-argument file)))
+                       (let ((temp-file (make-temp-file "latex-wc" nil ".tex")))
+                         (write-region (point-min) (point-max) temp-file)
+                         (prog1
+                             (shell-command-to-string
+                              (format "detex %s 2>/dev/null | wc -w"
+                                      (shell-quote-argument temp-file)))
+                           (delete-file temp-file))))))
+        (message "Words: %s" (string-trim result)))
+    (message "detex not found")))
+
+(with-eval-after-load 'latex
+  (define-key LaTeX-mode-map (kbd "C-c C-w") #'my/latex-word-count))
+
+;; Footnote shortcuts
+(defun my/insert-footnote-1 () (interactive) (insert "\\footnote{}") (backward-char 1))
+(defun my/insert-footnote-2 () (interactive) (insert "\\footnoteB{}") (backward-char 1))
+(defun my/insert-footnote-3 () (interactive) (insert "\\footnoteC{}") (backward-char 1))
+(defun my/insert-footnote-4 () (interactive) (insert "\\footnoteD{}") (backward-char 1))
+(defun my/insert-footnote-5 () (interactive) (insert "\\footnoteE{}") (backward-char 1))
+
+(with-eval-after-load 'latex
+  (define-key LaTeX-mode-map (kbd "C-c f 1") #'my/insert-footnote-1)
+  (define-key LaTeX-mode-map (kbd "C-c f 2") #'my/insert-footnote-2)
+  (define-key LaTeX-mode-map (kbd "C-c f 3") #'my/insert-footnote-3)
+  (define-key LaTeX-mode-map (kbd "C-c f 4") #'my/insert-footnote-4)
+  (define-key LaTeX-mode-map (kbd "C-c f 5") #'my/insert-footnote-5))
+
+;; Preamble templates
+(defvar my/doc-latex-hebrew-preamble
+  "\\babelprovide[main, import]{hebrew}
+\\babelprovide[import]{english}
+\\babelfont{rm}{David CLM}
+\\babelfont{sf}{Nachlieli CLM}
+\\babelfont{tt}{Miriam Mono CLM}")
+
+(defun my/insert-latex-hebrew-preamble ()
+  (interactive)
+  (insert my/doc-latex-hebrew-preamble))
+
+(provide '08-latex)
+;;; 08-latex.el ends here
+#+end_src

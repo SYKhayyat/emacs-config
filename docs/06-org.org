@@ -1,0 +1,116 @@
+#+TITLE: 06-org Module
+#+STARTUP: overview
+
+* Purpose
+
+Org mode configuration:
+- Document structure
+- TODO management
+- Capture templates
+- LaTeX export (Hebrew-ready)
+- Babel code blocks
+
+* Packages Used
+
+| Package      | Purpose                    |
+|--------------+----------------------------|
+| org          | Org mode                   |
+| org-modern   | Modern styling             |
+| org-download | Paste images               |
+
+* Key Bindings
+
+| Key       | Command              | Description            |
+|-----------+----------------------+------------------------|
+| ~C-c a~   | org-agenda           | Open agenda            |
+| ~C-c c~   | org-capture          | Capture note           |
+| ~C-c h f~ | my/org-fix-all-footnotes-rtl | Fix RTL footnotes |
+
+* Capture Templates
+
+| Key | Name        | Description                |
+|-----|-------------|----------------------------|
+| t   | Todo        | New task in inbox          |
+| n   | Note        | Quick note                 |
+| h   | Hebrew Note | Note with Hebrew property  |
+| j   | Journal     | Daily journal entry        |
+| r   | Research    | Research note with source  |
+
+Access: ~C-c c~ then press template key.
+
+* TODO Keywords
+
+| Keyword     | Meaning              |
+|-------------+----------------------|
+| TODO        | Not started          |
+| IN-PROGRESS | Working on it        |
+| WAITING     | Blocked              |
+| DONE        | Completed            |
+| CANCELLED   | Not doing            |
+
+* Tags
+
+| Tag      | Key | Purpose          |
+|----------|-----|------------------|
+| research | r   | Research items   |
+| hebrew   | h   | Hebrew content   |
+| english  | e   | English content  |
+| urgent   | u   | High priority    |
+| writing  | w   | Writing tasks    |
+| reading  | R   | Reading tasks    |
+
+* File Locations
+
+| Purpose   | Path                        |
+|-----------+-----------------------------|
+| Org files | ~/Documents/org/            |
+| Agenda    | ~/Documents/org/            |
+| Inbox     | ~/Documents/org/inbox.org   |
+| Journal   | ~/Documents/org/journal.org |
+| Research  | ~/Documents/org/research.org|
+
+* LaTeX Export
+
+Default class: ~article-hebrew~
+
+Features:
+- LuaLaTeX compiler
+- Hebrew (David CLM font)
+- Bigfoot footnotes (5 levels)
+- Deep nesting (20 levels)
+
+Export: ~C-c C-e l p~ (LaTeX to PDF)
+
+* Configuration Options
+
+** Change TODO keywords
+
+#+begin_src emacs-lisp :tangle no
+(setq org-todo-keywords
+      '((sequence "TODO" "NEXT" "|" "DONE")))
+#+end_src
+
+** Change org directory
+
+#+begin_src emacs-lisp :tangle no
+(setq org-directory "~/notes/")
+(setq org-agenda-files '("~/notes/"))
+#+end_src
+
+* Dependencies
+
+- 00-core
+- 01-ui
+- 02-hebrew (for RTL)
+
+* Troubleshooting
+
+** LaTeX export fails
+
+Check LuaLaTeX: ~which lualatex~
+
+Check fonts: ~fc-list | grep David~
+
+** Images not pasting
+
+Ensure imagemagick is installed: ~which convert~

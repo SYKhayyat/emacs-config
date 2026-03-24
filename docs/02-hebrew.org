@@ -1,0 +1,97 @@
+#+TITLE: 02-hebrew Module
+#+STARTUP: overview
+
+* Purpose
+
+Hebrew language and RTL (right-to-left) support:
+- Bidirectional text handling
+- Hebrew input method
+- RTL-specific editing helpers
+- Document templates
+
+* Packages Used
+
+None (uses built-in Emacs bidi support).
+
+* Key Bindings
+
+| Key       | Command                  | Description              |
+|-----------+--------------------------+--------------------------|
+| ~F9~      | my/toggle-hebrew-input   | Toggle Hebrew keyboard   |
+| ~C-c d~   | my/toggle-direction      | Toggle RTL/LTR           |
+| ~C-c r~   | my/set-rtl               | Set buffer to RTL        |
+| ~C-c l~   | my/set-ltr               | Set buffer to LTR        |
+| ~C-c B~   | my/toggle-bidi-reordering| Toggle bidi display      |
+| ~C-c h q~ | my/insert-hebrew-quotes  | Insert ״...״             |
+| ~C-c h p~ | my/insert-hebrew-parens  | Insert )...( for RTL     |
+| ~C-c h c~ | my/count-hebrew-words    | Count Hebrew words       |
+| ~C-c h n~ | my/create-hebrew-document| Create new Hebrew doc    |
+
+* Automatic Behavior
+
+** RTL by Default
+
+These modes automatically start in RTL:
+- org-mode
+- text-mode
+- markdown-mode
+
+** LTR by Default
+
+These modes automatically start in LTR:
+- prog-mode (all programming)
+
+** Large File Optimization
+
+Files over 5MB automatically:
+- Disable bidi reordering
+- Disable font-lock
+
+* Functions
+
+** my/create-hebrew-document
+
+Interactive function to create new Hebrew documents.
+
+Prompts for type:
+- org
+- latex
+- typst
+- context
+
+Inserts appropriate Hebrew preamble.
+
+* Configuration Options
+
+To change default direction for a mode:
+
+#+begin_src emacs-lisp :tangle no
+;; Make markdown LTR by default
+(add-hook 'markdown-mode-hook #'my/setup-ltr-mode)
+#+end_src
+
+* Dependencies
+
+- 00-core
+- 01-ui (for Hebrew fonts)
+
+* Troubleshooting
+
+** Hebrew displays as boxes
+
+Hebrew font not installed or not configured. Check:
+~M-: (font-info "David CLM")~
+
+** Text direction wrong
+
+Check current direction: ~M-: bidi-paragraph-direction~
+
+Values: ~right-to-left~, ~left-to-right~, or ~nil~ (auto-detect)
+
+** Hebrew input not working
+
+Check input method: ~M-: current-input-method~
+
+Should show ~"hebrew"~ when active.
+
+Toggle with ~F9~ or ~C-\~.

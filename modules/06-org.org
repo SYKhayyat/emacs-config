@@ -1,0 +1,149 @@
+#+TITLE: Org Mode
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Org Mode Configuration
+
+#+begin_src emacs-lisp
+;;; 06-org.el --- Org mode settings -*- lexical-binding: t; -*-
+
+(use-package org
+  :hook ((org-mode . visual-line-mode)
+         (org-mode . my/setup-rtl-mode))
+  :config
+  (setq org-startup-indented t
+        org-hide-leading-stars t
+        org-ellipsis " ▾"
+        org-pretty-entities t
+        org-src-fontify-natively t
+        org-src-tab-acts-natively t
+        org-confirm-babel-evaluate nil
+        org-edit-src-content-indentation 0
+        org-n-level-faces 20
+        org-cycle-level-faces t
+        org-list-indent-offset 2
+        org-list-allow-alphabetical t
+        org-list-demote-modify-bullet '(("+" . "-") ("-" . "+") ("*" . "-"))
+        org-return-follows-link t
+        org-log-done 'time
+        org-todo-keywords
+        '((sequence "TODO(t)" "IN-PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)"))
+        org-directory "~/Documents/org/"
+        org-agenda-files '("~/Documents/org/")
+        org-tag-alist
+        '(("research" . ?r) ("hebrew" . ?h) ("english" . ?e)
+          ("urgent" . ?u) ("writing" . ?w) ("reading" . ?R))))
+
+;; Babel languages
+(with-eval-after-load 'org
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (shell . t)
+     (python . t)
+     (latex . t))))
+
+(use-package org-modern
+  :hook (org-mode . org-modern-mode)
+  :config
+  (setq org-modern-star '("◉" "○" "◈" "◇" "✦" "✧" "✶" "✷")))
+
+;; Capture templates
+(with-eval-after-load 'org
+  (setq org-capture-templates
+        '(("t" "Todo" entry (file+headline "~/Documents/org/inbox.org" "Tasks")
+           "* TODO %?\n  %i\n  %a")
+          ("n" "Note" entry (file+headline "~/Documents/org/inbox.org" "Notes")
+           "* %?\n  %i\n  %a")
+          ("h" "Hebrew Note" entry (file+headline "~/Documents/org/inbox.org" "Notes")
+           "* %?\n  :PROPERTIES:\n  :LANG: hebrew\n  :END:\n  %i")
+          ("j" "Journal" entry (file+datetree "~/Documents/org/journal.org")
+           "* %?\n  Entered on %U\n  %i")
+          ("r" "Research" entry (file+headline "~/Documents/org/research.org" "Inbox")
+           "* %?\n  :PROPERTIES:\n  :SOURCE: \n  :END:\n  %i\n  %a"))))
+
+(global-set-key (kbd "C-c a") #'org-agenda)
+(global-set-key (kbd "C-c c") #'org-capture)
+
+(use-package org-download
+  :after org
+  :hook (org-mode . org-download-enable)
+  :config
+  (setq org-download-method 'directory
+        org-download-image-dir "./images"
+        org-download-heading-lvl nil))
+
+;; RTL footnote fix
+(with-eval-after-load 'org
+  (advice-add 'org-footnote-new :after
+              (lambda (&rest _)
+                (when (eq bidi-paragraph-direction 'right-to-left)
+                  (insert ?\x200F)))))
+
+(defun my/org-fix-all-footnotes-rtl ()
+  "Fix all footnotes for RTL."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (let ((count 0))
+      (while (re-search-forward "^\\(\\[fn:[^]]+\\]\\)" nil t)
+        (unless (looking-at (char-to-string ?\x200F))
+          (insert ?\x200F)
+          (cl-incf count)))
+      (message "Fixed %d footnotes" count))))
+
+(global-set-key (kbd "C-c h f") #'my/org-fix-all-footnotes-rtl)
+
+;; LaTeX export for Hebrew
+(with-eval-after-load 'ox-latex
+  (setq org-latex-compiler "lualatex")
+  (setq org-latex-pdf-process
+        '("latexmk -pdflatex='lualatex -shell-escape -interaction nonstopmode' -pdf -bibtex -f %f"))
+  (setq org-latex-packages-alist
+        '(("" "fontspec" t)
+          ("bidi=basic" "babel" t)
+          ("" "bigfoot" t)
+          ("" "titlesec" t)
+          ("" "enumitem" t)))
+  (add-to-list 'org-latex-classes
+               '("article-hebrew"
+                 "\\documentclass[11pt]{article}
+[NO-DEFAULT-PACKAGES]
+[PACKAGES]
+\\babelprovide[main, import]{hebrew}
+\\babelprovide[import]{english}
+\\babelfont{rm}{David CLM}
+\\babelfont{sf}{Nachlieli CLM}
+\\babelfont{tt}{Miriam Mono CLM}
+\\DeclareNewFootnote{default}
+\\DeclareNewFootnote{B}
+\\DeclareNewFootnote{C}
+\\DeclareNewFootnote{D}
+\\DeclareNewFootnote{E}
+\\setcounter{secnumdepth}{10}
+\\setcounter{tocdepth}{10}
+\\setlistdepth{20}
+\\renewlist{itemize}{itemize}{20}
+\\renewlist{enumerate}{enumerate}{20}
+[EXTRA]"
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+  (setq org-latex-default-class "article-hebrew"))
+
+;; Auto-tangle config
+(defun my/tangle-config ()
+  "Tangle config.org when saved."
+  (when (string-equal (buffer-file-name)
+                      (expand-file-name "config.org" user-emacs-directory))
+    (let ((org-confirm-babel-evaluate nil))
+      (org-babel-tangle))))
+
+(add-hook 'org-mode-hook
+          (lambda ()
+            (add-hook 'after-save-hook #'my/tangle-config nil t)))
+
+(provide '06-org)
+;;; 06-org.el ends here
+#+end_src

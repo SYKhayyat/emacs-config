@@ -1,0 +1,70 @@
+#+TITLE: 10-pdf Module
+#+STARTUP: overview
+
+* Purpose
+
+PDF viewing inside Emacs:
+- Fast rendering
+- Midnight mode (dark)
+- Synctex support
+
+* Packages Used
+
+| Package   | Purpose         |
+|-----------+-----------------|
+| pdf-tools | PDF viewer      |
+
+* Key Bindings
+
+Standard PDF-tools bindings:
+
+| Key       | Command                | Description          |
+|-----------+------------------------+----------------------|
+| ~n~       | pdf-view-next-page     | Next page            |
+| ~p~       | pdf-view-previous-page | Previous page        |
+| ~+~       | pdf-view-enlarge       | Zoom in              |
+| ~-~       | pdf-view-shrink        | Zoom out             |
+| ~0~       | pdf-view-scale-reset   | Reset zoom           |
+| ~g~       | pdf-view-goto-page     | Go to page           |
+| ~o~       | pdf-outline            | Show outline         |
+| ~s s~     | pdf-occur              | Search               |
+| ~C-s~     | isearch-forward        | Incremental search   |
+
+* Settings
+
+| Setting        | Value         |
+|----------------+---------------|
+| Display size   | fit-page      |
+| Resize factor  | 1.1           |
+| Scaling        | Enabled       |
+| Midnight mode  | Auto-enabled  |
+
+* Configuration Options
+
+** Disable midnight mode
+
+#+begin_src emacs-lisp :tangle no
+(add-hook 'pdf-view-mode-hook
+          (lambda () (pdf-view-midnight-minor-mode -1)))
+#+end_src
+
+** Change default zoom
+
+#+begin_src emacs-lisp :tangle no
+(setq pdf-view-display-size 'fit-width)
+#+end_src
+
+* Dependencies
+
+- 00-core
+- poppler (system library)
+
+* Troubleshooting
+
+** PDF not rendering
+
+Rebuild pdf-tools: ~M-x pdf-tools-install~
+
+** Blurry text
+
+Enable scaling: ~(setq pdf-view-use-scaling t)~
