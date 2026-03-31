@@ -102,5 +102,5 @@ Create:    _n_: New document
 
   (global-set-key (kbd "C-c P") #'hydra-document/body))
 
-(provide '15-hydras)
+(provide '16-hydras)
 ;;; 15-hydras.el ends here

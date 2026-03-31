@@ -10,6 +10,7 @@
   :hook ((org-mode . visual-line-mode)
          (org-mode . my/setup-rtl-mode))
   :config
+  ;; Basic settings
   (setq org-startup-indented t
         org-hide-leading-stars t
         org-ellipsis " ▾"
@@ -18,14 +19,18 @@
         org-src-tab-acts-natively t
         org-confirm-babel-evaluate nil
         org-edit-src-content-indentation 0
-        org-n-level-faces 20
-        org-cycle-level-faces t
-        org-list-indent-offset 2
-        org-list-allow-alphabetical t
-        org-list-demote-modify-bullet '(("+" . "-") ("-" . "+") ("*" . "-"))
         org-return-follows-link t
-        org-log-done 'time
-        org-todo-keywords
+        org-log-done 'time)
+
+  ;; Deep nesting support (20 levels)
+  (setq org-n-level-faces 20
+        org-cycle-level-faces nil
+        org-list-allow-alphabetical t
+        org-list-indent-offset 2
+        org-list-demote-modify-bullet '(("+" . "-") ("-" . "+") ("*" . "-")))
+
+  ;; TODO and tags
+  (setq org-todo-keywords
         '((sequence "TODO(t)" "IN-PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)"))
         org-directory "~/Documents/org/"
         org-agenda-files '("~/Documents/org/")
@@ -45,7 +50,8 @@
 (use-package org-modern
   :hook (org-mode . org-modern-mode)
   :config
-  (setq org-modern-star '("◉" "○" "◈" "◇" "✦" "✧" "✶" "✷")))
+  (setq org-modern-star '("◉" "○" "◈" "◇" "✦" "✧" "✶" "✷" "❋" "❊"
+                          "◉" "○" "◈" "◇" "✦" "✧" "✶" "✷" "❋" "❊")))
 
 ;; Capture templates
 (with-eval-after-load 'org
@@ -72,6 +78,62 @@
         org-download-image-dir "./images"
         org-download-heading-lvl nil))
 
+;; ═══════════════════════════════════════════════════════════════════════════
+;; NESTED FOOTNOTES FOR ORG
+;; Syntax: [fn:1] for level 1, [fn:1:2] for level 2, [fn:1:2:3] for level 3
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defvar my/org-footnote-level-commands
+  '((1 . "footnote")
+    (2 . "footnoteB")
+    (3 . "footnoteC")
+    (4 . "footnoteD")
+    (5 . "footnoteE")
+    (6 . "footnoteF")
+    (7 . "footnoteG")
+    (8 . "footnoteH")
+    (9 . "footnoteI")
+    (10 . "footnoteJ"))
+  "Mapping of footnote nesting levels to LaTeX commands.")
+
+(defun my/org-nested-footnote-level (label)
+  "Determine nesting level from footnote LABEL like 'fn:1:2:3'."
+  (length (split-string (replace-regexp-in-string "^fn:" "" label) ":")))
+
+(defun my/org-convert-nested-footnotes (backend)
+  "Convert nested footnote syntax to bigfoot commands for LaTeX export."
+  (when (memq backend '(latex beamer))
+    (let ((fn-def-re "^\\[fn:\\([^]]+\\)\\]")
+          (fn-ref-re "\\[fn:\\([^]]+\\)\\]"))
+      ;; Process footnote definitions
+      (save-excursion
+        (goto-char (point-min))
+        (while (re-search-forward fn-def-re nil t)
+          (let* ((label (match-string 1))
+                 (level (my/org-nested-footnote-level label))
+                 (cmd (cdr (assoc level my/org-footnote-level-commands))))
+            (when (and cmd (> level 1))
+              ;; Mark this footnote for special handling
+              (put-text-property (match-beginning 0) (match-end 0)
+                                 'org-footnote-level level))))))))
+
+(with-eval-after-load 'ox
+  (add-hook 'org-export-before-processing-hook #'my/org-convert-nested-footnotes))
+
+;; Custom footnote export
+(with-eval-after-load 'ox-latex
+  (defun my/org-latex-footnote-reference (footnote-reference _contents info)
+    "Export footnote with proper nesting level."
+    (let* ((label (org-element-property :label footnote-reference))
+           (level (if label (my/org-nested-footnote-level label) 1))
+           (cmd (or (cdr (assoc level my/org-footnote-level-commands)) "footnote"))
+           (def (org-export-get-footnote-definition footnote-reference info)))
+      (format "\\%s{%s}" cmd
+              (org-trim (org-export-data def info)))))
+
+  ;; Advice to use our custom exporter for nested footnotes
+  (advice-add 'org-latex-footnote-reference :override #'my/org-latex-footnote-reference))
+
 ;; RTL footnote fix
 (with-eval-after-load 'org
   (advice-add 'org-footnote-new :after
@@ -93,43 +155,122 @@
 
 (global-set-key (kbd "C-c h f") #'my/org-fix-all-footnotes-rtl)
 
-;; LaTeX export for Hebrew
+;; ═══════════════════════════════════════════════════════════════════════════
+;; LATEX EXPORT WITH DEEP NESTING
+;; ═══════════════════════════════════════════════════════════════════════════
+
 (with-eval-after-load 'ox-latex
-  (setq org-latex-compiler "lualatex")
+  (setq org-latex-compiler "lualatex"
+        org-latex-headline-levels 20)
+
   (setq org-latex-pdf-process
         '("latexmk -pdflatex='lualatex -shell-escape -interaction nonstopmode' -pdf -bibtex -f %f"))
+
   (setq org-latex-packages-alist
         '(("" "fontspec" t)
           ("bidi=basic" "babel" t)
           ("" "bigfoot" t)
           ("" "titlesec" t)
           ("" "enumitem" t)))
+
   (add-to-list 'org-latex-classes
                '("article-hebrew"
                  "\\documentclass[11pt]{article}
 [NO-DEFAULT-PACKAGES]
 [PACKAGES]
+
+% ── Hebrew ──
 \\babelprovide[main, import]{hebrew}
 \\babelprovide[import]{english}
 \\babelfont{rm}{David CLM}
 \\babelfont{sf}{Nachlieli CLM}
 \\babelfont{tt}{Miriam Mono CLM}
+
+% ── Footnotes (10 levels) ──
 \\DeclareNewFootnote{default}
 \\DeclareNewFootnote{B}
 \\DeclareNewFootnote{C}
 \\DeclareNewFootnote{D}
 \\DeclareNewFootnote{E}
-\\setcounter{secnumdepth}{10}
-\\setcounter{tocdepth}{10}
+\\DeclareNewFootnote{F}
+\\DeclareNewFootnote{G}
+\\DeclareNewFootnote{H}
+\\DeclareNewFootnote{I}
+\\DeclareNewFootnote{J}
+
+% ── Headings (20 levels) ──
+\\setcounter{secnumdepth}{20}
+\\setcounter{tocdepth}{20}
+
+% ── Lists (20 levels) ──
 \\setlistdepth{20}
+
 \\renewlist{itemize}{itemize}{20}
+\\setlist[itemize,1]{label=\\textbullet}
+\\setlist[itemize,2]{label=\\textendash}
+\\setlist[itemize,3]{label=\\textasteriskcentered}
+\\setlist[itemize,4]{label=\\textperiodcentered}
+\\setlist[itemize,5]{label=\\textbullet}
+\\setlist[itemize,6]{label=\\textendash}
+\\setlist[itemize,7]{label=\\textasteriskcentered}
+\\setlist[itemize,8]{label=\\textperiodcentered}
+\\setlist[itemize,9]{label=\\textbullet}
+\\setlist[itemize,10]{label=\\textendash}
+\\setlist[itemize,11]{label=\\textasteriskcentered}
+\\setlist[itemize,12]{label=\\textperiodcentered}
+\\setlist[itemize,13]{label=\\textbullet}
+\\setlist[itemize,14]{label=\\textendash}
+\\setlist[itemize,15]{label=\\textasteriskcentered}
+\\setlist[itemize,16]{label=\\textperiodcentered}
+\\setlist[itemize,17]{label=\\textbullet}
+\\setlist[itemize,18]{label=\\textendash}
+\\setlist[itemize,19]{label=\\textasteriskcentered}
+\\setlist[itemize,20]{label=\\textperiodcentered}
+
 \\renewlist{enumerate}{enumerate}{20}
+\\setlist[enumerate,1]{label=\\arabic*.}
+\\setlist[enumerate,2]{label=\\alph*.}
+\\setlist[enumerate,3]{label=\\roman*.}
+\\setlist[enumerate,4]{label=\\arabic*.}
+\\setlist[enumerate,5]{label=\\alph*.}
+\\setlist[enumerate,6]{label=\\roman*.}
+\\setlist[enumerate,7]{label=\\arabic*.}
+\\setlist[enumerate,8]{label=\\alph*.}
+\\setlist[enumerate,9]{label=\\roman*.}
+\\setlist[enumerate,10]{label=\\arabic*.}
+\\setlist[enumerate,11]{label=\\alph*.}
+\\setlist[enumerate,12]{label=\\roman*.}
+\\setlist[enumerate,13]{label=\\arabic*.}
+\\setlist[enumerate,14]{label=\\alph*.}
+\\setlist[enumerate,15]{label=\\roman*.}
+\\setlist[enumerate,16]{label=\\arabic*.}
+\\setlist[enumerate,17]{label=\\alph*.}
+\\setlist[enumerate,18]{label=\\roman*.}
+\\setlist[enumerate,19]{label=\\arabic*.}
+\\setlist[enumerate,20]{label=\\alph*.}
+
 [EXTRA]"
                  ("\\section{%s}" . "\\section*{%s}")
                  ("\\subsection{%s}" . "\\subsection*{%s}")
                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
                  ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
                  ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+
   (setq org-latex-default-class "article-hebrew"))
 
 ;; Auto-tangle config

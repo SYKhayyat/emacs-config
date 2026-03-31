@@ -1,1 +1,1 @@
-/nix/store/samxa2alxikwl12nqfmlmc8r0gnpvlin-home-manager-files/.config/emacs/early-init.el
+/nix/store/yask0v5wpl4ipblzzpqbw8yfsb1yrkgx-home-manager-files/.config/emacs/early-init.el

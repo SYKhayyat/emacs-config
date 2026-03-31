@@ -1,5 +1,22 @@
 ;;; -*- coding: utf-8; mode: lisp-data -*-
-(("/home/shaul/.config/emacs/modules/01-ui.org" . 3684)
+(("/home/shaul/Documents/seforim/Other/pdf/טור/אבן העזר/טור-אבן העזר.pdf"
+  . 3)
+ ("/home/shaul/.config/emacs/docs/10-pdf.org" . 4607)
+ ("/home/shaul/Documents/seforim/Other/pdf/טור/אורח חיים/טור- אורח חיים חלק א.pdf"
+  . 2)
+ ("/home/shaul/.config/emacs/docs/13-seforim.org" . 2479)
+ ("/home/shaul/.config/emacs/docs/README.org" . 3738)
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/b_thomas_t_taylor/parodies.org"
+  . 16161)
+ ("/home/shaul/nixos-config/hosts/desktop/configuration.nix" . 493)
+ ("/home/shaul/nixos-config/modules/system/file-sync.nix" . 9511)
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/b_moed/c_pesachim/six_pesachim.org"
+  . 15434)
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/e_kodshim/b_menachos/six_menachos.org"
+  . 28766)
+ ("/home/shaul/Downloads/methReviewExpanded.org" . 53082)
+ ("/home/shaul/.config/emacs/modules/06-org.org" . 4999)
+ ("/home/shaul/.config/emacs/modules/01-ui.org" . 3684)
  ("/home/shaul/.config/emacs/modules/04-editing.el" . 91)
  ("/home/shaul/.config/emacs/modules/04-editing.org" . 659)
  ("/home/shaul/.config/emacs/modules/03-completion.org" . 2957))

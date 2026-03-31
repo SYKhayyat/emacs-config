@@ -69,7 +69,6 @@
 
 ;; Focused writing
 (use-package visual-fill-column
-  :demand t
   :config
   (setq-default visual-fill-column-width 80
                 visual-fill-column-center-text t))

@@ -1,70 +1,119 @@
-#+TITLE: 10-pdf Module
-#+STARTUP: overview
+#+begin_src org
 
-* Purpose
+    Purpose
 
-PDF viewing inside Emacs:
-- Fast rendering
-- Midnight mode (dark)
-- Synctex support
+PDF viewing inside Emacs (NixOS optimized):
 
-* Packages Used
+    Fast rendering with epdfinfo
 
-| Package   | Purpose         |
-|-----------+-----------------|
-| pdf-tools | PDF viewer      |
+    Prevent "void-function" crash on startup
 
-* Key Bindings
+    Fix "gibberish" by forcing PDF mode
 
-Standard PDF-tools bindings:
+    Midnight mode (Dark mode) for seforim
 
-| Key       | Command                | Description          |
-|-----------+------------------------+----------------------|
-| ~n~       | pdf-view-next-page     | Next page            |
-| ~p~       | pdf-view-previous-page | Previous page        |
-| ~+~       | pdf-view-enlarge       | Zoom in              |
-| ~-~       | pdf-view-shrink        | Zoom out             |
-| ~0~       | pdf-view-scale-reset   | Reset zoom           |
-| ~g~       | pdf-view-goto-page     | Go to page           |
-| ~o~       | pdf-outline            | Show outline         |
-| ~s s~     | pdf-occur              | Search               |
-| ~C-s~     | isearch-forward        | Incremental search   |
+    Daf navigation for Talmud PDFs
 
-* Settings
+    Key Bindings
 
-| Setting        | Value         |
-|----------------+---------------|
-| Display size   | fit-page      |
-| Resize factor  | 1.1           |
-| Scaling        | Enabled       |
-| Midnight mode  | Auto-enabled  |
+| Key | Command | Description |
+|-----------+------------------------+------------------------|
+| n | pdf-view-next-page | Next page |
+| p | pdf-view-previous-page | Previous page |
+| + | pdf-view-enlarge | Zoom in |
+| - | pdf-view-shrink | Zoom out |
+| 0 | pdf-view-scale-reset | Reset zoom |
+| g | seforim-pdf-goto-page | Go to page |
+| G | seforim-pdf-goto-daf | Go to daf (Gemara) |
+| o | pdf-outline | Show outline |
+| s s | pdf-occur | Search text |
 
-* Configuration Options
+    Settings
 
-** Disable midnight mode
+| Setting | Value |
+|----------------+------------------|
+| Display size | fit-page |
+| Scaling | Enabled |
+| Midnight mode | Wheat on Black |
 
-#+begin_src emacs-lisp :tangle no
-(add-hook 'pdf-view-mode-hook
-          (lambda () (pdf-view-midnight-minor-mode -1)))
+    Configuration
+
+#+begin_src emacs-lisp
+;; 1. THE NIXOS CRASH VACCINE
+;; This MUST come before (use-package pdf-tools) to stop the void-function error.
+(defun pdf-occur-global-minor-mode (&optional arg)
+(interactive)
+(message "NixOS pdf-tools hook bypass"))
+
+;; 2. THE GIBBERISH PREVENTER
+;; Tell Emacs to use pdf-view-mode for all PDF files immediately
+(setq auto-mode-alist (append '(("\.pdf\'" . pdf-view-mode)) auto-mode-alist))
+
+(use-package pdf-tools
+:ensure t
+:mode ("\.pdf\'" . pdf-view-mode)
+:init
+;; Find the Nix-provided binary
+(setq pdf-info-epdfinfo-program (executable-find "epdfinfo"))
+:config
+;; NixOS standard initialization (Manual start)
+(pdf-info-initialize)
+(pdf-cache-install)
+(pdf-history-install)
+
+;; Viewer Settings
+(setq-default pdf-view-display-size 'fit-page)
+(setq pdf-view-use-scaling t)
+
+;; Midnight Mode (Amber/Wheat on Charcoal)
+(setq pdf-view-midnight-colors '("#dcdccc" . "#1a1a1a"))
+(add-hook 'pdf-view-mode-hook #'pdf-view-midnight-minor-mode)
+
+;; --- DAF NAVIGATION FUNCTIONS ---
+
+(defun seforim-pdf-goto-page (page)
+"Jump to a specific page number."
+(interactive "nGo to page: ")
+(pdf-view-goto-page page))
+
+(defun seforim-pdf-goto-daf (daf-num amud)
+"Jump to a Daf in Vilna Gemara PDF. Assumes page 3 is Daf 2a."
+(interactive "nDaf Number: \nsAmud (a or b): ")
+(let* ((base-page (* (- daf-num 2) 2))
+(offset (if (string= amud "a") 3 4))
+(target-page (+ base-page offset)))
+(pdf-view-goto-page target-page)))
+
+;; Bind keys inside the viewer
+(with-eval-after-load 'pdf-view
+(define-key pdf-view-mode-map (kbd "g") 'seforim-pdf-goto-page)
+(define-key pdf-view-mode-map (kbd "G") 'seforim-pdf-goto-daf)
+(define-key pdf-view-mode-map (kbd "o") 'pdf-outline)
+(define-key pdf-view-mode-map (kbd "s s") 'pdf-occur)))
 #+end_src
 
-** Change default zoom
+    Troubleshooting
 
-#+begin_src emacs-lisp :tangle no
-(setq pdf-view-display-size 'fit-width)
+** If files still show as gibberish
+Run M-x pdf-view-mode. If that works, then another config file is loading after this one and stealing the .pdf association.
+
+** If the error "void-function" persists
+You may need to run home-manager switch or nixos-rebuild to ensure the new org file is tangled into your config directory.
 #+end_src
+Why did I change it this way?
 
-* Dependencies
+    Removed Global Properties: Your seforim file starts directly with * Purpose. I removed the #+TITLE and #+PROPERTY headers I added earlier, which were likely confusing your Nix/Org tangling script.
 
-- 00-core
-- poppler (system library)
+    Simplified the Code Block: The code block now looks exactly like the ones in your working files.
 
-* Troubleshooting
+    The "Vaccine" Placement: I kept the (defun pdf-occur-global-minor-mode ...) at the very top of the code block. This is essential for NixOS because the Nix-provided pdf-tools tries to call that function the moment the package is loaded.
 
-** PDF not rendering
+    Auto-mode Append: I used (setq auto-mode-alist (append ...)) to ensure our PDF rule is at the absolute top of the list, so Emacs sees it first.
 
-Rebuild pdf-tools: ~M-x pdf-tools-install~
+Please try this:
 
-** Blurry text
+    Save this to 10-pdf.org.
 
-Enable scaling: ~(setq pdf-view-use-scaling t)~
+    Run your Nix build/switch command (or restart Emacs if it tangles on start).
+
+    Check the *Messages* buffer (C-h e)—if you see "NixOS pdf-tools hook bypass", it is working!

@@ -1,4 +1,4 @@
-;;; 12-magit.el --- Magit and git integration -*- lexical-binding: t; -*-
+;;; 13-magit.el --- Magit and git integration -*- lexical-binding: t; -*-
 
 (use-package magit
   :bind (("C-x g" . magit-status)
@@ -14,5 +14,5 @@
 (use-package git-timemachine
   :bind ("C-c v t" . git-timemachine))
 
-(provide '12-magit)
-;;; 12-magit.el ends here
+(provide '13-magit)
+;;; 13-magit.el ends here

@@ -1,10 +1,4 @@
-#+TITLE: Utilities
-#+PROPERTY: header-args:emacs-lisp :tangle yes
-
-* Miscellaneous Utilities
-
-#+begin_src emacs-lisp
-;;; 16-utils.el --- Utility functions -*- lexical-binding: t; -*-
+;;; 17-utils.el --- Utility functions -*- lexical-binding: t; -*-
 
 ;; Config management
 (defun my/open-config ()
@@ -54,6 +48,5 @@
             (message "Emacs ready in %.2f seconds"
                      (float-time (time-subtract after-init-time before-init-time)))))
 
-(provide '16-utils)
-;;; 16-utils.el ends here
-#+end_src
+(provide '17-utils)
+;;; 17-utils.el ends here

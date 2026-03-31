@@ -33,21 +33,145 @@
         (find-file-other-window pdf)
       (message "PDF not found"))))
 
+;; ═══════════════════════════════════════════════════════════════════════════
+;; HEBREW PREAMBLE
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defvar my/typst-hebrew-preamble
+  "#set text(lang: \"he\", font: \"David CLM\")
+#set page(flipped: true)
+#set heading(numbering: \"1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1\")
+"
+  "Typst Hebrew preamble.")
+
 (defun my/insert-typst-hebrew-preamble ()
   "Insert Hebrew preamble for Typst."
   (interactive)
-  (insert "#set text(lang: \"he\", font: \"David CLM\")
-#set page(flipped: true)
-#set heading(numbering: \"1.1.1\")
+  (insert my/typst-hebrew-preamble))
 
-"))
+;; ═══════════════════════════════════════════════════════════════════════════
+;; FULL PREAMBLE (5 footnotes simulated, unlimited headings/lists)
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defvar my/typst-full-preamble
+  "// ══════════════════════════════════════════════════════════════
+// FULL TYPST PREAMBLE
+// Hebrew, 5 footnote levels (simulated), unlimited headings/lists
+// ══════════════════════════════════════════════════════════════
+
+// ── Hebrew ──
+#set text(lang: \"he\", font: \"David CLM\")
+#set page(flipped: true)
+
+// ── Headings (20 levels numbered) ──
+#set heading(numbering: \"1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1\")
+
+// ── Footnotes (5 levels) ──
+// Level 1: standard footnote
+#let fn1(body) = footnote(body)
+#let fn = fn1
+
+// Levels 2-5: simulated with margin notes and symbols
+#let fn-counter-2 = counter(\"fn2\")
+#let fn-counter-3 = counter(\"fn3\")
+#let fn-counter-4 = counter(\"fn4\")
+#let fn-counter-5 = counter(\"fn5\")
+
+#let fn2(body) = {
+  fn-counter-2.step()
+  super(text(size: 0.7em)[†])
+  footnote(numbering: n => [†#n], body)
+}
+
+#let fn3(body) = {
+  fn-counter-3.step()
+  super(text(size: 0.7em)[‡])
+  footnote(numbering: n => [‡#n], body)
+}
+
+#let fn4(body) = {
+  fn-counter-4.step()
+  super(text(size: 0.7em)[§])
+  footnote(numbering: n => [§#n], body)
+}
+
+#let fn5(body) = {
+  fn-counter-5.step()
+  super(text(size: 0.7em)[¶])
+  footnote(numbering: n => [¶#n], body)
+}
+
+// Aliases
+#let fnB = fn2
+#let fnC = fn3
+#let fnD = fn4
+#let fnE = fn5
+
+// ── Heading in footnotes ──
+#let fnh(level, body) = {
+  let sizes = (1.4em, 1.3em, 1.2em, 1.1em, 1.05em, 1em, 1em, 1em, 1em, 1em,
+               1em, 1em, 1em, 1em, 1em, 1em, 1em, 1em, 1em, 1em)
+  let size = if level <= sizes.len() { sizes.at(level - 1) } else { 1em }
+  block(above: 0.8em, below: 0.4em, text(weight: \"bold\", size: size, body))
+}
+
+// ── Tables ──
+#let fn-table-counter = counter(\"fn-table\")
+#let fn-table(caption: none, ..args) = {
+  fn-table-counter.step()
+  block[
+    #if caption != none [*Table #fn-table-counter.display():* #caption]
+    #v(0.3em)
+    #table(..args)
+  ]
+}
+
+// ── Code ──
+#let fn-code(lang: none, body) = {
+  block(
+    fill: luma(245),
+    inset: 8pt,
+    radius: 3pt,
+    width: 100%,
+    raw(body.text, lang: lang)
+  )
+}
+
+#let fnc(body) = raw(body)
+"
+  "Full Typst preamble with all features.")
+
+(defun my/insert-typst-full-preamble ()
+  "Insert full Typst preamble."
+  (interactive)
+  (insert my/typst-full-preamble))
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; FOOTNOTE SHORTCUTS
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defun my/typst-insert-footnote-1 () (interactive) (insert "#fn[]") (backward-char 1))
+(defun my/typst-insert-footnote-2 () (interactive) (insert "#fnB[]") (backward-char 1))
+(defun my/typst-insert-footnote-3 () (interactive) (insert "#fnC[]") (backward-char 1))
+(defun my/typst-insert-footnote-4 () (interactive) (insert "#fnD[]") (backward-char 1))
+(defun my/typst-insert-footnote-5 () (interactive) (insert "#fnE[]") (backward-char 1))
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; KEYBINDINGS
+;; ═══════════════════════════════════════════════════════════════════════════
 
 (with-eval-after-load 'typst-ts-mode
   (when (boundp 'typst-ts-mode-map)
     (define-key typst-ts-mode-map (kbd "C-c C-c") #'my/typst-compile)
     (define-key typst-ts-mode-map (kbd "C-c C-w") #'my/typst-watch)
     (define-key typst-ts-mode-map (kbd "C-c C-v") #'my/typst-view)
-    (define-key typst-ts-mode-map (kbd "C-c t h") #'my/insert-typst-hebrew-preamble)))
+    (define-key typst-ts-mode-map (kbd "C-c p h") #'my/insert-typst-hebrew-preamble)
+    (define-key typst-ts-mode-map (kbd "C-c p f") #'my/insert-typst-full-preamble)
+    (define-key typst-ts-mode-map (kbd "C-c f 1") #'my/typst-insert-footnote-1)
+    (define-key typst-ts-mode-map (kbd "C-c f 2") #'my/typst-insert-footnote-2)
+    (define-key typst-ts-mode-map (kbd "C-c f 3") #'my/typst-insert-footnote-3)
+    (define-key typst-ts-mode-map (kbd "C-c f 4") #'my/typst-insert-footnote-4)
+    (define-key typst-ts-mode-map (kbd "C-c f 5") #'my/typst-insert-footnote-5)))
 
 (provide '09-typst)
 ;;; 09-typst.el ends here

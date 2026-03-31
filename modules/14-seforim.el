@@ -1,4 +1,4 @@
-;;; 13-seforim.el --- Jewish texts library management -*- lexical-binding: t; -*-
+;;; 14-seforim.el --- Jewish texts library management -*- lexical-binding: t; -*-
 
 (defgroup seforim nil "Seforim library." :group 'applications)
 
@@ -214,5 +214,5 @@
 (global-set-key (kbd "C-c s I") #'seforim-reindex)
 (global-set-key (kbd "C-c s ?") #'seforim-status)
 
-(provide '13-seforim)
-;;; 13-seforim.el ends here
+(provide '14-seforim)
+;;; 14-seforim.el ends here
