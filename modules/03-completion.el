@@ -12,8 +12,21 @@
 (use-package orderless
   :demand t
   :config
+  (defun seforim-orderless-hebrew-dispatcher (pattern _index _total)
+    "Multi-method Hebrew Matching.
+     -term (exclude), =term (literal), term (flex + spelling variants)."
+    (cond
+     ((string-prefix-p "-" pattern) `(orderless-without-literal . ,(substring pattern 1)))
+     ((string-prefix-p "=" pattern) `(orderless-literal . ,(substring pattern 1)))
+     ((string-match-p "\\`[א-ת- ]+\\'" pattern)
+      (let ((regex pattern))
+        (setq regex (replace-regexp-in-string "ו" "ו?" regex))
+        (setq regex (replace-regexp-in-string "י" "י?" regex))
+        (mapconcat (lambda (c) (regexp-quote (char-to-string c))) regex ".*")))))
+
   (setq completion-styles '(orderless basic)
         completion-category-defaults nil
+        orderless-style-dispatchers '(seforim-orderless-hebrew-dispatcher)
         completion-category-overrides '((file (styles partial-completion)))))
 
 ;; Marginalia - rich annotations
@@ -24,7 +37,8 @@
 
 ;; Consult - enhanced commands
 (use-package consult
-  :bind (("C-s" . consult-line)
+  :bind (;; ("C-s" . consult-line)                 ; ← REMOVED (now default isearch)
+         ("M-s l" . consult-line)                  ; ← NEW binding for fuzzy line search
          ("C-x b" . consult-buffer)
          ("C-x 4 b" . consult-buffer-other-window)
          ("M-g g" . consult-goto-line)
@@ -55,7 +69,16 @@
          ("C-;" . embark-dwim)
          ("C-h B" . embark-bindings))
   :config
-  (setq prefix-help-command #'embark-prefix-help-command))
+  (setq prefix-help-command #'embark-prefix-help-command)
+
+  ;; KEEP MINIBUFFER OPEN when using scholarly actions (Open multiple)
+  (setq embark-quit-after-action
+        '((kill-buffer . nil)
+          (seforim-embark-open-tab . nil)
+          (seforim-embark-copy-citation . nil)))
+
+  (add-to-list 'embark-keymap-alist '(seforim-file . seforim-embark-file-map))
+  (add-to-list 'embark-keymap-alist '(recoll-result . seforim-embark-file-map)))
 
 (use-package embark-consult
   :after (embark consult)
@@ -85,26 +108,8 @@
   :config
   (setq jinx-languages "en_US he_IL"))
 
-(defun my/spell-hebrew ()
-  "Set spell check to Hebrew."
-  (interactive)
-  (setq-local jinx-languages "he_IL")
-  (jinx-mode 1)
-  (message "Spell: Hebrew"))
-
-(defun my/spell-english ()
-  "Set spell check to English."
-  (interactive)
-  (setq-local jinx-languages "en_US")
-  (jinx-mode 1)
-  (message "Spell: English"))
-
-(defun my/spell-both ()
-  "Set spell check to both Hebrew and English."
-  (interactive)
-  (setq-local jinx-languages "en_US he_IL")
-  (jinx-mode 1)
-  (message "Spell: Both"))
+(defun my/spell-hebrew () (interactive) (setq-local jinx-languages "he_IL") (jinx-mode 1) (message "Spell: Hebrew"))
+(defun my/spell-english () (interactive) (setq-local jinx-languages "en_US") (jinx-mode 1) (message "Spell: English"))
+(defun my/spell-both () (interactive) (setq-local jinx-languages "en_US he_IL") (jinx-mode 1) (message "Spell: Both"))
 
 (provide '03-completion)
-;;; 03-completion.el ends here

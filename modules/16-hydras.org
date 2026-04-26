@@ -1,113 +1,102 @@
-#+TITLE: Hydras
+#+TITLE: Unified Hydras 3.0 (Synchronized & ASCII-Safe)
 #+PROPERTY: header-args:emacs-lisp :tangle yes
 
-* Hydra Menus
-
-#+begin_src emacs-lisp
-;;; 15-hydras.el --- Hydra definitions -*- lexical-binding: t; -*-
+    Hydra Configuration
+    #+begin_src emacs-lisp
+    ;;; 16-hydras.el --- Unified Hydra menus -- lexical-binding: t; --
 
 (use-package hydra
-  :demand t
-  :config
-
-  ;; Direction and spell hydra
-  (defhydra hydra-direction (:color blue :hint nil)
-    "
-Direction: _r_: RTL  _l_: LTR  _t_: toggle  _B_: bidi
-Spell:     _h_: Hebrew  _e_: English  _b_: both
-Writing:   _w_: focused  _W_: width
+:demand t
+:config
+(defhydra hydra-seforim (:color blue :hint nil)
 "
-    ("r" my/set-rtl)
-    ("l" my/set-ltr)
-    ("t" my/toggle-direction)
-    ("B" my/toggle-bidi-reordering)
-    ("h" my/spell-hebrew)
-    ("e" my/spell-english)
-    ("b" my/spell-both)
-    ("w" my/toggle-focused-writing)
-    ("W" my/set-focused-width)
-    ("q" nil))
-
-  (global-set-key (kbd "C-c D") #'hydra-direction/body)
-
-  ;; Org-roam hydra
-  (defhydra hydra-roam (:color blue :hint nil)
-    "
-Roam: _f_: find  _i_: insert  _c_: capture  _l_: buffer
-      _d_: daily  _D_: date  _g_: graph  _u_: UI
-      _h_: hebrew  _R_: research  _t_: tag
++--------------------------------------------------------------------------+
+| S E F O R I M 3 . 0 --- S I X S E A R C H M E T H O D S |
++--------------------------------------------------------------------------+
+| FILE NAME SEARCH TEXT SEARCH (inside documents) |
+| f: plocate (instant, exact) s: rg (notes: .org/.tex) |
+| F: fd (live filesystem) S: rga (PDFs/EPUBs) |
+| z: fzf (fuzzy, typo-tolerant) r: recoll (boolean, advanced) |
++--------------------------------------------------------------------------+
+| READING & NAVIGATION LIBRARY MANAGEMENT |
+| w: reading room toggle l: study log (recent files) |
+| e: open EPUB (nov) ?: library status |
+| d: jump to daf (PDF/Org) b: browse seforim directory |
+| o: consult outline |
++--------------------------------------------------------------------------+
 "
-    ("f" org-roam-node-find)
-    ("i" org-roam-node-insert)
-    ("c" org-roam-capture)
-    ("l" org-roam-buffer-toggle)
-    ("d" org-roam-dailies-goto-today)
-    ("D" org-roam-dailies-goto-date)
-    ("g" org-roam-graph)
-    ("u" org-roam-ui-mode)
-    ("h" my/org-roam-find-hebrew)
-    ("R" my/org-roam-find-research)
-    ("t" org-roam-tag-add)
-    ("q" nil))
+;; File name search
+("f" seforim-find-name)
+("F" seforim-find-live)
+("z" seforim-find-fzf)
+;; Text search inside documents (Updated to match consolidated 14-seforim)
+("s" seforim-search-library)
+("S" (lambda () (interactive) (seforim-search-library t)))
+("r" seforim-search-recoll)
+;; Reading & navigation
+("w" my/toggle-reading-room)
+("e" nov-open)
+("d" seforim-goto-daf)
+("o" consult-outline)
+("b" (lambda () (interactive) (dired seforim-directory)))
+;; Library management
+("l" seforim-show-log)
+("?" seforim-status)
+("q" nil))
 
-  (global-set-key (kbd "C-c N") #'hydra-roam/body)
+(global-set-key (kbd "C-c S") #'hydra-seforim/body)
 
-  ;; Seforim hydra
-  (defhydra hydra-seforim (:color blue :hint nil)
-    "
-Seforim: _f_: find  _r_: recent  _s_: search  _b_: browse
-         _o_: outline  _d_: daf  _D_: daf (current)
-         _I_: reindex  _?_: status
+(defhydra hydra-direction (:color blue :hint nil)
 "
-    ("f" seforim-find)
-    ("r" seforim-find-recent)
-    ("s" seforim-search)
-    ("b" seforim-browse)
-    ("o" seforim-outline)
-    ("d" seforim-goto-daf)
-    ("D" seforim-goto-daf-current)
-    ("I" seforim-reindex)
-    ("?" seforim-status)
-    ("q" nil))
-
-  (global-set-key (kbd "C-c S") #'hydra-seforim/body)
-
-  ;; Rich footnotes hydra
-  (defhydra hydra-rich-footnotes (:color blue :hint nil)
-    "
-Rich Footnotes
-Insert:   _l_: LaTeX    _t_: Typst      _c_: ConTeXt
-Preamble: _p_: LaTeX    _T_: Typst      _C_: ConTeXt
+Direction: r: RTL l: LTR t: toggle B: bidi reorder
+Writing: w: focused mode W: set width
+Spell: h: Hebrew e: English a: both
 "
-    ("l" my/insert-rich-footnote-latex)
-    ("t" my/insert-rich-footnote-typst)
-    ("c" my/insert-rich-footnote-context)
-    ("p" my/insert-latex-rich-footnotes-preamble)
-    ("T" my/insert-typst-rich-footnotes-preamble)
-    ("C" my/insert-context-rich-footnotes-preamble)
-    ("q" nil))
+("r" my/set-rtl) ("l" my/set-ltr) ("t" my/toggle-direction) ("B" my/toggle-bidi-reordering)
+("h" my/spell-hebrew) ("e" my/spell-english) ("a" my/spell-both)
+("w" my/toggle-focused-writing) ("W" my/set-focused-width) ("q" nil))
 
-  (global-set-key (kbd "C-c F") #'hydra-rich-footnotes/body)
+(global-set-key (kbd "C-c D") #'hydra-direction/body)
 
-  ;; Document hydra
-  (defhydra hydra-document (:color blue :hint nil)
-    "
-Documents
-Preambles: _p_: LaTeX Hebrew  _t_: Typst Hebrew  _c_: ConTeXt Hebrew
-Rich FN:   _l_: LaTeX Rich    _T_: Typst Rich    _C_: ConTeXt Rich
-Create:    _n_: New document
+(defhydra hydra-roam (:color blue :hint nil)
 "
-    ("p" my/insert-latex-hebrew-preamble)
-    ("t" my/insert-typst-hebrew-preamble)
-    ("c" my/insert-context-hebrew-preamble)
-    ("l" my/insert-latex-rich-footnotes-preamble)
-    ("T" my/insert-typst-rich-footnotes-preamble)
-    ("C" my/insert-context-rich-footnotes-preamble)
-    ("n" my/create-hebrew-document)
-    ("q" nil))
+Roam: f: find node i: insert link c: capture
+d: daily g: graph u: UI toggle
+"
+("f" org-roam-node-find) ("i" org-roam-node-insert) ("c" org-roam-capture)
+("d" org-roam-dailies-goto-today) ("g" org-roam-graph) ("u" org-roam-ui-mode) ("q" nil))
 
-  (global-set-key (kbd "C-c P") #'hydra-document/body))
+(global-set-key (kbd "C-c N") #'hydra-roam/body)
+
+(defhydra hydra-academic (:color blue :hint nil)
+"
+Academic: b: open bib i: insert cite r: insert ref
+Web: s: sefaria o: otzar S: scholar
+"
+("b" citar-open) ("i" citar-insert-citation) ("r" citar-insert-reference)
+("s" (lambda () (interactive) (engine/search-sefaria)))
+("o" (lambda () (interactive) (engine/search-otzar)))
+("S" (lambda () (interactive) (engine/search-scholar))) ("q" nil))
+
+(global-set-key (kbd "C-c A") #'hydra-academic/body)
+
+(defhydra hydra-rich-footnotes (:color blue :hint nil)
+"
+Rich Footnotes: l: LX t: Typst c: CT p: LX Pre T: Ty Pre C: CT Pre
+"
+("l" my/insert-rich-footnote-latex) ("t" my/insert-rich-footnote-typst)
+("c" my/insert-rich-footnote-context) ("p" my/insert-latex-rich-footnotes-preamble)
+("T" my/insert-typst-rich-footnotes-preamble) ("C" my/insert-context-rich-footnotes-preamble) ("q" nil))
+
+(global-set-key (kbd "C-c F") #'hydra-rich-footnotes/body)
+
+(defhydra hydra-nix (:color blue :hint nil)
+"
+Nix: r: rebuild h: home switch g: garbage e: open config
+"
+("r" my/nixos-rebuild) ("h" my/home-manager-switch) ("g" my/nix-garbage-collect) ("e" my/open-config) ("q" nil))
+
+(global-set-key (kbd "C-c E") #'hydra-nix/body))
 
 (provide '16-hydras)
-;;; 15-hydras.el ends here
 #+end_src

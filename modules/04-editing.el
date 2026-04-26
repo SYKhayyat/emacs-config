@@ -67,37 +67,32 @@
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
 
-;; Focused writing
-(use-package visual-fill-column
+;; Writable Grep (Edit search results directly)
+(use-package wgrep
+  :config (setq wgrep-auto-save-buffer t))
+
+;; Hebrew Table alignment fix
+(use-package valign
+  :hook (org-mode . valign-mode))
+
+;; Distraction-free Writing Desk
+(use-package olivetti
   :config
-  (setq-default visual-fill-column-width 80
-                visual-fill-column-center-text t))
+  (setq-default olivetti-body-width 100))
 
-(defvar-local my/focused-writing nil)
+;; Focused reading (dim other paragraphs)
+(use-package focus
+  :bind ("C-c C-f" . focus-mode))
 
-(defun my/toggle-focused-writing ()
-  "Toggle focused writing mode."
+(defun my/toggle-reading-room ()
+  "Toggle ultimate scholar mode: focus on the text."
   (interactive)
-  (if my/focused-writing
-      (progn
-        (visual-fill-column-mode -1)
-        (visual-line-mode -1)
-        (setq my/focused-writing nil)
-        (message "Focused: OFF"))
-    (visual-line-mode 1)
-    (visual-fill-column-mode 1)
-    (setq my/focused-writing t)
-    (message "Focused: ON")))
+  (require 'olivetti)
+  (olivetti-mode 'toggle)
+  (visual-line-mode (if olivetti-mode 1 -1))
+  (display-line-numbers-mode (if olivetti-mode -1 1))
+  (message "Reading Room: %s" (if olivetti-mode "ON" "OFF")))
 
-(defun my/set-focused-width (width)
-  "Set focused writing width."
-  (interactive "nWidth: ")
-  (setq visual-fill-column-width width)
-  (when visual-fill-column-mode
-    (visual-fill-column-adjust)))
-
-(global-set-key (kbd "C-c w") #'my/toggle-focused-writing)
-(global-set-key (kbd "C-c W") #'my/set-focused-width)
+(global-set-key (kbd "C-c w") #'my/toggle-reading-room)
 
 (provide '04-editing)
-;;; 04-editing.el ends here

@@ -1,0 +1,47 @@
+#+TITLE: Modern File Management
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+* Dirvish Configuration
+
+#+begin_src emacs-lisp
+;;; 22-dirvish.el --- Modern Dired replacement with Scholar paths -*- lexical-binding: t; -*-
+
+(use-package dirvish
+  :demand t
+  :init
+  (require 'dirvish)
+  ;; Replace standard dired with dirvish
+  (dirvish-override-dired-mode)
+  :custom
+  ;; Scholar-specific quick access paths
+  (dirvish-quick-access-entries
+   '(("h" "~/"                          "Home")
+     ("d" "~/Downloads"                 "Downloads")
+     ("s" "~/Documents/seforim"         "Seforim")
+     ("n" "~/Documents/roam"            "Notes")
+     ("o" "~/Documents/org"             "Org")))
+  :config
+  ;; Visual features
+  (setq dirvish-attributes
+        '(nerd-icons file-time file-size collapse git-msg))
+  
+  ;; Mode line setup
+  (setq dirvish-mode-line-format
+        '(:left (sort symlink) :right (omit yank index)))
+  
+  ;; Note: dirvish-peek-mode and dirvish-side-follow-mode have been
+  ;; merged into core or renamed in recent versions. Previews are 
+  ;; now handled via the internal preview dispatchers.
+  
+  :bind
+  (("C-x d" . dirvish)
+   :map dirvish-mode-map
+   ("a"   . dirvish-quick-access)
+   ("f"   . dirvish-fd)
+   ("TAB" . dirvish-subtype-toggle)
+   ("M-t" . dirvish-layout-toggle)
+   ("h"   . dired-up-directory)
+   ("l"   . dired-find-file)))
+
+(provide '22-dirvish)
+#+end_src

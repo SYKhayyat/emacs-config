@@ -4,6 +4,11 @@
   :hook ((org-mode . visual-line-mode)
          (org-mode . my/setup-rtl-mode))
   :config
+  ;; Load export backends (Fixes Problem 1)
+  (require 'ox-org)
+  (require 'ox-latex)
+  (require 'ox-md)
+
   ;; Basic settings
   (setq org-startup-indented t
         org-hide-leading-stars t
@@ -14,6 +19,7 @@
         org-confirm-babel-evaluate nil
         org-edit-src-content-indentation 0
         org-return-follows-link t
+	org-footnote-auto-adjust t 
         org-log-done 'time)
 
   ;; Deep nesting support (20 levels)
