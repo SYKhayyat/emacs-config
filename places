@@ -1,17 +1,45 @@
 ;;; -*- coding: utf-8; mode: lisp-data -*-
-(("/home/shaul/Documents/seforim/תלמוד בבלי/סדר נשים/יבמות.org"
-  . 20024)
+(("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/b_thomas_t_taylor/longReport.org"
+  . 6975)
+ ("/home/shaul/nixos-config/flake.nix" . 197)
+ ("/home/shaul/nixos-config/hosts/desktop/configuration.nix" . 3054)
+ ("/home/shaul/nixos-config/modules/system/core.nix" . 147)
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/b_thomas_t_taylor/photography2.org"
+  . 23576)
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/"
+  (dired-filename
+   . "/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/b_thomas_t_taylor"))
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/b_thomas_t_taylor/"
+  (dired-filename
+   . "/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/b_thomas_t_taylor/longReport.org"))
+ ("/home/shaul/Documents/siach_shai/b_typed/b_shiur/d_halacha/a_semicha/semicha_shiurim.org"
+  . 34310)
+ ("/home/shaul/nixos-config/modules/system/cli-tools.nix" . 1121)
  ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/e_kodshim/b_menachos/six_menachos.org"
-  . 32450)
+  . 33246)
+ ("/home/shaul/Documents/recents/"
+  (dired-filename . "/home/shaul/Documents/recents/yerushalmi.org"))
+ ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/e_sichsa_deshai/b_moed_sichsa_deshai/beitza/beitza_yerushalmi.org"
+  . 733)
+ ("/home/shaul/Documents/siach_shai/"
+  (dired-filename . "/home/shaul/Documents/siach_shai/b_typed"))
+ ("/home/shaul/Documents/siach_shai/b_typed/"
+  (dired-filename
+   . "/home/shaul/Documents/siach_shai/b_typed/a_siach_shai"))
+ ("/home/shaul/Documents/seforim/Other/pdf/טור/יורה דעה/"
+  (dired-filename
+   . "/home/shaul/Documents/seforim/Other/pdf/טור/יורה דעה/יורה דעה חלק א.pdf"))
+ ("/home/shaul/Documents/seforim/Other/pdf/טור/"
+  (dired-filename
+   . "/home/shaul/Documents/seforim/Other/pdf/טור/יורה דעה"))
+ ("/home/shaul/Documents/seforim/תלמוד בבלי/סדר נשים/יבמות.org"
+  . 20024)
  ("/home/shaul/Documents/seforim/תלמוד בבלי/סדר קדשים/זבחים.org"
   . 66208)
  ("/home/shaul/Documents/seforim/הלכה/שולחן ערוך/מפרשים/שפתי כהן/שפתי כהן על שולחן ערוך יורה דעה.org"
   . 869906)
  ("/home/shaul/Documents/siach_shai/b_typed/b_shiur/d_halacha/a_semicha/sikkum_basar_chalav.org"
   . 45909)
- ("/home/shaul/Documents/siach_shai/b_typed/b_shiur/d_halacha/a_semicha/semicha_shiurim.org"
-  . 33384)
- ("/home/shaul/Downloads/DS2/magicNumber.java" . 944)
  ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/c_od/iyun/yevamos/summer_zman.org"
   . 11240)
  ("/home/shaul/Documents/seforim/חסידות/ספרי חסידות נוספים/בית ישראל (רוזין).org"
@@ -20,8 +48,6 @@
   . 2934)
  ("/home/shaul/.config/emacs/modules/14-seforim.org" . 13537)
  ("/home/shaul/.config/emacs/modules/16-hydras.org" . 4337)
- ("/home/shaul/Downloads/DS2/dialog.java" . 477)
- ("/home/shaul/Downloads/DS2/Frame.java" . 214)
  ("/home/shaul/Documents/seforim/Other/pdf/שס PDF/"
   (dired-filename
    . "/home/shaul/Documents/seforim/Other/pdf/שס PDF/ז מסכת יבמות.pdf"))
@@ -29,19 +55,10 @@
   (dired-filename . "/home/shaul/Documents/seforim/Other/pdf/שס PDF"))
  ("/plain	[file:/home/shaul/Documents/seforim/Other/pninimToOtzaria/pninim"
   . 2)
- ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/b_thomas_t_taylor/"
-  (dired-filename
-   . "/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/b_thomas_t_taylor/parodies.org"))
  ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/b_thomas_t_taylor/parodies.org"
   . 30066)
  ("/home/shaul/Documents/siach_shai/b_typed/d_other/"
   (dired-filename . "/home/shaul/Documents/siach_shai/b_typed"))
- ("/home/shaul/Documents/siach_shai/b_typed/"
-  (dired-filename
-   . "/home/shaul/Documents/siach_shai/b_typed/a_siach_shai"))
- ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/"
-  (dired-filename
-   . "/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/b_thomas_t_taylor"))
  ("/home/shaul/Documents/seforim/הלכה/טור/מפרשים/בית יוסף/בית יוסף - 4.org"
   . 61)
  ("/home/shaul/Documents/siach_shai/b_typed/b_shiur/d_halacha/a_semicha/output.org.org"
@@ -52,13 +69,11 @@
   (dired-filename . "/home/shaul/Documents/seforim/תלמוד בבלי/אחרונים"))
  ("/home/shaul/Documents/seforim/תלמוד בבלי/סדר קדשים/חולין.org"
   . 340704)
- ("/home/shaul/nixos-config/modules/system/cli-tools.nix" . 3475)
  ("/home/shaul/nixos-config/home/common.nix" . 271)
  ("/home/shaul/nixos-config/modules/home/niri/default.nix" . 2363)
  ("/home/shaul/nixos-config/modules/home/emacs/default.nix" . 4412)
  ("/home/shaul/nixos-config/modules/home/yazi.nix" . 1285)
  ("/home/shaul/nixos-config/modules/home/niri/guide.org" . 4491)
- ("/home/shaul/nixos-config/hosts/desktop/configuration.nix" . 2160)
  ("/home/shaul/nixos-config/modules/system/niri.nix" . 763)
  ("/home/shaul/nixos-config/home/desktop.nix" . 2681)
  ("/home/shaul/.config/emacs/modules/22-dirvish.org" . 1401)
@@ -82,7 +97,6 @@
  ("/home/shaul/nixos-config/modules/system/file-sync.nix" . 9511)
  ("/home/shaul/Documents/siach_shai/b_typed/a_siach_shai/a_siach_shai/a_siach_shai_shas/a_siach_shai/b_moed/c_pesachim/six_pesachim.org"
   . 15434)
- ("/home/shaul/Downloads/methReviewExpanded.org" . 53082)
  ("/home/shaul/.config/emacs/modules/01-ui.org" . 3684)
  ("/home/shaul/.config/emacs/modules/04-editing.el" . 91)
  ("/home/shaul/.config/emacs/modules/03-completion.org" . 2957))
