@@ -1,0 +1,78 @@
+#+TITLE: 14c Seforim Search – Four reliable search commands (with real fuzzy)
+#+PROPERTY: header-args:emacs-lisp :tangle 14c-seforim-search.el :comments link
+
+#+BEGIN_SRC emacs-lisp
+;;; 14c-seforim-search.el --- Seforim: four search commands using stable Consult APIs  -*- lexical-binding: t; -*-
+
+(require '14a-seforim-core)
+(require '14b-seforim-candidates)
+
+;; ---------------------------------------------------------------------------
+;; Helper: call consult command with default-directory set to seforim base
+;; ---------------------------------------------------------------------------
+(defun seforim--call-with-seforim-dir (consult-cmd)
+  "Call CONSULT-CMD interactively.
+If prefix argument is used, let consult ask for directory.
+Otherwise set `default-directory' to `seforim--base-dir'."
+  (if current-prefix-arg
+      (call-interactively consult-cmd)
+    (let ((default-directory (seforim--base-dir)))
+      (call-interactively consult-cmd))))
+
+;; ---------------------------------------------------------------------------
+;; 1. plocate – system‑wide filename search
+;; ---------------------------------------------------------------------------
+(defun seforim-find-plocate ()
+  "Filename search with plocate (system‑wide, live, async)."
+  (interactive)
+  (unless (executable-find "plocate") (user-error "plocate not found"))
+  ;; Synchronous check – no sentinel error
+  (let ((out (shell-command-to-string "plocate --limit 1 /")))
+    (when (string-empty-p (string-trim out))
+      (message "Warning: plocate database empty. Run 'sudo updatedb'.")))
+  (call-interactively #'consult-locate))
+
+;; ---------------------------------------------------------------------------
+;; 2. fd – exact filename search (no fuzzy)
+;; ---------------------------------------------------------------------------
+(defun seforim-find-fd ()
+  "Exact filename search with fd (live, async) within seforim directory.
+With prefix arg, prompt for directory."
+  (interactive)
+  (unless (executable-find "fd") (user-error "fd not found"))
+  (seforim--call-with-seforim-dir #'consult-fd))
+
+;; ---------------------------------------------------------------------------
+;; 3. fd fuzzy – glob‑based fuzzy filename search (real fuzzy, not just Orderless)
+;; ---------------------------------------------------------------------------
+(defun seforim-find-fuzzy ()
+  "Fuzzy filename search using fd's glob matching.
+Converts query like 'shab' to '*shab*'.
+With prefix arg, prompt for directory (otherwise uses seforim base)."
+  (interactive)
+  (unless (executable-find "fd") (user-error "fd not found"))
+  (if current-prefix-arg
+      (let ((default-directory (read-directory-name "Search in: ")))
+        (consult-fd))
+    (let* ((dir (seforim--base-dir))
+           (pattern (read-string "Fuzzy pattern: " nil nil)))
+      (unless (string-empty-p (string-trim pattern))
+        (let ((default-directory dir)
+              (consult-fd-args `("fd" "--type" "f" "--hidden" "--no-ignore"
+                                 "--color" "never" "--full-path" "--glob"
+                                 ,(concat "*" pattern "*"))))
+          (consult-fd))))))
+
+;; ---------------------------------------------------------------------------
+;; 4. rg – full‑text search (plain, no niqqud handling)
+;; ---------------------------------------------------------------------------
+(defun seforim-search-rg ()
+  "Full‑text search with ripgrep (live, async) within seforim directory.
+With prefix arg, prompt for directory."
+  (interactive)
+  (unless (executable-find "rg") (user-error "rg not found"))
+  (seforim--call-with-seforim-dir #'consult-ripgrep))
+
+(provide '14c-seforim-search)
+;;; 14c-seforim-search.el ends here
+#+END_SRC
