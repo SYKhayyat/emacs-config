@@ -14,6 +14,18 @@
   (setq vertico-count 15
         vertico-resize nil)
   (vertico-mode 1))
+(defun my/vertico-sort-alpha-directories-first (candidates)
+  "Sort CANDIDATES alphabetically, directories first."
+  (sort candidates
+        (lambda (a b)
+          (let ((a-dir (file-directory-p a))
+                (b-dir (file-directory-p b)))
+            (cond
+             ((and a-dir (not b-dir)) t)
+             ((and (not a-dir) b-dir) nil)
+             (t (string< a b)))))))
+
+(setq vertico-sort-function #'my/vertico-sort-alpha-directories-first)
 
 ;; Orderless - flexible completion style
 (use-package orderless
@@ -34,8 +46,7 @@
   (setq completion-styles '(orderless basic)
         completion-category-defaults nil
         orderless-style-dispatchers '(seforim-orderless-hebrew-dispatcher)
-        completion-category-overrides '((file (styles partial-completion)))))
-
+               completion-category-overrides '((file (styles partial-completion) (cycle t) (sort directory-first)))))
 ;; Marginalia - rich annotations
 (use-package marginalia
   :demand t

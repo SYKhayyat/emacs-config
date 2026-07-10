@@ -12,7 +12,9 @@
       '(("melpa" . "https://melpa.org/packages/")
         ("gnu" . "https://elpa.gnu.org/packages/")
         ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
-
+(setq completions-sort 'directory-first)
+(setq read-file-name-completion-ignore-case t)
+(setq completions-detailed t)
 ;; Use-package - packages come from Nix, so :ensure nil
 (require 'use-package)
 (setq use-package-always-ensure nil
@@ -45,6 +47,7 @@
 
 ;; So-long mode for large files
 (global-so-long-mode 1)
+
 
 (provide '00-core)
 ;;; 00-core.el ends here

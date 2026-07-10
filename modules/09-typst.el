@@ -7,6 +7,23 @@
   (treesit-auto-add-to-auto-mode-alist 'all)
   (global-treesit-auto-mode 1))
 
+
+  (unless (file-directory-p (expand-file-name "typst-preview.el" user-emacs-directory))
+  (let ((url "https://github.com/havarddj/typst-preview.el.git"))
+    (message "Cloning typst-preview.el...")
+    (call-process "git" nil nil nil "clone" url (expand-file-name "typst-preview.el" user-emacs-directory))
+    (add-to-list 'load-path (expand-file-name "typst-preview.el" user-emacs-directory))))
+  (use-package typst-preview
+  :commands (typst-preview-mode typst-preview-start typst-preview-stop)
+  :custom
+  (typst-preview-browser "xwidget")   ; preview inside Emacs
+  :config
+  ;; Optional: auto‑enable preview mode when opening a .typ file
+  (add-hook 'typst-ts-mode-hook #'typst-preview-mode))
+(with-eval-after-load 'typst-preview
+  (define-key typst-preview-mode-map (kbd "C-c t p") #'typst-preview-start)
+  (define-key typst-preview-mode-map (kbd "C-c t s") #'typst-preview-stop)
+  (define-key typst-preview-mode-map (kbd "C-c t r") #'typst-preview-restart))
 (use-package typst-ts-mode
   :mode "\\.typ\\'"
   :hook ((typst-ts-mode . my/setup-rtl-mode)

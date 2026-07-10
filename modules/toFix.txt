@@ -1,8 +1,0 @@
-1. Directory picking starts off on wrong directory.
-2. Directory picking returns error.
-3. searching inside files does not work (probably nekkudah problem).
-All in all, ask Claude to deal with it all.
-Additions:
-1. Faster.
-2. Linking mefarshim.
-3. Show it Otzaria, and ask it to compare.

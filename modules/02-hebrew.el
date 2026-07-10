@@ -36,6 +36,10 @@
 (defun my/setup-rtl-mode ()
   "Setup RTL for prose."
   (setq-local bidi-paragraph-direction 'right-to-left))
+(add-hook 'typst-ts-mode-hook
+          (lambda ()
+            (setq bidi-paragraph-direction nil)   ; dynamic RTL per paragraph
+            (visual-line-mode 1)))
 
 (defun my/setup-ltr-mode ()
   "Setup LTR for code."
