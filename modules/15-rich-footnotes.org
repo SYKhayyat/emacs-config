@@ -190,7 +190,7 @@
 
 // ── Hebrew ──
 #set text(lang: \"he\", font: \"David CLM\")
-#set page(flipped: true)
+// RTL is automatic from lang: he -- do NOT use page(flipped:true) (landscape)
 
 // ── Headings (20 levels numbered) ──
 #set heading(numbering: \"1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1\")

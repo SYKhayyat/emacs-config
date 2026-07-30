@@ -24,8 +24,10 @@
 (defun my/insert-hebrew-date ()
   "Insert the current Hebrew date."
   (interactive)
-  (let ((date (shell-command-to-string "hdate -H --notime")))
-    (insert (string-trim date))))
+  (if (executable-find "hdate")
+      (let ((date (shell-command-to-string "hdate -H --notime")))
+        (insert (string-trim date)))
+    (message "hdate not installed")))
 
 ;; Keybindings for scholarship
 (global-set-key (kbd "C-c h G") #'my/gematria-calculate)

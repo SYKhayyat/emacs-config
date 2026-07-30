@@ -13,6 +13,7 @@
   :demand t
   :config
   (projectile-mode 1)
+  (setq projectile-indexing-method 'alien)   ; fast native indexing (fd/git)
   (setq projectile-project-search-path '("~/Documents/"))
   (add-to-list 'projectile-project-root-files "Bavli")
   

@@ -1,14 +1,33 @@
-#+TITLE: 14a Seforim Core – Config, Hebrew, Paths
-#+PROPERTY: header-args:emacs-lisp :tangle 14a-seforim-core.el :comments link
+#+TITLE: 14a Seforim Core – Config, Hebrew, Paths, Niqqud
+#+PROPERTY: header-args:emacs-lisp :tangle 14a-seforim-core.el
+
+Core of the seforim system: user options, Hebrew-numeral utilities, niqqud
+handling (including the niqqud-insensitive Consult regexp compiler that makes
+full-text search work), and path helpers that auto-detect the library
+directory regardless of "Seforim"/"seforim" casing (NixOS is case-sensitive).
 
 #+BEGIN_SRC emacs-lisp
 ;;; 14a-seforim-core.el --- Seforim: config, Hebrew utilities, paths  -*- lexical-binding: t; -*-
 
-(require 'consult)
-(require 'embark)
+;; NOTE: `consult' is NOT required at load time — it is only used at *command*
+;; time (inside `seforim--niqqud-regexp-compiler'), by which point a search
+;; command has autoloaded it.  This keeps consult out of the startup path.
 (require 'cl-lib)
 (require 'subr-x)
-(require 'crm)
+
+;; ---------------------------------------------------------------------------
+;; Path auto-detection (fixes "wrong directory" / "returns error")
+;; ---------------------------------------------------------------------------
+
+(defun seforim--default-directory ()
+  "Return the first existing candidate seforim directory.
+Tries capital and lowercase spellings so the config works on
+case-sensitive filesystems without manual tweaking."
+  (seq-find #'file-directory-p
+            (list (expand-file-name "~/Documents/seforim/")
+                  (expand-file-name "~/Documents/Seforim/")
+                  (expand-file-name "~/seforim/"))
+            (expand-file-name "~/Documents/seforim/")))
 
 ;; ---------------------------------------------------------------------------
 ;; User Configuration
@@ -16,26 +35,33 @@
 
 (defgroup seforim nil "Jewish library management." :group 'applications)
 
-(defcustom seforim-directory (expand-file-name "~/Documents/seforim/")
-  "Base path for the seforim library."
-  :type 'directory)
+(defcustom seforim-directory (seforim--default-directory)
+  "Base path for the seforim library.
+Auto-detected at load time; override in your init if needed."
+  :type 'directory
+  :group 'seforim)
 
 (defcustom seforim-study-log-path
   (expand-file-name "~/.cache/emacs/seforim/study-log.el")
   "File where the study log is stored."
-  :type 'file)
+  :type 'file
+  :group 'seforim)
 
 (defcustom seforim-niqqud-ignore t
-  "If non-nil, full-text search (rg/rga) will ignore Hebrew niqqud."
-  :type 'boolean)
+  "If non-nil, full-text search ignores Hebrew niqqud/te'amim.
+You type plain (unpointed) Hebrew and it matches pointed text too."
+  :type 'boolean
+  :group 'seforim)
 
 (defcustom seforim-inbuffer-niqqud-key (kbd "C-c s")
-  "Key binding for niqqud‑ignoring isearch in `seforim-mode'."
-  :type 'key-sequence)
+  "Key binding for niqqud-ignoring isearch in `seforim-mode'."
+  :type 'key-sequence
+  :group 'seforim)
 
 (defcustom seforim-consult-idle-delay 0.15
   "Idle delay in seconds before running async search process."
-  :type 'float)
+  :type 'float
+  :group 'seforim)
 
 (defcustom seforim-max-results 200
   "Maximum number of results to show in search commands."
@@ -43,7 +69,7 @@
   :group 'seforim)
 
 ;; ---------------------------------------------------------------------------
-;; Hebrew Utilities
+;; Hebrew Numeral Utilities
 ;; ---------------------------------------------------------------------------
 
 (defun seforim--h-c (id)
@@ -51,7 +77,7 @@
   (char-to-string (+ 1488 id)))
 
 (defun seforim--h-s (&rest ids)
-  "Hebrew string from IDs."
+  "Hebrew string from IDS."
   (apply #'concat (mapcar #'seforim--h-c ids)))
 
 (defun seforim--num-to-heb (n)
@@ -84,31 +110,74 @@
 ;; Niqqud Handling
 ;; ---------------------------------------------------------------------------
 
+(defconst seforim--niqqud-lo #x0591 "First codepoint of the niqqud/te'amim block.")
+(defconst seforim--niqqud-hi #x05C7 "Last codepoint of the niqqud/te'amim block.")
+(defconst seforim--letter-lo #x05D0 "Hebrew letter Aleph.")
+(defconst seforim--letter-hi #x05EA "Hebrew letter Tav (incl. final forms).")
+
 (defconst seforim--niqqud-re
-  (concat "[" (char-to-string #x0591) "-" (char-to-string #x05C7) "]")
+  (concat "[" (char-to-string seforim--niqqud-lo) "-"
+          (char-to-string seforim--niqqud-hi) "]")
   "Regex matching a single Hebrew niqqud/cantillation character.")
+
+(defconst seforim--niqqud-opt
+  (concat seforim--niqqud-re "*")
+  "Regex matching zero or more niqqud characters.
+Uses literal Unicode chars, so it is valid in both ERE and PCRE.")
 
 (defun seforim--strip-niqqud (str)
   "Remove Hebrew niqqud (U+0591-U+05C7) from STR."
   (replace-regexp-in-string seforim--niqqud-re "" str))
 
+(defun seforim--letter-p (ch)
+  "Non-nil if CH is a Hebrew letter (incl. final forms)."
+  (<= seforim--letter-lo ch seforim--letter-hi))
+
+(defun seforim--niqqud-char-p (ch)
+  "Non-nil if CH is a Hebrew niqqud/cantillation mark."
+  (<= seforim--niqqud-lo ch seforim--niqqud-hi))
+
+(defun seforim--inject-niqqud (regexp)
+  "Make REGEXP niqqud-insensitive.
+Drop any niqqud already present in REGEXP, and after every Hebrew
+letter insert an optional-niqqud class so the pattern matches pointed
+text.  Non-Hebrew characters (including regex metacharacters) are left
+untouched, so this is safe to apply to an already-compiled regexp."
+  (let (out)
+    (dolist (ch (string-to-list regexp))
+      (cond
+       ((seforim--niqqud-char-p ch) nil)          ; strip niqqud from query
+       ((seforim--letter-p ch)
+        (push (char-to-string ch) out)
+        (push seforim--niqqud-opt out))
+       (t (push (char-to-string ch) out))))
+    (apply #'concat (nreverse out))))
+
 (defun seforim--build-niqqud-regex (query)
-  "Build a PCRE regex from QUERY matching regardless of niqqud.
-First strips niqqud from QUERY itself."
-  (let* ((stripped-query (seforim--strip-niqqud query))
-         (niqqud-opt (concat seforim--niqqud-re "*")))
-    (mapconcat
-     (lambda (c)
-       (concat (regexp-quote (char-to-string c)) niqqud-opt))
-     (string-to-list stripped-query)
-     "")))
+  "Build a regex from QUERY matching QUERY regardless of niqqud."
+  (seforim--inject-niqqud query))
+
+(defun seforim--niqqud-regexp-compiler (input type ignore-case)
+  "Consult regexp compiler that ignores Hebrew niqqud.
+Wraps the default `consult--regexp-compiler': compiles INPUT normally,
+then rewrites each produced regexp so Hebrew letters tolerate niqqud.
+INPUT, TYPE and IGNORE-CASE are passed through unchanged."
+  (pcase-let ((`(,regexps . ,hl)
+               (funcall (default-value 'consult--regexp-compiler)
+                        input type ignore-case)))
+    (cons (mapcar #'seforim--inject-niqqud regexps) hl)))
+
 ;; ---------------------------------------------------------------------------
 ;; Path Helpers
 ;; ---------------------------------------------------------------------------
 
 (defun seforim--base-dir ()
-  "Return normalized base directory."
-  (file-name-as-directory (expand-file-name seforim-directory)))
+  "Return the normalized, existing base directory.
+Falls back to auto-detection if `seforim-directory' does not exist,
+so a wrong casing in the custom value never breaks the commands."
+  (let ((d (expand-file-name seforim-directory)))
+    (file-name-as-directory
+     (if (file-directory-p d) d (or (seforim--default-directory) d)))))
 
 (defun seforim--format-path (path)
   "Shorten PATH for display, showing last 3 components."
@@ -119,60 +188,14 @@ First strips niqqud from QUERY itself."
         (mapconcat #'identity (last parts 3) "/")
       rel)))
 
-(defun seforim--normalize-dir (path)
-  "Return a clean, existing directory path."
-  (when (and path (not (string-empty-p (string-trim path))))
-    (let* ((expanded (expand-file-name (string-trim path)))
-           (real     (condition-case nil (file-truename expanded) (error expanded)))
-           (clean    (replace-regexp-in-string "/+" "/" real))
-           (result   (if (and (> (length clean) 1) (string-suffix-p "/" clean))
-                         (substring clean 0 -1)
-                       clean)))
-      (when (and (file-exists-p result) (file-directory-p result))
-        result))))
-
-(defun seforim--validate-dirs (dirs)
-  "Filter DIRS through `seforim--normalize-dir'; error if none remain."
-  (let ((valid (delq nil (mapcar #'seforim--normalize-dir dirs))))
-    (unless valid
-      (user-error "No valid search directories found"))
-    valid))
-
-;; ---------------------------------------------------------------------------
-;; Directory Selection
-;; ---------------------------------------------------------------------------
-
-(defun seforim--choose-dirs ()
-  "Prompt user to pick one, several, or all subdirectories.
-Returns validated absolute paths.  All search commands use these directories."
-  (let* ((base   (seforim--normalize-dir (seforim--base-dir)))
-         (choice (completing-read "Scope: 1 Single  2 Multi  3 All: "
-                                  '("1" "2" "3") nil t)))
-    (unless base
-      (user-error "Base seforim directory does not exist: %s" seforim-directory))
-    (cond
-     ((equal choice "1")
-      (let* ((raw (read-directory-name "Search in: "
-                                       (file-name-as-directory base)
-                                       nil t))
-             (dir (seforim--normalize-dir raw)))
-        (unless dir (user-error "Directory does not exist: %s" raw))
-        (list dir)))
-     ((equal choice "2")
-      (let* ((entries  (directory-files base t nil t))
-             (subdirs  (cl-remove-if-not
-                        (lambda (f)
-                          (and (file-directory-p f)
-                               (not (member (file-name-nondirectory f) '("." "..")))))
-                        entries))
-             (rel->abs (mapcar (lambda (d) (cons (file-relative-name d base) d)) subdirs))
-             (rel-names (mapcar #'car rel->abs))
-             (sel       (completing-read-multiple "Dirs (comma-separated): " rel-names nil t)))
-        (when (null sel) (user-error "No directories selected"))
-        (seforim--validate-dirs
-         (mapcar (lambda (s) (cdr (assoc s rel->abs))) sel))))
-     ((equal choice "3") (list base))
-     (t (user-error "Invalid choice")))))
+(defun seforim--list-subdirs ()
+  "List immediate subdirectories of the seforim base directory."
+  (let ((base (seforim--base-dir)))
+    (when (file-directory-p base)
+      (seq-filter (lambda (f)
+                    (and (file-directory-p f)
+                         (not (member (file-name-nondirectory f) '("." "..")))))
+                  (directory-files base t)))))
 
 ;; ---------------------------------------------------------------------------
 ;; Provide

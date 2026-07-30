@@ -13,7 +13,8 @@
   :demand t
   :config
   (setq undo-tree-auto-save-history t)
-  (setq undo-tree-history-directory-alist '(("." . "~/.cache/emacs/undo-tree-history/")))
+  (setq undo-tree-history-directory-alist
+        `(("." . ,(expand-file-name "undo-tree-history/" user-emacs-directory))))
   (setq undo-limit (* 80 1024 1024))
   (setq undo-strong-limit (* 120 1024 1024))
   (setq undo-outer-limit (* 300 1024 1024))
@@ -64,10 +65,6 @@
 (use-package visual-regexp
   :bind (("C-c q" . vr/query-replace)
          ("C-c M" . vr/mc-mark)))
-
-(use-package wgrep
-  :config
-  (setq wgrep-auto-save-buffer t))
 
 (add-hook 'prog-mode-hook #'electric-pair-local-mode)
 

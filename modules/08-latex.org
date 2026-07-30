@@ -6,8 +6,17 @@
 #+begin_src emacs-lisp
 ;;; 08-latex.el --- LaTeX and AUCTeX settings -*- lexical-binding: t; -*-
 
+;; AUCTeX is special: its *package* name is `auctex' but its *feature* is `tex'.
+;; A bare `:ensure auctex' would run `package-install' on EVERY startup —
+;; including on Nix/distro where AUCTeX is already provided — so we only pull it
+;; from MELPA in portable mode, and let `use-package' below use the copy that is
+;; already on the load-path (Nix, or just-installed) via `:ensure nil'.
+(when (bound-and-true-p my/portable-packages)
+  (unless (package-installed-p 'auctex)
+    (ignore-errors (package-install 'auctex))))
+
 (use-package tex
-  :ensure auctex
+  :ensure nil
   :mode ("\\.tex\\'" . LaTeX-mode)
   :hook ((LaTeX-mode . my/setup-rtl-mode)
          (LaTeX-mode . TeX-source-correlate-mode)
@@ -29,7 +38,11 @@
 (defun my/latex-word-count ()
   "Count words in LaTeX buffer."
   (interactive)
-  (if (executable-find "detex")
+  ;; The detex|wc pipeline is POSIX-only (redirection, pipe, wc), so only use it
+  ;; when detex exists AND we are not on Windows.  Elsewhere fall back to a
+  ;; portable in-buffer count so the command works on every OS.
+  (if (and (executable-find "detex")
+           (not (eq system-type 'windows-nt)))
       (let* ((file (buffer-file-name))
              (result (if file
                          (shell-command-to-string
@@ -43,7 +56,7 @@
                                       (shell-quote-argument temp-file)))
                            (delete-file temp-file))))))
         (message "Words: %s" (string-trim result)))
-    (message "detex not found")))
+    (message "Words: %d" (count-words (point-min) (point-max)))))
 
 (with-eval-after-load 'latex
   (define-key LaTeX-mode-map (kbd "C-c C-w") #'my/latex-word-count))

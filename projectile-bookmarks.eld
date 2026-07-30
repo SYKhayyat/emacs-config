@@ -1,1 +1,0 @@
-("~/Documents/siach_shai/b_typed/" "~/nixos-config/" "~/.config/emacs/")

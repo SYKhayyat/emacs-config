@@ -21,6 +21,7 @@
   ;; Basic settings
   (setq org-startup-indented t
         org-hide-leading-stars t
+        org-hide-emphasis-markers t
         org-ellipsis " ▾"
         org-pretty-entities t
         org-src-fontify-natively t
@@ -60,7 +61,9 @@
   :hook (org-mode . org-modern-mode)
   :config
   (setq org-modern-star '("◉" "○" "◈" "◇" "✦" "✧" "✶" "✷" "❋" "❊"
-                          "◉" "○" "◈" "◇" "✦" "✧" "✶" "✷" "❋" "❊")))
+                          "◉" "○" "◈" "◇" "✦" "✧" "✶" "✷" "❋" "❊")
+        org-modern-hide-stars 'leading
+        org-modern-table t))
 
 ;; Capture templates
 (with-eval-after-load 'org
@@ -88,60 +91,34 @@
         org-download-heading-lvl nil))
 
 ;; ═══════════════════════════════════════════════════════════════════════════
-;; NESTED FOOTNOTES FOR ORG
-;; Syntax: [fn:1] for level 1, [fn:1:2] for level 2, [fn:1:2:3] for level 3
+;; FOOTNOTES IN ORG  (incl. footnote-on-footnote for LaTeX export)
 ;; ═══════════════════════════════════════════════════════════════════════════
+;; Org supports only FLAT footnotes.  The old code here tried to encode nesting
+;; in the label ([fn:1:2:3]), but Org reads ':' as inline-definition syntax, so
+;; it never produced nested footnotes -- and its `:override' advice on
+;; `org-latex-footnote-reference' risked mangling ordinary footnotes (reused
+;; refs, multi-paragraph/block content).  It has been removed; normal Org
+;; footnotes now export the standard, correct way.
+;;
+;; TO NEST a footnote inside a footnote in LaTeX/PDF output, drop a bigfoot
+;; second-series command as a raw LaTeX snippet INSIDE a normal footnote's
+;; definition:
+;;
+;;     Text.[fn:1]
+;;     [fn:1] Outer note. @@latex:\footnoteB{Inner note (level 2).}@@
+;;
+;; The `article-hebrew' class below loads bigfoot and declares footnote series
+;; B..J, so \footnoteB .. \footnoteJ nest correctly.  Helper to insert one:
 
-(defvar my/org-footnote-level-commands
-  '((1 . "footnote")
-    (2 . "footnoteB")
-    (3 . "footnoteC")
-    (4 . "footnoteD")
-    (5 . "footnoteE")
-    (6 . "footnoteF")
-    (7 . "footnoteG")
-    (8 . "footnoteH")
-    (9 . "footnoteI")
-    (10 . "footnoteJ"))
-  "Mapping of footnote nesting levels to LaTeX commands.")
-
-(defun my/org-nested-footnote-level (label)
-  "Determine nesting level from footnote LABEL like 'fn:1:2:3'."
-  (length (split-string (replace-regexp-in-string "^fn:" "" label) ":")))
-
-(defun my/org-convert-nested-footnotes (backend)
-  "Convert nested footnote syntax to bigfoot commands for LaTeX export."
-  (when (memq backend '(latex beamer))
-    (let ((fn-def-re "^\\[fn:\\([^]]+\\)\\]")
-          (fn-ref-re "\\[fn:\\([^]]+\\)\\]"))
-      ;; Process footnote definitions
-      (save-excursion
-        (goto-char (point-min))
-        (while (re-search-forward fn-def-re nil t)
-          (let* ((label (match-string 1))
-                 (level (my/org-nested-footnote-level label))
-                 (cmd (cdr (assoc level my/org-footnote-level-commands))))
-            (when (and cmd (> level 1))
-              ;; Mark this footnote for special handling
-              (put-text-property (match-beginning 0) (match-end 0)
-                                 'org-footnote-level level))))))))
-
-(with-eval-after-load 'ox
-  (add-hook 'org-export-before-processing-hook #'my/org-convert-nested-footnotes))
-
-;; Custom footnote export
-(with-eval-after-load 'ox-latex
-  (defun my/org-latex-footnote-reference (footnote-reference _contents info)
-    "Export footnote with proper nesting level."
-    (let* ((label (org-element-property :label footnote-reference))
-           (level (if label (my/org-nested-footnote-level label) 1))
-           (cmd (or (cdr (assoc level my/org-footnote-level-commands)) "footnote"))
-           (def (org-export-get-footnote-definition footnote-reference info)))
-      (format "\\%s{%s}" cmd
-              (org-trim (org-export-data def info)))))
-
-  ;; Advice to use our custom exporter for nested footnotes
-  (advice-add 'org-latex-footnote-reference :override #'my/org-latex-footnote-reference))
+(defun my/org-insert-nested-footnote (level)
+  "Insert a raw-LaTeX level-LEVEL footnote snippet for Org export.
+1 = \\footnote, 2 = \\footnoteB, ... 10 = \\footnoteJ.  Place it INSIDE an
+ordinary Org footnote definition to get a footnote-on-a-footnote in the PDF."
+  (interactive "nFootnote level (1-10): ")
+  (let ((cmd (if (<= level 1) "footnote"
+               (format "footnote%c" (+ ?A (1- level))))))
+    (insert (format "@@latex:\\%s{}@@" cmd))
+    (search-backward "}@@")))
 
 ;; RTL footnote fix
 (with-eval-after-load 'org

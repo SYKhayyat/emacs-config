@@ -21,6 +21,7 @@
         aw-scope 'frame))
 
 (use-package winner
+  :ensure nil
   :demand t
   :config
   (winner-mode 1)
@@ -28,6 +29,7 @@
          ("C-c <right>" . winner-redo)))
 
 (use-package tab-bar
+  :ensure nil
   :config
   (setq tab-bar-show 1
         tab-bar-close-button-show nil
@@ -71,6 +73,7 @@
 (global-set-key (kbd "C-c R") #'my/revert-buffer-no-confirm)
 
 (use-package ibuffer
+  :ensure nil
   :bind ("C-x C-b" . ibuffer)
   :config
   (setq ibuffer-saved-filter-groups

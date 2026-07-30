@@ -14,39 +14,44 @@
   (setq vertico-count 15
         vertico-resize nil)
   (vertico-mode 1))
-(defun my/vertico-sort-alpha-directories-first (candidates)
-  "Sort CANDIDATES alphabetically, directories first."
-  (sort candidates
-        (lambda (a b)
-          (let ((a-dir (file-directory-p a))
-                (b-dir (file-directory-p b)))
-            (cond
-             ((and a-dir (not b-dir)) t)
-             ((and (not a-dir) b-dir) nil)
-             (t (string< a b)))))))
-
-(setq vertico-sort-function #'my/vertico-sort-alpha-directories-first)
 
 ;; Orderless - flexible completion style
 (use-package orderless
   :demand t
   :config
   (defun seforim-orderless-hebrew-dispatcher (pattern _index _total)
-    "Multi-method Hebrew Matching.
-     -term (exclude), =term (literal), term (flex + spelling variants)."
+    "Hebrew-aware Orderless dispatcher.
+-term  -> exclude,  =term  -> literal match,
+Hebrew term -> a regexp that tolerates niqqud between letters and treats
+vav/yod as optional (ktiv male/chaser spelling variants).
+
+NOTE: the previous version did (replace-regexp-in-string \"ו\" \"ו?\") and then
+`regexp-quote'd EVERY character including the inserted ?, producing a broken
+pattern that literally required a \"?\".  This builds the regexp correctly and
+hands it to Orderless via the `orderless-regexp' style."
     (cond
-     ((string-prefix-p "-" pattern) `(orderless-without-literal . ,(substring pattern 1)))
-     ((string-prefix-p "=" pattern) `(orderless-literal . ,(substring pattern 1)))
-     ((string-match-p "\\`[א-ת- ]+\\'" pattern)
-      (let ((regex pattern))
-        (setq regex (replace-regexp-in-string "ו" "ו?" regex))
-        (setq regex (replace-regexp-in-string "י" "י?" regex))
-        (mapconcat (lambda (c) (regexp-quote (char-to-string c))) regex ".*")))))
+     ((string-prefix-p "-" pattern)
+      `(orderless-without-literal . ,(substring pattern 1)))
+     ((string-prefix-p "=" pattern)
+      `(orderless-literal . ,(substring pattern 1)))
+     ((string-match-p "\\`[א-ת]+\\'" pattern)
+      (let* ((niqqud (concat "[" (char-to-string #x0591) "-"
+                             (char-to-string #x05C7) "]*"))
+             (rx (mapconcat
+                  (lambda (c)
+                    (let ((q (regexp-quote (char-to-string c))))
+                      (if (memq c '(?ו ?י))
+                          (concat q "?" niqqud)   ; optional vav/yod + niqqud
+                        (concat q niqqud))))      ; letter + optional niqqud
+                  (append pattern nil)
+                  "")))
+        (cons 'orderless-regexp (concat niqqud rx))))))
 
   (setq completion-styles '(orderless basic)
         completion-category-defaults nil
         orderless-style-dispatchers '(seforim-orderless-hebrew-dispatcher)
-               completion-category-overrides '((file (styles partial-completion) (cycle t) (sort directory-first)))))
+        completion-category-overrides '((file (styles partial-completion)))))
+
 ;; Marginalia - rich annotations
 (use-package marginalia
   :demand t
@@ -119,16 +124,31 @@
          ([remap describe-key] . helpful-key)))
 
 ;; Jinx - spell checking
+;;
+;; Jinx compiles a small C module against Enchant.  Nix builds that for us; on
+;; a bare machine package.el installs the elisp and then the module fails to
+;; load.  Gate on the capability so a box without Enchant quietly loses spell
+;; check instead of taking vertico/consult/corfu down with the rest of this
+;; module.  `M-x my/report-capabilities' lists anything skipped.
 (use-package jinx
+  :if (my/package-usable-p "jinx" "enchant-2")
   :hook ((text-mode . jinx-mode)
          (org-mode . jinx-mode))
   :bind ("M-$" . jinx-correct)
   :config
   (setq jinx-languages "en_US he_IL"))
 
-(defun my/spell-hebrew () (interactive) (setq-local jinx-languages "he_IL") (jinx-mode 1) (message "Spell: Hebrew"))
-(defun my/spell-english () (interactive) (setq-local jinx-languages "en_US") (jinx-mode 1) (message "Spell: English"))
-(defun my/spell-both () (interactive) (setq-local jinx-languages "en_US he_IL") (jinx-mode 1) (message "Spell: Both"))
+(defun my/spell--set (langs label)
+  "Switch spell checking to LANGS, reporting LABEL."
+  (if (not (fboundp 'jinx-mode))
+      (message "Spell check unavailable here (jinx needs Enchant + a C compiler)")
+    (setq-local jinx-languages langs)
+    (jinx-mode 1)
+    (message "Spell: %s" label)))
+
+(defun my/spell-hebrew  () (interactive) (my/spell--set "he_IL" "Hebrew"))
+(defun my/spell-english () (interactive) (my/spell--set "en_US" "English"))
+(defun my/spell-both    () (interactive) (my/spell--set "en_US he_IL" "Both"))
 
 (provide '03-completion)
 #+end_src

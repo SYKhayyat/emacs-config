@@ -9,7 +9,11 @@
 (use-package magit
   :bind (("C-x g" . magit-status)
          ("C-x M-g" . magit-dispatch)
-         ("C-c v g" . magit-file-dispatch)))
+         ("C-c v g" . magit-file-dispatch))
+  :config
+  ;; Performance: skip the extra status-buffer refresh, refine diff hunks.
+  (setq magit-refresh-status-buffer nil)
+  (setq magit-diff-refine-hunk t))
 
 (use-package git-gutter
   :diminish

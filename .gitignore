@@ -1,0 +1,38 @@
+# The .org files are the source of truth; the .el files are tangle output
+# (tools/tangle.sh). Committing both meant every edit showed up twice and the
+# diff never told you which one someone actually wrote.
+modules/*.el
+init.el~
+*.el~
+*.org~
+\#*\#
+.\#*
+
+# Packages come from Nix now (see the emacsWithPackages list in default.nix),
+# not from package.el — so nothing downloaded belongs in the repo.
+elpa/
+eln-cache/
+share/
+transient/
+snippets/
+auto-save-list/
+
+# Runtime state: whatever this Emacs happened to be doing when it exited.
+recentf
+places
+history
+org-roam.db
+projectile-bookmarks.eld
+undo-tree-history/
+projects
+.org-id-locations
+
+# One-off dumps, regenerated on demand.
+combined.txt
+combined_files.txt
+all.txt
+*.kate-swp
+
+# OS cruft
+.DS_Store
+Thumbs.db
