@@ -1,0 +1,8 @@
+# These scripts run inside a Nix build and in GitHub Actions, and this repo is
+# edited from Windows as well as Linux. A CRLF shebang fails with
+# "bad interpreter: /usr/bin/env^M", which is a genuinely awful hour to spend.
+*.sh    text eol=lf
+*.el    text eol=lf
+*.org   text eol=lf
+*.nix   text eol=lf
+*.yml   text eol=lf

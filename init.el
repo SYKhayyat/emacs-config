@@ -116,14 +116,23 @@
 ;; Only touches org (a startup cost) when something is actually stale.
 ;; ---------------------------------------------------------------------------
 (defun my/tangle-stale-modules ()
-  "Tangle every `*.org' under `my/modules-dirs' whose `.el' is missing or older."
+  "Tangle every `*.org' under `my/modules-dirs' whose `.el' is missing or older.
+
+Directories that are not writable are skipped.  On NixOS this config is
+consumed as a flake input and the modules are a read-only symlink into the
+Nix store, already tangled at BUILD time -- there is nothing to do and
+nowhere to write it.  Mtimes in the store are all identical, so the
+staleness test below would not fire anyway, but relying on that is relying
+on an implementation detail of the store to keep us from writing to a
+read-only filesystem.  Ask the question directly instead."
   (let (stale)
     (dolist (dir my/modules-dirs)
-      (dolist (org (directory-files dir t "\\.org\\'"))
-        (let ((el (concat (file-name-sans-extension org) ".el")))
-          (when (or (not (file-exists-p el))
-                    (file-newer-than-file-p org el))
-            (push org stale)))))
+      (when (file-writable-p dir)
+        (dolist (org (directory-files dir t "\\.org\\'"))
+          (let ((el (concat (file-name-sans-extension org) ".el")))
+            (when (or (not (file-exists-p el))
+                      (file-newer-than-file-p org el))
+              (push org stale))))))
     (when stale
       (require 'org)
       (require 'ob-tangle)

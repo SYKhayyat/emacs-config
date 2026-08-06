@@ -20,6 +20,75 @@ The *seforim* system has its own deep-dive: **[README-SEFORIM.md](README-SEFORIM
 
 ---
 
+## Installing it
+
+**Any machine (Windows, macOS, any distro).** Clone and deploy; packages come
+from MELPA on first launch.
+
+```sh
+git clone https://github.com/SYKhayyat/emacs-config
+cd emacs-config && bash tools/deploy.sh
+```
+
+**NixOS.** This repo is a flake. Add it as an input and symlink the *tangled*
+output — do **not** point `deploy.sh` at `~/.config/emacs` there.
+
+```nix
+inputs.emacs-config.url = "github:SYKhayyat/emacs-config";
+
+# in a home-manager module:
+home.file.".config/emacs/init.el".source       = "${emacsConfig}/init.el";
+home.file.".config/emacs/early-init.el".source = "${emacsConfig}/early-init.el";
+home.file.".config/emacs/modules".source       = "${emacsConfig}/modules";
+```
+
+where `emacsConfig = inputs.emacs-config.packages.${system}.default`. That
+package is this repo **with every module already tangled**, so nothing is
+written at runtime and the whole thing is pinned in your `flake.lock`.
+
+`packages.emacs` is the Emacs binary with the package set this config expects —
+use it so the editor you run and the editor CI verifies against are the same
+one.
+
+> ### Why it used to live inside the NixOS repo, and why it doesn't now
+>
+> The Nix store is read-only and this config tangles `.el` next to `.org` at
+> runtime, so the old arrangement staged the modules read-only in the store and
+> then ran an mtime-gated `cp` into a writable `~/.config/emacs/modules`.
+>
+> That copy is a directory Nix does not own. It cannot roll it back, cannot
+> garbage-collect it, and never deletes from it — the sync only ever adds. Edit
+> a module there directly (and you will; it is an Org file in your editor and
+> it is writable) and one of two things happens on the next rebuild: your edit
+> is newer, survives, and is now the live config while the repo goes silently
+> stale — or it is older, and gets clobbered with no backup. You cannot tell
+> from the outside which happened.
+>
+> Six modules also sat **untracked** for weeks. A flake copies the *git tree*
+> to the store, so they never existed anywhere but one machine — and because
+> that machine's writable copy still had them from an earlier deploy, nothing
+> ever looked wrong.
+>
+> Tangling at build time deletes that entire class of problem. What you symlink
+> is immutable, complete, and pinned.
+
+## Checks
+
+```sh
+bash tools/check-modules.sh   # consistency — no Emacs needed, ~1 second
+bash tools/tangle.sh          # .org -> .el
+bash tools/verify.sh          # byte-compile against the installed packages
+nix flake check               # all of the above, hermetically
+```
+
+`tools/check-modules.sh` runs in CI on every push. It exists because a
+renumbering left five modules requiring feature names nothing provided, and
+**1,569 of the seforim system's 1,775 lines silently stopped loading** — no
+crash, no failing build, for weeks. See [modules/README.md](modules/README.md)
+→ *Renumbering a module*.
+
+---
+
 ## 1. What makes it tick (the 60-second model)
 
 - **Literate.** Every module is an Org file, `NN-name.org`, whose code blocks
@@ -34,7 +103,7 @@ The *seforim* system has its own deep-dive: **[README-SEFORIM.md](README-SEFORIM
   - **Portable mode** — a fresh machine with none of them: `use-package`
     auto-installs from MELPA. The *same* config bootstraps itself anywhere.
   - Force it with env var `EMACS_PACKAGES=1` (portable) / `0` (nix).
-  - ⚠️ **In Nix mode a package that is not in `default.nix`'s `epkgs` list is
+  - ⚠️ **In Nix mode a package that is not in `emacs-package.nix` is
     silently absent** — `use-package-always-ensure` is nil, so the form is a
     no-op and the feature simply is not there, with no error. If a feature does
     nothing, check that list first.
@@ -133,10 +202,19 @@ startup, `M-x view-echo-area-messages` shows any module that failed to load.
 
 ### NixOS (declarative — the recommended path on Linux)
 
-This config lives inside the nix repo at `modules/home/emacs/`. `default.nix`
-consumes those *files* (`home.file.".config/emacs/init.el".source = ./init.el`)
-rather than duplicating the loader as a Nix string, so there is exactly one copy
-and the Nix and portable paths cannot drift. Edit the `.org`, run `just switch`.
+This repo is a **flake input** of the NixOS config, not a subdirectory of it.
+The NixOS side keeps only the home-manager wiring — `home.packages`,
+`services.emacs`, `recoll.conf` — and symlinks
+`inputs.emacs-config.packages.${system}.default`, which is this repo with every
+module already tangled.
+
+The edit loop: **commit here → `nix flake update emacs-config` there →
+`just switch`.** Slower than editing in place, and that is the deal: the
+revision you are running is written down in `flake.lock`, so you can roll it
+back. While hacking, `--override-input emacs-config path:/path/to/checkout`
+gives you the fast loop back.
+
+See [README-LINUX.md](README-LINUX.md) § 3 for the exact incantations.
 
 ### Build tooling (`tools/`)
 
@@ -146,7 +224,7 @@ All of them walk `modules/<group>/`.
   `provide` matches its filename, **every local `require` resolves to a module
   that exists**, dependencies point essentials → extras and never back, nothing
   is orphaned, every `.org` is tracked by git. No Emacs, no packages, ~1 second.
-  Wired into `nix flake check` as `emacs-modules`; `just check-emacs` locally.
+  Runs in CI on every push, and as `nix flake check`'s `modules` check.
 - `bash tools/tangle.sh [NAME|GROUP]` — tangle everything, one module, or one
   group, forcing LF output.
 - `bash tools/verify.sh [NAME…]` — byte-compile and report errors. Both group
@@ -297,7 +375,7 @@ are gone from `modules/system/cli-tools.nix` too.
 - **A module didn't load.** `M-x view-echo-area-messages`, or check
   `my/load-errors`. Usually a missing package/system library (§2.1).
 - **A feature silently does nothing on NixOS.** Almost always a package that is
-  `use-package`'d but missing from `epkgs` in `default.nix`. In Nix mode that is
+  `use-package`'d but missing from `epkgs` in `emacs-package.nix`. In Nix mode that is
   a no-op, not an error.
 - **Hebrew search returns nothing.** Confirm `rg` is on `PATH`
   (`M-x seforim-status`). Do **not** override the process coding system on
@@ -322,7 +400,7 @@ are gone from `modules/system/cli-tools.nix` too.
    `(provide 'NN-name)` matching its filename.
 4. **Don't hardcode `:ensure t`.** Let modules inherit `use-package-always-ensure`.
    Built-ins get `:ensure nil`. (AUCTeX is the one special case — its package
-   name ≠ its feature; see `07-latex`.) **And add the package to `default.nix`,**
+   name ≠ its feature; see `07-latex`.) **And add the package to `emacs-package.nix`,**
    or it will be silently missing on NixOS.
 5. **Guard OS-specific code** with `(when (eq system-type 'windows-nt) …)`.
 6. **Gate on the module name, not its number**, in `my/module-enabled-p`.

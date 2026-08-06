@@ -1,0 +1,16 @@
+# Tangled module output — the .org files are the source of truth. Committing
+# generated .el is how a stale artifact ends up shadowing its source.
+# init.el / early-init.el are hand-written loaders and ARE tracked.
+modules/*/*.el
+modules/*/*.elc
+
+# Nix
+result
+result-*
+.direnv/
+
+# Editor / OS cruft
+*~
+\#*\#
+.DS_Store
+custom.el

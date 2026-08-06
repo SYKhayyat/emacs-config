@@ -1,0 +1,40 @@
+name: check
+
+# The job this repo exists to have.
+#
+# The essentials/extras split renumbered every module and left five of them
+# requiring the pre-split feature names. Nothing provided those, `require`
+# signalled, init.el caught it in `condition-case`, and 1,569 of the seforim
+# system's 1,775 lines silently stopped loading — for weeks, with a green
+# build, because nothing anywhere ran over the elisp.
+#
+# `modules` is the cheap deterministic gate and runs on every push.
+# `bytecompile` is the expensive real one; it builds a full Emacs package set,
+# so it is slower by a lot. If that becomes annoying, drop it to a schedule —
+# but do not drop `modules`.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  modules:
+    name: module consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: check-modules.sh
+        run: bash tools/check-modules.sh
+
+  bytecompile:
+    name: tangle + byte-compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v27
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+      - name: nix flake check
+        run: nix flake check --print-build-logs

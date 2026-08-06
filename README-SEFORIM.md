@@ -31,7 +31,7 @@ a human *or* a future AI agent maintaining this config.
 > `modules/README.md` → *Renumbering a module*.
 >
 > **If you are reading this after a rename and something here doesn't work,
-> run `just check-emacs` before you debug anything else.**
+> run `bash tools/check-modules.sh` before you debug anything else.**
 
 ## The bugs that were fixed
 

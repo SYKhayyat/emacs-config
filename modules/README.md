@@ -13,11 +13,12 @@ way: extras may use anything essentials defines, and essentials may never
 reach into extras. That is enforced by the load order rather than by everyone
 remembering it.
 
-Each module is a literate Org file **tangled to `.el` on Emacs startup**.
-**The `.org` files are the source of truth.** Edit them, run `just switch`.
-Never edit the generated `.el` — it is overwritten on the next tangle. `.el`
-files are deliberately *not* checked in: they are build output, and committing
-them is how a stale generated file ends up shadowing its source.
+Each module is a literate Org file tangled to `.el` — at Emacs startup on a
+portable install, at **build time** on NixOS (see below).
+**The `.org` files are the source of truth.** Never edit the generated `.el` —
+it is overwritten on the next tangle. `.el` files are deliberately *not*
+checked in: they are build output, and committing them is how a stale generated
+file ends up shadowing its source.
 
 ## How extras reaches into essentials
 
@@ -35,15 +36,35 @@ Nothing in extras redefines an essentials function.
 
 ## How they reach the running Emacs
 
-`just switch` stages this directory (read-only) to `~/.config/emacs/modules-src`;
-the home activation in `../default.nix` walks each **group** subdirectory and
-copies its `.org` files into the *writable* `~/.config/emacs/modules/<group>/`,
-where Emacs tangles them next to the source. That extra hop exists because the
-nix store is read-only and Emacs must be able to write the `.el` beside the
-`.org`.
+**Portable install** (Windows, macOS, any non-Nix distro). `tools/deploy.sh`
+copies this tree into the config dir. It is writable, so `init.el` tangles any
+`.el` that is missing or older than its `.org` on startup, and
+`essentials/24-utils` re-tangles a module when you save it. Instant edit loop.
 
-The loader itself (`../init.el`, `../early-init.el`) is consumed by `default.nix`
-via `.source = ./init.el` — one copy, shared with every non-Nix machine.
+**NixOS.** The flake's `packages.default` runs `tools/tangle.sh` **at build
+time** and ships `.org` and `.el` together. The consuming home-manager module
+symlinks that store path to `~/.config/emacs/modules`, read-only. Nothing
+tangles at startup — `my/tangle-stale-modules` checks `file-writable-p` and
+skips the directory outright.
+
+> This replaced a staging hop: the modules used to be installed read-only to
+> `~/.config/emacs/modules-src` and then `cp`'d — gated on mtime — into a
+> *writable* `~/.config/emacs/modules`, because the store is read-only and
+> Emacs had to write the `.el` next to the `.org`.
+>
+> That copy was a directory Nix did not own. It could not be rolled back or
+> garbage-collected, and the sync only ever added, never deleted. Editing a
+> module in place either silently won (your edit becomes the live config, the
+> repo goes stale) or was silently clobbered, with nothing to tell you which.
+> It also concealed its own failures: six modules sat untracked for weeks, so
+> they never entered the store at all — invisible, because the writable copy
+> still had them from an earlier deploy.
+>
+> Tangling at build time removes the reason the hop existed.
+
+The loader itself (`../init.el`, `../early-init.el`) is the same file on every
+machine — symlinked from the store on NixOS, copied by `deploy.sh` elsewhere.
+One copy, so the Nix and portable paths cannot drift.
 
 ## The modules
 
@@ -102,7 +123,7 @@ loading.** No crash, no failing build. The only symptom was
 So: after any rename, run
 
 ```sh
-just check-emacs      # or: bash tools/check-modules.sh
+bash tools/check-modules.sh
 ```
 
 `tools/check-modules.sh` verifies that
