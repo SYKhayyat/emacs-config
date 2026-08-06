@@ -189,8 +189,10 @@ boot — missing optional tools just disable their feature.
 | Indexed search (extras) | `recoll` | distro `recoll` | `brew install recoll` | rare — use rg/rga |
 
 > **Windows note:** everything Windows-specific is auto-detected and guarded.
-> `16-vterm` is skipped automatically and **`17-terminal`** (PowerShell/bash/nu
-> tabs, `` C-` ``) takes over. Hebrew ripgrep search works out of the box —
+> `16-vterm` is skipped automatically. Nothing is lost with it: **`17-terminal`**
+> (PowerShell/bash/nu tabs) owns `` C-` `` on *every* platform, precisely because
+> it is the one of the two that always loads — a key defined in a gated module is
+> a key that works on some machines. Hebrew ripgrep search works out of the box —
 > **do not** set a UTF-8 process coding system; the default locale coding is
 > what makes it work.
 
@@ -270,8 +272,8 @@ the invariants it now enforces.
 | 13 | magit | Git UI (+ perf tuning) |
 | 14 | projectile | project management (alien indexing) |
 | 15 | dirvish | file manager **+ `<f8>` IDE sidebar** |
-| 16 | vterm | full terminal (skipped where cmake/libvterm are absent) |
-| 17 | terminal | portable multi-shell tabbed terminal (PowerShell/bash/nu) |
+| 16 | vterm | the compiled terminal, on `M-x vterm` (skipped where cmake/libvterm are absent) |
+| 17 | terminal | portable multi-shell tabbed terminal (PowerShell/bash/nu) — owns `` C-` `` on every platform |
 | 18 | tabs | centaur-tabs buffer strip + `C-c T` tabs hydra |
 | 19 | academic | citar/bibliography |
 | 20 | local-ai | gptel — local Ollama by default; cloud backends documented in-module |
@@ -307,7 +309,7 @@ the invariants it now enforces.
 | `C-c S` | **Seforim** *(extras)* — find, search, mefarshim, reader, bookmarks |
 | `C-c D` | **Direction** *(extras)* — RTL/LTR, Hebrew input, footnote repair |
 | `<f8>` | Toggle the **IDE file-tree sidebar** (dirvish-side) |
-| `` C-` `` | Toggle a **bottom terminal** panel |
+| `` C-` `` | Toggle a **bottom terminal** panel (`17-terminal`, everywhere — `M-x vterm` for the compiled one) |
 | `C-c m p` | **Toggle live side-by-side preview** — Markdown *and* Typst |
 | `C-c e i` / `e m` / `e r` / `e R` | Open init / open modules dir / reload / restart |
 | `C-c a` / `C-c c` | Org agenda / capture |

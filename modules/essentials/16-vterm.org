@@ -1,33 +1,40 @@
-* 16-vterm.org
-#+TITLE: Terminal Integration
+#+TITLE: 16 · vterm (the compiled terminal)
 #+PROPERTY: header-args:emacs-lisp :tangle yes
 
-* Terminal Support
+This module configures =vterm=, and nothing else. It used to also define
+=my/toggle-terminal= and bind it to =C-`= and =C-c t t= — which
+=essentials/17-terminal= defines and binds too, 34 lines of it, to the same two
+keys.
 
+Modules load in filename order, so 17 loaded second and won. Every line of the
+toggle here was dead, and it had been dead since 17 was written: one want,
+satisfied twice, the second written without deleting the first.
+
+It could not have worked anyway. The dead toggle drove =eat=, and =eat= is not
+in =emacs-package.nix= — on Nix, =use-package-always-ensure= is nil, so a
+package that is not listed there is not installed and not on the load-path, the
+=use-package= form is a silent no-op, and =eat-mode= is void. Two independent
+reasons for the same twelve lines to do nothing, which is roughly how long
+something survives when nothing ever calls it.
+
+*The toggle belongs in 17 and stays there*, for a reason worth stating: this
+module is *gated*. =init.el= only loads =16-vterm= where a =vterm-module= is
+already on the load-path or cmake and a C compiler are present to build one.
+=17-terminal= is ungated and always loads. A keybinding defined in a module that
+is conditionally absent is a key that works on some machines — which is the
+whole reason 17 exists.
+
+So =C-`= opens 17's panel everywhere, and =M-x vterm= gets you the real terminal
+on the machines that can build one.
+
+* vterm
 #+begin_src emacs-lisp
-;;; 16-vterm.el --- Professional Terminal toggles (Vterm & Eat) -*- lexical-binding: t; -*-
+;;; 16-vterm.el --- Compiled terminal emulator (vterm) -*- lexical-binding: t; -*-
 
 (use-package vterm
   :commands vterm
   :config (setq vterm-max-scrollback 10000))
 
-;; Lightweight, Sixel-capable Terminal
-(use-package eat
-  :commands eat
-  :config (setq eat-kill-buffer-on-exit t))
-
-(defun my/toggle-terminal ()
-  "Toggle a persistent 'eat' terminal popup at the bottom."
-  (interactive)
-  (let ((buffer (get-buffer-create "*eat-popup*")))
-    (if (get-buffer-window buffer)
-        (delete-window (get-buffer-window buffer))
-      (let ((win (display-buffer-in-side-window buffer '((side . bottom) (window-height . 0.35)))))
-        (select-window win)
-        (with-current-buffer buffer (unless (derived-mode-p 'eat-mode) (eat-mode)))))))
-
-(global-set-key (kbd "C-`") #'my/toggle-terminal)
-(global-set-key (kbd "C-c t t") #'my/toggle-terminal)
-
 (provide '16-vterm)
+;;; 16-vterm.el ends here
 #+end_src

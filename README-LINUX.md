@@ -177,8 +177,9 @@ modules against it.
   the Nix tooling actually being present, so it is skipped on Debian rather than
   erroring.
 - **`essentials/16-vterm`** — needs a compiled module. Gated on either a prebuilt
-  `vterm-module` or cmake + a C compiler. Where it's unavailable, `essentials/17-terminal`
-  (built-in shells) covers the same ground and always loads.
+  `vterm-module` or cmake + a C compiler, and reached with `M-x vterm`. It defines
+  no keybinding *because* it is gated: `essentials/17-terminal` (built-in shells)
+  always loads, so it is the one that can own `` C-` `` on every machine.
 - **`~/.recoll/recoll.conf`** — written by the NixOS repo's `default.nix` only; on other
   distros run `recollindex` yourself if you want `extras/15-seforim-dream`'s
   indexed search.
