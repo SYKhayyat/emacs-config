@@ -18,14 +18,26 @@ redefining anything, so nothing here breaks if the base module changes shape.
 ;; `a' in dirvish (quick access) gets a jump to the library.  The entries live
 ;; in the `dirvish-quick-access' sub-feature, not in `dirvish' itself, so load
 ;; it before appending -- otherwise the variable is void until the first `a'.
+;;
+;; `customize-set-variable', not `add-to-list', and that is not a style
+;; preference.  `dirvish-quick-access' is not a command that reads this list
+;; when you press `a' -- it is a transient prefix that the defcustom's own
+;; `:set' function *generates* from the list, once, at set time.  Update the
+;; variable by any route that skips `:set' and the value is genuinely there
+;; and the menu still does not have it: entry present, `a' unchanged.  That is
+;; the failure this file already had once, in a different disguise.
 (with-eval-after-load 'dirvish
   (require 'dirvish-quick-access nil t)
   (when (boundp 'dirvish-quick-access-entries)
-    (add-to-list 'dirvish-quick-access-entries
-                 (list "s" (or (bound-and-true-p seforim-directory)
-                               "~/Documents/seforim")
-                       "Seforim")
-                 t)))
+    ;; Guarded so re-evaluating the module (C-x C-e while editing it, or a
+    ;; second load) does not stack duplicate "s" rows into the menu.
+    (unless (assoc "s" dirvish-quick-access-entries)
+      (customize-set-variable
+       'dirvish-quick-access-entries
+       (append dirvish-quick-access-entries
+               (list (list "s" (or (bound-and-true-p seforim-directory)
+                                   "~/Documents/seforim")
+                           "Seforim")))))))
 
 ;; ── Buffer list ────────────────────────────────────────────────────────────
 ;; essentials/04-navigation builds its ibuffer groups from this variable at

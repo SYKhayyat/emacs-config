@@ -13,8 +13,9 @@
   ;; Replace standard dired with dirvish
   (dirvish-override-dired-mode)
   :custom
-  ;; Quick-access paths.  An extras module adds its own with
-  ;; `(add-to-list 'dirvish-quick-access-entries ...)' rather than editing this.
+  ;; Quick-access paths.  An extras module appends its own with
+  ;; `customize-set-variable' rather than editing this -- it has to go through
+  ;; the defcustom's `:set', which is what regenerates the transient menu.
   (dirvish-quick-access-entries
    '(("h" "~/"                          "Home")
      ("d" "~/Downloads"                 "Downloads")
