@@ -13,6 +13,22 @@ one way. Essentials never reaches into extras; where extras needs to appear in
 something essentials owns, it appends to a documented extension point (listed in
 [modules/README.md](modules/README.md)).
 
+"Take separately" is meant literally, and it does not require editing anything —
+`EMACS_MODULE_GROUPS` names which groups load, in load order:
+
+```sh
+EMACS_MODULE_GROUPS=essentials emacs        # the general half alone
+emacs                                       # both; this is the default
+```
+
+Separators are space, comma or colon. This matters most where the config is
+installed read-only — on NixOS it is a flake input and `modules/` is a store
+symlink, so the alternative to an environment variable is a commit and a
+rebuild. To make one of them the machine's default, set the variable in the
+session rather than changing the list in `init.el`; on NixOS/home-manager that
+is `home.sessionVariables` for shells plus `systemd.user.sessionVariables` for
+the daemon that `emacsclient` talks to.
+
 New to Emacs? Read **[EMACS-PRIMER.md](EMACS-PRIMER.md)** first — it explains the
 key notation (`C-c`, `M-x`, …), buffers/windows, and the survival commands.
 

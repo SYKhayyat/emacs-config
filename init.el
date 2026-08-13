@@ -90,14 +90,45 @@
       user-emacs-directory))                  ; in place: init.el next to them
   "Directory holding the module group directories.")
 
-(defvar my/module-groups '("essentials" "extras")
-  "Module group directories under `my/modules-root', in load order.")
+;; Which groups load is settable from the environment, and that is not a
+;; convenience.  On NixOS this config is consumed as a flake input: `modules/'
+;; is a symlink into the store and this file is read-only.  Editing the list
+;; below there costs a commit, a flake bump and a rebuild -- which is the right
+;; price for changing what the config *is*, and much too high for deciding what
+;; to load in the session you are about to start.  Those are different
+;; questions and only one of them belongs in the repo.
+;;
+;;   EMACS_MODULE_GROUPS=essentials emacs        ; the general half alone
+;;   EMACS_MODULE_GROUPS="essentials extras"     ; the default, spelled out
+;;
+;; Separators are space, comma or colon.  The order given is the load order:
+;; it is honoured as written rather than sorted, so naming `extras' first is
+;; possible and will break the one-way dependency described above.  That is
+;; deliberate -- the config cannot tell a mistake from an experiment, and the
+;; wrong order is loud enough to diagnose itself.
+(defvar my/module-groups
+  (let ((env (getenv "EMACS_MODULE_GROUPS")))
+    (or (and env (split-string env "[ \t,:]+" t))
+        '("essentials" "extras")))
+  "Module group directories under `my/modules-root', in load order.
+Overridden by the `EMACS_MODULE_GROUPS' environment variable; see the
+commentary above this definition.")
 
 (defvar my/modules-dirs
   (let ((dirs (delq nil
                     (mapcar (lambda (g)
                               (let ((d (expand-file-name g my/modules-root)))
-                                (and (file-directory-p d) (file-name-as-directory d))))
+                                (if (file-directory-p d)
+                                    (file-name-as-directory d)
+                                  ;; Worth a line: a typo in the environment
+                                  ;; variable and a deliberately slim config
+                                  ;; look identical from the inside -- fewer
+                                  ;; modules load, everything that did load
+                                  ;; works, and nothing says why the rest is
+                                  ;; missing.
+                                  (message "init: no module group %S under %s"
+                                           g my/modules-root)
+                                  nil)))
                             my/module-groups))))
     ;; Fall back to a flat layout so an older checkout, or a hand-made deploy
     ;; that never split, still boots instead of silently loading nothing.
