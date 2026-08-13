@@ -15,13 +15,17 @@ redefining anything, so nothing here breaks if the base module changes shape.
 ;;; 16-seforim-integration.el --- Seforim hooks into the base config -*- lexical-binding: t; -*-
 
 ;; ── File manager ───────────────────────────────────────────────────────────
-;; `a' in dirvish (quick access) gets a jump to the library.
+;; `a' in dirvish (quick access) gets a jump to the library.  The entries live
+;; in the `dirvish-quick-access' sub-feature, not in `dirvish' itself, so load
+;; it before appending -- otherwise the variable is void until the first `a'.
 (with-eval-after-load 'dirvish
-  (add-to-list 'dirvish-quick-access-entries
-               (list "s" (or (bound-and-true-p seforim-directory)
-                             "~/Documents/seforim")
-                     "Seforim")
-               t))
+  (require 'dirvish-quick-access nil t)
+  (when (boundp 'dirvish-quick-access-entries)
+    (add-to-list 'dirvish-quick-access-entries
+                 (list "s" (or (bound-and-true-p seforim-directory)
+                               "~/Documents/seforim")
+                       "Seforim")
+                 t)))
 
 ;; ── Buffer list ────────────────────────────────────────────────────────────
 ;; essentials/04-navigation builds its ibuffer groups from this variable at

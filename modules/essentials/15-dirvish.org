@@ -35,6 +35,13 @@
   ;; bare load-path setup) — this is what makes <f8> reliable everywhere.
   (require 'dirvish-side nil t)
   (setq dirvish-side-width 32)
+  ;; Same reason, and this one is load-bearing: `dirvish-quick-access-entries'
+  ;; is a defcustom in the `dirvish-quick-access' sub-feature, which `dirvish'
+  ;; does not pull in -- it is autoloaded on the first `a'.  Until then the
+  ;; variable is *void*, the `:custom' value above sits unapplied as a deferred
+  ;; theme setting, and anything that appends to the list (extras/16) fails.
+  ;; Loading it here defines the variable and applies that value at startup.
+  (require 'dirvish-quick-access nil t)
   ;; `dirvish-side-follow-mode' is a global minor mode, so it must be *called*,
   ;; not `setq'd, to actually track the current file in the sidebar.
   (when (fboundp 'dirvish-side-follow-mode) (dirvish-side-follow-mode 1))
