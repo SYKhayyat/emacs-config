@@ -8,9 +8,34 @@
 
 (require 'package)
 (setq package-archives
-      '(("melpa" . "https://melpa.org/packages/")
+      '(("melpa-stable" . "https://stable.melpa.org/packages/")
+        ("melpa" . "https://melpa.org/packages/")
         ("gnu" . "https://elpa.gnu.org/packages/")
         ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
+
+;; Prefer tagged releases over MELPA HEAD.  This is a reproducibility fix, not
+;; a taste one.  MELPA rebuilds from the upstream default branch daily and
+;; DELETES the superseded tarball, so a config that resolves against it cannot
+;; be reinstalled later -- the exact version that worked is gone from the
+;; server.  `my/package-install-retry' below exists only to paper over that.
+;;
+;; melpa-stable serves tagged releases, which are not deleted, so portable mode
+;; can be rebuilt on a fresh machine months from now.  MELPA is kept as a
+;; lower-priority fallback because not every package cuts releases; anything
+;; that resolves through it is still unpinnable, and `package-pinned-packages'
+;; below is where a specific package gets nailed to one archive.
+(setq package-archive-priorities
+      '(("melpa-stable" . 30)
+        ("gnu"          . 20)
+        ("nongnu"       . 15)
+        ("melpa"        . 10)))
+
+;; Packages that must come from a specific archive regardless of priority.
+;; Add an entry here when a package has no stable release and you need to
+;; record that fact deliberately rather than discover it on a rebuild.
+(defvar my/package-pins nil
+  "Alist of (PACKAGE . ARCHIVE) overrides applied to `package-pinned-packages'.")
+(setq package-pinned-packages (append my/package-pins package-pinned-packages))
 
 ;; ---------------------------------------------------------------------------
 ;; Portable vs. Nix package sourcing  (makes this config work on any machine)
