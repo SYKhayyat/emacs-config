@@ -90,13 +90,81 @@
 
 (add-hook 'prog-mode-hook #'my/setup-ltr-mode)
 
-;; ── Hebrew font ────────────────────────────────────────────────────────────
+;; ── Hebrew fonts ───────────────────────────────────────────────────────────
 ;; essentials/01-ui picks the monospace face and exports `my/pick-font'; the
-;; Hebrew fontset is chosen here so a config without this module never carries
-;; a list of Hebrew families it has no use for.
+;; Hebrew families are listed here so a config without this module never
+;; carries a list of Hebrew families it has no use for.
+;;
+;; The order is by mark positioning, not by looks.  The Taamey faces are the
+;; Culmus fonts built to place niqqud and cantillation; plain David CLM does
+;; not position cantillation, and the Noto faces are legibility fallbacks
+;; rather than a typesetting choice.
+;;
+;; None of these ship with any OS.  Nix packages them as `culmus', Debian as
+;; fonts-culmus, Fedora as culmus-fonts; on Windows they are a manual install.
+;; `my/hebrew-font-report' says what the machine in front of you actually has,
+;; which is the first thing to check when Hebrew suddenly looks wrong.
+
+(defvar my/hebrew-font-families
+  '("Taamey David CLM" "Taamey Frank CLM" "David CLM" "Frank Ruehl CLM"
+    "SBL Hebrew" "Noto Serif Hebrew" "Noto Sans Hebrew" "Arial Hebrew" "David")
+  "Hebrew display families, most preferred first.")
+
+(defvar my/hebrew-pointing-fonts
+  '("Taamey David CLM" "Taamey Frank CLM" "SBL Hebrew")
+  "Families in `my/hebrew-font-families' that position niqqud and cantillation.
+Anything outside this list renders pointed text legibly at best.")
+
+(defvar my/hebrew-document-fonts
+  '((rm "Taamey David CLM" "David CLM" "Noto Serif Hebrew")
+    (sf "Nachlieli CLM" "Noto Sans Hebrew")
+    (tt "Miriam Mono CLM" "Noto Sans Hebrew"))
+  "Families named in the generated preambles, per LaTeX font kind.
+The last entry of each row is the one that has to exist on a bare machine, so
+it is a Noto face and not a Culmus one.  The `tt' fallback is not monospaced;
+it is there so the document compiles, not because it is right.")
+
+(defun my/hebrew-font-report ()
+  "Report which Hebrew families this machine has, and whether any points text."
+  (interactive)
+  (let* ((have (seq-filter (lambda (f) (member f (font-family-list)))
+                           my/hebrew-font-families))
+         (pointing (seq-intersection have my/hebrew-pointing-fonts)))
+    (message "Hebrew fonts: %s | positions marks: %s"
+             (if have (string-join have ", ") "none")
+             (if pointing (string-join pointing ", ") "NONE -- install culmus"))))
+
+(defun my/hebrew-babelfont-chain ()
+  "Return babelfont lines for rm, sf and tt over `my/hebrew-document-fonts'.
+Each is wrapped in fontspec's `\\IfFontExistsTF' so a missing Culmus font falls
+through to the next candidate instead of erroring the run.  The last candidate
+of a row is emitted unguarded: something has to be tried."
+  (mapconcat
+   (lambda (row)
+     (let* ((kind (symbol-name (car row)))
+            (families (cdr row))
+            (guarded (butlast families))
+            (final (car (last families))))
+       (concat
+        (mapconcat (lambda (f)
+                     (format "\\IfFontExistsTF{%s}{\\babelfont{%s}{%s}}{%%\n"
+                             f kind f))
+                   guarded "")
+        (format "\\babelfont{%s}{%s}" kind final)
+        (make-string (length guarded) ?}))))
+   my/hebrew-document-fonts "\n"))
+
+(defun my/hebrew-typst-font-list ()
+  "Return the serif candidates as a Typst font array.
+Typst takes a list and uses the first family that is installed, so this needs
+none of the conditional machinery the LaTeX preamble does."
+  (format "(%s)"
+          (mapconcat (lambda (f) (format "\"%s\"" f))
+                     (cdr (assq 'rm my/hebrew-document-fonts))
+                     ", ")))
+
 (when (and (display-graphic-p) (fboundp 'set-fontset-font))
-  (let ((heb (my/pick-font '("David CLM" "Taamey Frank CLM" "Frank Ruehl CLM"
-                             "SBL Hebrew" "Noto Sans Hebrew" "Arial Hebrew" "David"))))
+  (let ((heb (my/pick-font my/hebrew-font-families)))
     (when heb
       (set-fontset-font t 'hebrew (font-spec :family heb)))))
 
@@ -188,7 +256,7 @@
 \\usepackage{fontspec}
 \\usepackage[bidi=basic]{babel}
 \\babelprovide[main, import]{hebrew}
-\\babelfont{rm}{David CLM}
+" (my/hebrew-babelfont-chain) "
 
 \\begin{document}
 
@@ -196,12 +264,15 @@
 
 \\end{document}
 "))
-      ("typst" (insert "#set text(lang: \"he\", font: \"David CLM\")
+      ("typst" (insert "#set text(lang: \"he\", font: " (my/hebrew-typst-font-list) ")
 // RTL is automatic from lang: he -- do NOT use page(flipped:true) (landscape)
 
 = כותרת
 
 "))
+      ;; ConTeXt names the font outright: it has no test for "is this family
+      ;; installed", and `\\definefallbackfamily' substitutes missing GLYPHS,
+      ;; which is a different problem.  This one wants culmus present.
       ("context" (insert "\\mainlanguage[he]
 \\setupalign[r2l]
 \\definefontfamily[hebrew][rm][David CLM]
