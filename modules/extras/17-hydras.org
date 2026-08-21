@@ -90,7 +90,7 @@ for the languages that do work.
   (defhydra hydra-direction (:color blue :hint nil)
     "
 Direction: r: RTL  l: LTR  t: toggle  B: bidi reorder
-Hebrew:    i: toggle Hebrew input  n: new Hebrew document
+Hebrew:    i: toggle Hebrew input  I: pick input method  n: new Hebrew document
 Notes:     f: fix all footnotes for RTL
 "
     ("r" my/set-rtl)
@@ -98,6 +98,7 @@ Notes:     f: fix all footnotes for RTL
     ("t" my/toggle-direction)
     ("B" my/toggle-bidi-reordering)
     ("i" my/toggle-hebrew-input)
+    ("I" my/select-hebrew-input)
     ("n" my/create-hebrew-document)
     ("f" my/org-fix-all-footnotes-rtl)
     ("q" nil))

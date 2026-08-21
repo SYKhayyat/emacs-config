@@ -8,22 +8,58 @@
 
 (setq-default bidi-display-reordering t)
 (setq-default bidi-paragraph-direction nil)
-(setq bidi-inhibit-bpa t)
+
+;; `bidi-inhibit-bpa' is deliberately not set here.  essentials/00-core sets the
+;; global, and `my/apply-direction' below overrides it per buffer; a second
+;; global assignment in the module that wants the BPA *on* for prose was only
+;; ever confusing.
 
 (defvar-local my/bidi-direction 'right-to-left)
+
+;; Direction is three variables, not one, and only `bidi-paragraph-direction'
+;; is per-buffer by default.  `visual-order-cursor-movement' and
+;; `bidi-inhibit-bpa' are ordinary globals, so they need `setq-local' to stay
+;; scoped to the buffer being set up.
+;;
+;; `visual-order-cursor-movement' makes C-f, C-b and the arrow keys follow what
+;; is on screen rather than the order of the underlying characters.  In
+;; monolingual Hebrew the two agree and it changes nothing; on a line mixing
+;; scripts, the logical default lands the cursor somewhere the eye did not
+;; follow it to.
+;;
+;; `bidi-inhibit-bpa' is set globally in essentials/00-core, where it is a
+;; redisplay speedup and the right default for code.  It also switches off the
+;; Bidirectional Parentheses Algorithm, which is what resolves a bracket's
+;; direction from its pair rather than from the surrounding run -- so prose
+;; wants it back on.  Clearing it per-buffer leaves the global default alone,
+;; and a config that never loads this module is unaffected.
+
+(defun my/apply-direction (direction)
+  "Apply DIRECTION -- `right-to-left' or `left-to-right' -- to this buffer."
+  (let ((rtl (eq direction 'right-to-left)))
+    (setq-local bidi-paragraph-direction direction
+                visual-order-cursor-movement rtl
+                bidi-inhibit-bpa (not rtl))
+    (setq my/bidi-direction direction)))
+
+(defun my/setup-rtl-mode ()
+  "Set up RTL for prose."
+  (my/apply-direction 'right-to-left))
+
+(defun my/setup-ltr-mode ()
+  "Set up LTR for code."
+  (my/apply-direction 'left-to-right))
 
 (defun my/set-rtl ()
   "Set buffer to RTL."
   (interactive)
-  (setq-local bidi-paragraph-direction 'right-to-left)
-  (setq-local my/bidi-direction 'right-to-left)
+  (my/setup-rtl-mode)
   (message "Direction: RTL"))
 
 (defun my/set-ltr ()
   "Set buffer to LTR."
   (interactive)
-  (setq-local bidi-paragraph-direction 'left-to-right)
-  (setq-local my/bidi-direction 'left-to-right)
+  (my/setup-ltr-mode)
   (message "Direction: LTR"))
 
 (defun my/toggle-direction ()
@@ -38,14 +74,6 @@
   (interactive)
   (setq bidi-display-reordering (not bidi-display-reordering))
   (message "Bidi: %s" (if bidi-display-reordering "ON" "OFF")))
-
-(defun my/setup-rtl-mode ()
-  "Setup RTL for prose."
-  (setq-local bidi-paragraph-direction 'right-to-left))
-
-(defun my/setup-ltr-mode ()
-  "Setup LTR for code."
-  (setq-local bidi-paragraph-direction 'left-to-right))
 
 ;; RTL for prose, LTR for code.  The typesetting modes are listed here rather
 ;; than in essentials/07-latex, 08-typst and 09-context: those are meant to work
@@ -72,12 +100,33 @@
     (when heb
       (set-fontset-font t 'hebrew (font-spec :family heb)))))
 
-(defun my/toggle-hebrew-input ()
-  "Toggle Hebrew input."
-  (interactive)
-  (if current-input-method
-      (deactivate-input-method)
-    (set-input-method "hebrew")))
+;; Emacs ships eight Hebrew and Yiddish Quail packages.  `hebrew' is the
+;; standard Israeli layout and cannot enter niqqud or cantillation marks; the
+;; two biblical methods exist for that.  F9 toggles the chosen one, C-u F9
+;; picks a different one and makes it what F9 toggles from then on.
+
+(defvar my/hebrew-input-methods
+  '("hebrew" "hebrew-new" "hebrew-full" "hebrew-lyx"
+    "hebrew-biblical-tiro" "hebrew-biblical-sil"
+    "yiddish-royal" "yiddish-keyman")
+  "Input methods offered by `my/select-hebrew-input'.")
+
+(defvar my/hebrew-input-method "hebrew"
+  "Input method `my/toggle-hebrew-input' activates.")
+
+(defun my/select-hebrew-input (method)
+  "Activate METHOD and make it the one `my/toggle-hebrew-input' activates."
+  (interactive (list (completing-read "Hebrew input method: "
+                                      my/hebrew-input-methods nil t)))
+  (setq my/hebrew-input-method method)
+  (set-input-method method))
+
+(defun my/toggle-hebrew-input (&optional select)
+  "Toggle `my/hebrew-input-method'.  With prefix SELECT, choose one first."
+  (interactive "P")
+  (cond (select (call-interactively #'my/select-hebrew-input))
+        (current-input-method (deactivate-input-method))
+        (t (set-input-method my/hebrew-input-method))))
 
 (defun my/large-file-hook ()
   "Optimize large files."
@@ -90,6 +139,7 @@
 
 ;; Keybindings
 (global-set-key (kbd "<f9>") #'my/toggle-hebrew-input)
+(global-set-key (kbd "C-c h i") #'my/select-hebrew-input)
 (global-set-key (kbd "C-c d") #'my/toggle-direction)
 (global-set-key (kbd "C-c r") #'my/set-rtl)
 (global-set-key (kbd "C-c l") #'my/set-ltr)
