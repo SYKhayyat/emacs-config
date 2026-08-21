@@ -32,6 +32,12 @@ the daemon that `emacsclient` talks to.
 New to Emacs? Read **[EMACS-PRIMER.md](EMACS-PRIMER.md)** first — it explains the
 key notation (`C-c`, `M-x`, …), buffers/windows, and the survival commands.
 
+New to *this* config? **[docs/ONBOARDING.md](docs/ONBOARDING.md)** routes you and
+then walks the path: install, taking one half, the model, and the eight rules a
+change is held to. Something not working?
+**[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** is symptom-first — and it
+leads with the three commands that ask the running Emacs instead of a document.
+
 The *seforim* system has its own deep-dive: **[README-SEFORIM.md](README-SEFORIM.md)**.
 
 ---
@@ -389,6 +395,11 @@ are gone from `modules/system/cli-tools.nix` too.
 ---
 
 ## 7. Troubleshooting
+
+The six below are the ones that come up most. Everything else — capability
+gating, the two package modes, the NixOS silent-absence trap, Windows and Hebrew
+search, fonts, startup, and why CI can be red while your machine is green — is in
+**[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)**.
 
 - **A module didn't load.** `M-x view-echo-area-messages`, or check
   `my/load-errors`. Usually a missing package/system library (§2.1).
