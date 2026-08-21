@@ -19,16 +19,19 @@ like a bidi problem.
 #+begin_src emacs-lisp
 ;;; 03-hebrew-typesetting.el --- Hebrew preambles for the typesetting modes -*- lexical-binding: t; -*-
 
+(require '00-hebrew)   ; my/hebrew-babelfont-chain, my/hebrew-typst-font-list
+
 ;; ── LaTeX ──────────────────────────────────────────────────────────────────
+;; The font declarations come from `my/hebrew-document-fonts' rather than being
+;; written out here, so a machine without culmus falls through to Noto instead
+;; of failing the run on a font fontspec cannot find.
 (defvar my/latex-hebrew-preamble
-  "% ── Hebrew Support ──
+  (concat "% ── Hebrew Support ──
 \\usepackage{fontspec}
 \\usepackage[bidi=basic]{babel}
 \\babelprovide[main, import]{hebrew}
 \\babelprovide[import]{english}
-\\babelfont{rm}{David CLM}
-\\babelfont{sf}{Nachlieli CLM}
-\\babelfont{tt}{Miriam Mono CLM}"
+" (my/hebrew-babelfont-chain))
   "LaTeX Hebrew preamble.  Needs lualatex or xelatex, not pdflatex.")
 
 (defun my/insert-latex-hebrew-preamble ()
@@ -37,10 +40,12 @@ like a bidi problem.
   (insert my/latex-hebrew-preamble))
 
 ;; ── Typst ──────────────────────────────────────────────────────────────────
+;; Typst takes a font list and picks the first installed family, so the
+;; fallback needs no conditional -- see `my/hebrew-typst-font-list'.
 (defvar my/typst-hebrew-preamble
-  "#set text(lang: \"he\", font: \"David CLM\")
+  (concat "#set text(lang: \"he\", font: " (my/hebrew-typst-font-list) ")
 // RTL follows from lang: \"he\" -- do NOT use page(flipped: true), that is landscape.
-"
+")
   "Typst Hebrew preamble.")
 
 (defun my/insert-typst-hebrew-preamble ()
@@ -49,6 +54,11 @@ like a bidi problem.
   (insert my/typst-hebrew-preamble))
 
 ;; ── ConTeXt ────────────────────────────────────────────────────────────────
+;; No guard here, unlike the LaTeX preamble above: ConTeXt has no test for
+;; "is this family installed".  `\definefallbackfamily' substitutes missing
+;; GLYPHS within a family, which is a different problem.  So this names the
+;; fonts outright and wants culmus present -- `my/hebrew-font-report' says
+;; whether it is.
 (defvar my/context-hebrew-preamble
   "% ── Hebrew Support ──
 \\mainlanguage[he]
