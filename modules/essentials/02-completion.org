@@ -33,10 +33,25 @@ another module without touching this one."
      ((string-prefix-p "=" pattern)
       `(orderless-literal . ,(substring pattern 1)))))
 
+  (defun my/dirs-first-sort (completions)
+    "Sort file COMPLETIONS with directories first, alphabetical inside each group.
+File-category candidates carry a trailing slash on directories; partition them
+into two buckets and let the built-in `sort' do the work, so the cost stays the
+same as vertico's default sort."
+    (let (dirs files)
+      (dolist (c completions)
+        (if (string-suffix-p "/" c)
+            (push c dirs)
+          (push c files)))
+      (nconc (sort dirs #'string-lessp)
+             (sort files #'string-lessp))))
+
   (setq completion-styles '(orderless basic)
         completion-category-defaults nil
         orderless-style-dispatchers '(my/orderless-dispatcher)
-        completion-category-overrides '((file (styles partial-completion)))))
+        completion-category-overrides
+        '((file (styles partial-completion)
+                (display-sort-function . my/dirs-first-sort)))))
 
 ;; Marginalia - rich annotations
 (use-package marginalia
@@ -112,9 +127,32 @@ another module without touching this one."
   :if (my/package-usable-p "jinx" "enchant-2")
   :hook ((text-mode . jinx-mode)
          (org-mode . jinx-mode))
-  :bind ("M-$" . jinx-correct)
+  :bind (("M-$" . jinx-correct)
+         ([remap ispell-word] . jinx-correct)
+         ([remap ispell-complete-word] . jinx-correct)
+         ([remap ispell-completion-at-point] . jinx-correct))
   :config
   (setq jinx-languages "en_US"))
+
+;; ispell - plain word-list for lookup/completion
+;;
+;; `ispell-complete-word' and `ispell-lookup-words' (also reached from
+;; `ispell-completion-at-point') need a plain word-list file named by
+;; `ispell-alternate-dictionary'; the classic /usr/share/dict locations are
+;; absent on NixOS, which is where the "No plain word-list found at system
+;; default locations" error comes from.  Discover hunspell's dictionary dir
+;; next to the binary (that layout holds on Debian, Arch, Homebrew and NixOS)
+;; and point ispell at it, so stray ispell invocations work even when jinx is
+;; not available.  Cost is a couple of file-exists checks at startup.
+(when-let* ((h (executable-find "hunspell"))
+            (dict-dir (expand-file-name "../share/hunspell/" (file-name-directory h)))
+            (dic (or (car (file-expand-wildcards (expand-file-name "en_US.dic" dict-dir)))
+                     (car (file-expand-wildcards (expand-file-name "en_*.dic" dict-dir))))))
+  (unless (and (stringp ispell-alternate-dictionary)
+               (file-readable-p ispell-alternate-dictionary))
+    (setq ispell-program-name h
+          ispell-complete-word-dict dic
+          ispell-alternate-dictionary dic)))
 
 (defun my/spell-set-language (langs)
   "Set spell checking in this buffer to LANGS and turn `jinx-mode' on.

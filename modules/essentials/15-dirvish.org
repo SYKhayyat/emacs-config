@@ -22,6 +22,10 @@
      ("n" "~/Documents/roam"            "Notes")
      ("o" "~/Documents/org"             "Org")))
   :config
+  ;; Dirs before files in listings (`C-x d'), alphabetical within each group.
+  ;; `--group-directories-first' is done by ls itself, and dirvish obeys this
+  ;; variable unless `dirvish-listing-switches' is set.
+  (setq dired-listing-switches "-al --group-directories-first")
   ;; Visual features
   (setq dirvish-attributes
         '(nerd-icons file-time file-size collapse git-msg))
