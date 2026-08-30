@@ -31,7 +31,11 @@
 (use-package tab-bar
   :ensure nil
   :config
-  (setq tab-bar-show 1
+  ;; tab-bar-show is the number of tabs *after which* the bar appears: 0 shows
+  ;; it always (there is always >= 1 workspace), 1 hides it while a single
+  ;; workspace is active -- which reads as "no tabs at all".  We want the strip
+  ;; visible even with one workspace, so use 0.
+  (setq tab-bar-show 0
         tab-bar-close-button-show nil
         tab-bar-new-tab-choice "*scratch*"
         tab-bar-tab-hints t
