@@ -296,7 +296,7 @@ the invariants it now enforces.
 | 15 | dirvish | file manager **+ `<f8>` IDE sidebar** |
 | 16 | vterm | the compiled terminal, on `M-x vterm` (skipped where cmake/libvterm are absent) |
 | 17 | terminal | portable multi-shell tabbed terminal (PowerShell/bash/nu) — owns `` C-` `` on every platform |
-| 18 | tabs | centaur-tabs buffer strip + `C-c T` tabs hydra |
+| 18 | tabs | workspace tab-bar helpers + `C-c T` tabs hydra |
 | 19 | academic | citar/bibliography |
 | 20 | local-ai | gptel — local Ollama by default; cloud backends documented in-module |
 | 21 | web-search | engine-mode: Google Scholar, nixpkgs, DuckDuckGo |

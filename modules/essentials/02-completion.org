@@ -148,11 +148,12 @@ same as vertico's default sort."
             (dict-dir (expand-file-name "../share/hunspell/" (file-name-directory h)))
             (dic (or (car (file-expand-wildcards (expand-file-name "en_US.dic" dict-dir)))
                      (car (file-expand-wildcards (expand-file-name "en_*.dic" dict-dir))))))
-  (unless (and (stringp ispell-alternate-dictionary)
-               (file-readable-p ispell-alternate-dictionary))
-    (setq ispell-program-name h
-          ispell-complete-word-dict dic
-          ispell-alternate-dictionary dic)))
+(unless (and (boundp 'ispell-alternate-dictionary)
+             (stringp (default-value 'ispell-alternate-dictionary))
+             (file-readable-p (default-value 'ispell-alternate-dictionary)))
+  (setq ispell-program-name h
+        ispell-complete-word-dict dic
+        ispell-alternate-dictionary dic)))
 
 (defun my/spell-set-language (langs)
   "Set spell checking in this buffer to LANGS and turn `jinx-mode' on.

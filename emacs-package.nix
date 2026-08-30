@@ -35,7 +35,6 @@ in
   yasnippet-snippets editorconfig envrc helpful which-key
   gcmh hydra restart-emacs visual-fill-column
   valign focus olivetti
-  centaur-tabs
   # typst-preview is an *Emacs* package, so it belongs on the Emacs
   # load-path — not in `home.packages`, where it was previously listed and
   # therefore could never be `require`d.  It talks to `tinymist preview`
