@@ -132,28 +132,47 @@ same as vertico's default sort."
          ([remap ispell-complete-word] . jinx-correct)
          ([remap ispell-completion-at-point] . jinx-correct))
   :config
-  (setq jinx-languages "en_US"))
-
-;; ispell - plain word-list for lookup/completion
+  (setq jinx-languages "en_US"));; ispell - plain word-list, ONLY when jinx is unavailable
 ;;
-;; `ispell-complete-word' and `ispell-lookup-words' (also reached from
-;; `ispell-completion-at-point') need a plain word-list file named by
-;; `ispell-alternate-dictionary'; the classic /usr/share/dict locations are
-;; absent on NixOS, which is where the "No plain word-list found at system
-;; default locations" error comes from.  Discover hunspell's dictionary dir
-;; next to the binary (that layout holds on Debian, Arch, Homebrew and NixOS)
-;; and point ispell at it, so stray ispell invocations work even when jinx is
-;; not available.  Cost is a couple of file-exists checks at startup.
-(when-let* ((h (executable-find "hunspell"))
-            (dict-dir (expand-file-name "../share/hunspell/" (file-name-directory h)))
-            (dic (or (car (file-expand-wildcards (expand-file-name "en_US.dic" dict-dir)))
-                     (car (file-expand-wildcards (expand-file-name "en_*.dic" dict-dir))))))
-(unless (and (boundp 'ispell-alternate-dictionary)
-             (stringp (default-value 'ispell-alternate-dictionary))
-             (file-readable-p (default-value 'ispell-alternate-dictionary)))
-  (setq ispell-program-name h
-        ispell-complete-word-dict dic
-        ispell-alternate-dictionary dic)))
+;; The original reasoning: ispell's word-completion/lookup needs a plain
+;; word-list (`ispell-alternate-dictionary') and NixOS has no /usr/share/dict,
+;; so discover hunspell's .dic and point ispell at it.
+;;
+;; What that actually cost, measured: org-mode and text-mode both keep
+;; `ispell-completion-at-point' in `completion-at-point-functions', and corfu
+;; auto-completion calls that FUNCTIONALLY on every popup.  jinx's `:bind`
+;; remap can only intercept a keystroke, not a functional call.  So with a
+;; plain word-list configured, every completion event spawned the external
+;; `look' binary against the whole en_US.dic -- dozens of `look' processes per
+;; idle moment, and the editor froze.  jinx is the real speller on this
+;; machine, so ispell's slow plain-dict path buys nothing here.
+;;
+;; `(fboundp 'jinx-mode)' is already true whenever jinx is installed (autoload),
+;; so this block only runs on a bare box that really lacks jinx; where jinx
+;; exists, ispell is never pointed at a word-list and cannot spawn `look'.
+(unless (fboundp 'jinx-mode)
+  (when-let* ((h (executable-find "hunspell"))
+              (dict-dir (expand-file-name "../share/hunspell/" (file-name-directory h)))
+              (dic (or (car (file-expand-wildcards (expand-file-name "en_US.dic" dict-dir)))
+                       (car (file-expand-wildcards (expand-file-name "en_*.dic" dict-dir))))))
+    (unless (and (boundp 'ispell-alternate-dictionary)
+                 (stringp (default-value 'ispell-alternate-dictionary))
+                 (file-readable-p (default-value 'ispell-alternate-dictionary)))
+      (setq ispell-program-name h
+            ispell-complete-word-dict dic
+            ispell-alternate-dictionary dic))))
+
+;; Drop ispell out of the completion path entirely: org-mode and text-mode put
+;; `ispell-completion-at-point' in `completion-at-point-functions', which corfu
+;; auto-invokes while typing.  Each call spawned a `look' subprocess (the
+;; "Starting \"look\" process..." spam and the lag).  jinx already underlines
+;; misspellings live, so no completion capability is lost.
+(dolist (hook '(text-mode-hook org-mode-hook))
+  (add-hook hook
+            (lambda ()
+              (setq-local completion-at-point-functions
+                          (remove 'ispell-completion-at-point
+                                  completion-at-point-functions)))))
 
 (defun my/spell-set-language (langs)
   "Set spell checking in this buffer to LANGS and turn `jinx-mode' on.
