@@ -38,13 +38,12 @@ Roam: f: find node  i: insert link  c: capture
   (defhydra hydra-writing (:color blue :hint nil)
     "
 Writing:  w: reading room (olivetti)   W: set width   f: focus mode
-Spell:    s: set language              $: correct word at point
 "
     ("w" my/toggle-reading-room)
     ("W" olivetti-set-width)
     ("f" focus-mode)
-    ("s" my/spell-set-language)
-    ("$" jinx-correct)
+    ;; ("s" my/spell-set-language)  ; disabled with jinx — see 02-completion
+    ;; ("$" jinx-correct)           ; disabled with jinx — see 02-completion
     ("q" nil))
 
   (global-set-key (kbd "C-c W") #'hydra-writing/body))
