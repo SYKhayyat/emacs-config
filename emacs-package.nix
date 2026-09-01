@@ -14,8 +14,41 @@
 
 let
   emacs = pkgs.emacs30-pgtk or pkgs.emacs30 or pkgs.emacs29-pgtk;
+
+  # Work around an upstream nixpkgs bug on nixos-26.05: its generated GNU ELPA
+  # snapshot pins `org' at 9.8.3, a version GNU ELPA never published (the
+  # archive goes 9.8.1 -> 9.8.4).  Every mirror 404s for both org-9.8.3.tar and
+  # org-9.8.3.tar.lz, so `nix flake check' (the bytecompile job) is red even with
+  # a healthy config.  `org' is also pulled in *transitively* by org-roam, citar,
+  # org-modern and ox-pandoc, so it has to be fixed here rather than just dropped
+  # from the package list below.
+  #
+  # We re-pin it to the latest published release.  GNU ELPA keeps every *released*
+  # version in its archive permanently, compressed as x.tar.lz (only the current
+  # version is additionally served uncompressed), so we fetch the x.tar.lz — it
+  # will not go away when a newer org lands — and decompress it with lzip, exactly
+  # as nixpkgs' own fetchelpa.nix does.  `sha256' is the hash of the *decompressed*
+  # tar, i.e. of the final `$out' that fetchurl verifies after postFetch.
+  emacsWithOrg =
+    let
+      epkgs = pkgs.emacsPackagesFor emacs;
+    in
+    (epkgs.overrideScope (_: super: {
+      org = super.org.overrideAttrs (_: {
+        version = "9.8.10";
+        src = pkgs.fetchurl {
+          name = "org-9.8.10.tar";
+          url = "https://elpa.gnu.org/packages/org-9.8.10.tar.lz";
+          sha256 = "890a9dd5c4f1d279f6ed0b3d10670d796aaccb7fdc71a2a665cd153bec463f1d";
+          postFetch = ''
+            ${pkgs.lzip}/bin/lzip -d -c "$out" > "$out.uncompressed"
+            mv "$out.uncompressed" "$out"
+          '';
+        };
+      });
+    }));
 in
-(pkgs.emacsPackagesFor emacs).emacsWithPackages (epkgs: with epkgs; [
+emacsWithOrg.emacsWithPackages (epkgs: with epkgs; [
   use-package dash s f seq cl-lib diminish
   doom-themes doom-modeline nerd-icons all-the-icons all-the-icons-dired pulsar shrink-path
   vertico orderless marginalia consult embark embark-consult corfu anzu deadgrep engine-mode
@@ -35,6 +68,10 @@ in
   yasnippet-snippets editorconfig envrc helpful which-key
   gcmh hydra restart-emacs visual-fill-column
   valign focus olivetti
+  # activities: the persistent-workspace layer behind 25-activities.org.  A GNU
+  # ELPA package (pure Elisp, depends only on `persist'), so it builds and runs
+  # the same on every OS.
+  activities
   # typst-preview is an *Emacs* package, so it belongs on the Emacs
   # load-path — not in `home.packages`, where it was previously listed and
   # therefore could never be `require`d.  It talks to `tinymist preview`
