@@ -1,0 +1,69 @@
+#+TITLE: Activities (persistent workspaces)
+#+PROPERTY: header-args:emacs-lisp :tangle yes
+
+=04-navigation= and =18-tabs= give you workspaces as *tab-bar* tabs: a tab is a
+whole window layout, one per project, and switching tabs swaps the layout at
+once.  The one thing tabs cannot do is outlive the session — restart Emacs and
+every workspace is rebuilt by hand.
+
+This module adds the *activities* layer on top (alphapapa's =activities=
+package, GNU ELPA): an activity is a *saved* tab — a named window layout plus
+the specific buffers in it — that you can resurrect on demand, across restarts,
+and without touching your manual tab workflow.
+
+The two are not rivals.  A *tab* is live ("I'm here now"); an *activity* is a
+bookmark for a workspace ("I'll need this again").  You lay a layout out in a
+tab, save it as an activity, later resume it into a fresh tab, and revert it to
+its saved state whenever it drifts.
+
+=activities-tabs-mode= keeps everything on the tab strip: activities are
+managed *as* tabs, so the model you already know (one tab, one workspace) is
+unchanged.  =activities-mode= saves each activity's state automatically when
+Emacs is idle and when it exits, so nothing is lost when you close a tab or quit.
+
+It is pure Elisp with a single lightweight dependency (=persist=) and no native
+code, so it is equally fast and identical on Linux, macOS, Windows and Haiku.
+
+* Package configuration
+Bindings live on =C-x C-a=, the prefix the package's own documentation
+recommends (and that `edebug' would otherwise claim — we disable that in =:init=,
+before the keymap is set up).
+
+- =C-x C-a C-a= — *resume* an activity into a fresh tab (restores last state).
+- =C-x C-a C-d= — *define* this tab's layout as a new activity (=C-u= redefines).
+- =C-x C-a C-n= — switch to a new, empty activity (a blank tab).
+- =C-x C-a C-s= — *suspend*: save the last state, close the tab.
+- =C-x C-a C-k= — *kill*: discard the last state, close the tab (uses the saved
+  default next time).
+- =C-x C-a RET= — *switch* to an already-active activity.
+- =C-x C-a g= — *revert* the activity to its saved default state.
+- =C-x C-a b= — switch to a buffer that belongs to this activity only.
+- =C-x C-a l= — list and manage activities.
+#+begin_src emacs-lisp
+;;; 25-activities.el --- Persistent workspace tabs (activities) -*- lexical-binding: t; -*-
+
+(use-package activities
+  :init
+  ;; Save each activity's state on idle and at exit, so closing a tab or
+  ;; quitting Emacs is never data loss.
+  (activities-mode)
+  ;; Model activities as tab-bar *tabs* — the workspace model 04-navigation and
+  ;; 18-tabs already use — rather than as additional frames.
+  (activities-tabs-mode)
+  ;; `edebug' reclaims the `C-x C-a ...' prefix by default; this config uses
+  ;; that prefix for activities, so keep edebug (and its advice) out of it.
+  (setq edebug-inhibit-emacs-lisp-mode-bindings t)
+  :bind
+  (("C-x C-a C-n" . activities-new)
+   ("C-x C-a C-d" . activities-define)
+   ("C-x C-a C-a" . activities-resume)
+   ("C-x C-a C-s" . activities-suspend)
+   ("C-x C-a C-k" . activities-kill)
+   ("C-x C-a RET" . activities-switch)
+   ("C-x C-a b"   . activities-switch-buffer)
+   ("C-x C-a g"   . activities-revert)
+   ("C-x C-a l"   . activities-list)))
+
+(provide '25-activities)
+;;; 25-activities.el ends here
+#+end_src
