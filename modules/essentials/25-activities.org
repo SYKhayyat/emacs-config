@@ -43,16 +43,21 @@ before the keymap is set up).
 ;;; 25-activities.el --- Persistent workspace tabs (activities) -*- lexical-binding: t; -*-
 
 (use-package activities
+  ;; `edebug' reclaims the `C-x C-a ...' prefix by default; this config uses
+  ;; that prefix for activities, so keep edebug (and its advice) out of it.
+  ;; `edebug' is builtin, so this is safe in :init, before the package loads.
   :init
+  (setq edebug-inhibit-emacs-lisp-mode-bindings t)
+  ;; The two modes below are package functions, so they must run after the
+  ;; package is loaded — i.e. in :config, not :init, or Emacs apis "void
+  ;; function" on them.
+  :config
   ;; Save each activity's state on idle and at exit, so closing a tab or
   ;; quitting Emacs is never data loss.
   (activities-mode)
   ;; Model activities as tab-bar *tabs* — the workspace model 04-navigation and
   ;; 18-tabs already use — rather than as additional frames.
   (activities-tabs-mode)
-  ;; `edebug' reclaims the `C-x C-a ...' prefix by default; this config uses
-  ;; that prefix for activities, so keep edebug (and its advice) out of it.
-  (setq edebug-inhibit-emacs-lisp-mode-bindings t)
   :bind
   (("C-x C-a C-n" . activities-new)
    ("C-x C-a C-d" . activities-define)
