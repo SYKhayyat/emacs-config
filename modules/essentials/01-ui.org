@@ -30,6 +30,27 @@
                 eshell-mode-hook vterm-mode-hook pdf-view-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
+;; Tall / large buffers degrade gracefully.
+;;
+;; Relative numbering is the worst case on a tall file: Emacs recomputes the
+;; offset of every visible line on each scroll.  For a truly large file,
+;; `my/apply-large-file-settings' (00-core) has already put this buffer in
+;; `my/large-file-mode' and switched line numbers off, so this hook stands
+;; down there -- it only touches merely-tall buffers, where it falls back to
+;; absolute numbering.
+(defun my/ui-large-or-tall-p ()
+  "Non-nil when the current file is too large or tall for relative numbers."
+  (and buffer-file-name
+       (not (bound-and-true-p my/large-file-mode))
+       (> (line-number-at-pos (point-max)) my/medium-file-lines)))
+
+(defun my/ui-degrade-line-numbers ()
+  "Use absolute (not relative) line numbers in tall buffers."
+  (when (my/ui-large-or-tall-p)
+    (setq display-line-numbers t)))
+
+(add-hook 'find-file-hook #'my/ui-degrade-line-numbers)
+
 ;; Visual aids
 (global-hl-line-mode 1)
 (show-paren-mode 1)

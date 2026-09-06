@@ -247,6 +247,61 @@ rather than silently missing."
 ;; So-long mode for large files
 (global-so-long-mode 1)
 
+;; Large files: shed decoration that does not scale.
+;;
+;; `global-so-long-mode' above handles *wide* lines (a line with 100k columns
+;; still redraws acceptably).  It does nothing for *tall* files -- a 100 MB
+;; text file of short lines -- where the per-line, per-scroll cost is what
+;; hurts.  Three regular features add up badly there:
+;;
+;;   * font-lock fontification re-parses the region on every edit and scroll;
+;;   * relative line numbers recompute every visible line's offset each scroll
+;;     (the single worst offender -- see the absolute-number fallback in 01-ui);
+;;   * global-auto-revert (01-ui) re-reads the whole file the instant anything
+;;     touches it on disk.
+;;
+;; The hook below turns each of those off for the buffer, never touching its
+;; contents.  Each knob is a normal variable, so this is compositional rather
+;; than a pile of inline `find-file-hook' hacks, and it degrades the buffer
+;; rather than refusing it.
+(defcustom my/large-file-size (* 5 1024 1024)
+  "A file at or above this size (bytes) is treated as large.
+Large files drop font-lock, line numbers and per-buffer auto-revert."
+  :type 'integer
+  :group 'finding)
+
+(defcustom my/medium-file-lines 50000
+  "Line count at which tall-but-not-huge buffers lose relative line numbers.
+At or above this many lines `my/ui-degrade-line-numbers' (01-ui) falls back
+to absolute numbering.  Huge files (>= `my/large-file-size') are handled
+here by `my/large-file-mode' instead of that degradation."
+  :type 'integer
+  :group 'editing)
+
+(defvar-local my/large-file-mode nil
+  "Non-nil when the current buffer is being handled for a large file.")
+
+(defun my/large-file-p ()
+  "Non-nil when `buffer-file-name' is at least `my/large-file-size' bytes."
+  (and buffer-file-name
+       (>= (nth 7 (file-attributes buffer-file-name))
+           my/large-file-size)))
+
+(defun my/apply-large-file-settings ()
+  "Adapt the current buffer for a large file; called from `find-file-hook'.
+Turns off font-lock, display line numbers and per-buffer auto-revert, and
+flags `my/large-file-mode' so 01-ui does not re-enable anything."
+  (when (my/large-file-p)
+    (setq-local my/large-file-mode t)
+    (when (bound-and-true-p font-lock-mode)
+      (font-lock-mode 0))
+    (when (bound-and-true-p display-line-numbers)
+      (display-line-numbers-mode 0))
+    (when (bound-and-true-p auto-revert-mode)
+      (auto-revert-mode -1))))
+
+(add-hook 'find-file-hook #'my/apply-large-file-settings)
+
 (provide '00-core)
 ;;; 00-core.el ends here
 #+end_src
