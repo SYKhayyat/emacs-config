@@ -66,6 +66,15 @@
       scroll-margin 3
       scroll-preserve-screen-position t)
 
+;; Soft line wrapping at word boundaries.
+;;
+;; `visual-line-mode' sets `word-wrap' locally, but a plain text/fundamental
+;; buffer (and `so-long' on long-line buffers) wraps at character level,
+;; splitting a Hebrew or otherwise long word across two lines. Defaulting
+;; `word-wrap' to t makes every soft break land at a word boundary, so the
+;; letters of a word stay together no matter which minor mode is active.
+(setq-default word-wrap t)
+
 ;; Frame
 (add-to-list 'default-frame-alist '(height . 35))
 ;; Files and backups
