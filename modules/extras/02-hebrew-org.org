@@ -40,6 +40,8 @@ what each backend was measured to do.
 #+begin_src emacs-lisp
 ;;; 02-hebrew-org.el --- RTL footnotes and Hebrew LaTeX export -*- lexical-binding: t; -*-
 
+(require '00-hebrew)   ; my/hebrew-babelfont-chain
+
 ;; ── Hebrew tag, capture and roam templates ─────────────────────────────────
 ;; essentials/05-org and 06-org-roam keep the general sets; the Hebrew entries
 ;; are appended here so the base config carries no tag it has no use for.
@@ -129,8 +131,16 @@ ordinary Org footnote definition."
                  ("" "enumitem" t)))
     (add-to-list 'org-latex-packages-alist pkg t))
 
+  ;; @BABELFONT@ stands in for the font declarations, which come from
+  ;; extras/00-hebrew so a machine without culmus falls through to Noto rather
+  ;; than failing the export on a font fontspec cannot find.  Substituted with
+  ;; `replace-regexp-in-string' and not `format': the class body is full of `%'
+  ;; comment markers that `format' would read as specifiers, and the
+  ;; replacement is full of backslashes, hence LITERAL.
   (add-to-list 'org-latex-classes
-               '("article-hebrew"
+               (list "article-hebrew"
+                 (replace-regexp-in-string
+                  "@BABELFONT@" (my/hebrew-babelfont-chain)
                  "\\documentclass[11pt]{article}
 [NO-DEFAULT-PACKAGES]
 [PACKAGES]
@@ -138,9 +148,7 @@ ordinary Org footnote definition."
 % ── Hebrew ──
 \\babelprovide[main, import]{hebrew}
 \\babelprovide[import]{english}
-\\babelfont{rm}{David CLM}
-\\babelfont{sf}{Nachlieli CLM}
-\\babelfont{tt}{Miriam Mono CLM}
+@BABELFONT@
 
 % ── Footnote series ──
 % B..J are bigfoot's; the unlettered series is LaTeX's own \\footnote and needs
@@ -157,12 +165,12 @@ ordinary Org footnote definition."
 \\DeclareNewFootnote{I}
 \\DeclareNewFootnote{J}
 
-[EXTRA]"
-                 ("\\section{%s}" . "\\section*{%s}")
-                 ("\\subsection{%s}" . "\\subsection*{%s}")
-                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))))
+[EXTRA]" t t)
+                 '("\\section{%s}" . "\\section*{%s}")
+                 '("\\subsection{%s}" . "\\subsection*{%s}")
+                 '("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 '("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 '("\\subparagraph{%s}" . "\\subparagraph*{%s}"))))
 
 (provide '02-hebrew-org)
 ;;; 02-hebrew-org.el ends here
