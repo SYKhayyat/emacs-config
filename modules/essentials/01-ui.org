@@ -113,6 +113,45 @@
 (with-eval-after-load 'dired
   (require 'dired-x))
 
+(defun my/drop-none-style (box)
+  "Return BOX with the (:style none) pair removed, rest preserved."
+  (let ((kept nil))
+    (while box
+      (let ((key (pop box))
+            (val (pop box)))
+        (unless (and (eq key :style) (eq val 'none))
+          (push key kept)
+          (push val kept))))
+    (nreverse kept)))
+
+(defun my/sanitize-spec-tree (tree)
+  "Return TREE with every :box carrying (:style none) repaired.
+Emacs 30 rejects :style none as an invalid face box; doom-themes 2.3.0
+sets it on the custom-button faces.  Overriding the faces afterwards
+cannot help, because face realization validates every stored spec on
+the way to the winner, so the invalid one is rewritten here, at install
+time, the same way upstream fixed it: the style pair is dropped and the
+rest of the box is kept."
+  (cond ((not (consp tree)) tree)
+        ((and (eq (car tree) :box)
+              (consp (cdr tree))
+              (listp (cadr tree))
+              (eq (plist-get (cadr tree) :style) 'none))
+         (cons :box (cons (my/drop-none-style (cadr tree))
+                          (my/sanitize-spec-tree (cddr tree)))))
+        (t (cons (my/sanitize-spec-tree (car tree))
+                 (my/sanitize-spec-tree (cdr tree))))))
+
+(defun my/sanitize-face-spec (spec)
+  "Run `my/sanitize-spec-tree' over one theme face SPEC."
+  (my/sanitize-spec-tree spec))
+
+(defun my/sanitize-theme-faces-advice (orig theme &rest specs)
+  "Around advice for `custom-theme-set-faces' running `my/sanitize-face-spec'."
+  (apply orig theme (mapcar #'my/sanitize-face-spec specs)))
+
+(advice-add 'custom-theme-set-faces :around #'my/sanitize-theme-faces-advice)
+
 ;; Theme
 (use-package doom-themes
   :demand t
