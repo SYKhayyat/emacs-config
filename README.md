@@ -100,6 +100,7 @@ one.
 bash tools/check-modules.sh   # consistency — no Emacs needed, ~1 second
 bash tools/tangle.sh          # .org -> .el
 bash tools/verify.sh          # byte-compile against the installed packages
+bash tools/check-face-box.sh  # the :style none sanitizer, all four entry points
 nix flake check               # all of the above, hermetically
 ```
 
@@ -255,8 +256,17 @@ All of them walk `modules/<group>/`.
   directories go on the load-path, so cross-group references resolve the way
   they do at runtime. Uses `~/.emacs.d/elpa` if it exists (portable/MELPA
   machines); on Nix the packages are already on the Emacs binary's own
-  load-path. Wired into `nix flake check` as `emacs-bytecompile`;
+  load-path. Wired into `nix flake check` as `bytecompile`;
   `just verify-emacs` locally.
+- `bash tools/check-face-box.sh` — assert that the `:style none` face-box
+  sanitizer is installed on **all four** entry points a face spec can arrive
+  through, and that each one repairs the spec rather than rejecting it. Emacs 30
+  refuses `:style none` in a box; doom-themes 2.3.0 writes it on five `custom-*`
+  faces, and two of those four entry points *store* the bad spec and fail later,
+  mid-redisplay — which is how a load report came to name `11-pdf` for a face
+  neither it nor its neighbours write. Wired into `nix flake check` as
+  `facebox`. It ends with a control that takes the advices off and requires the
+  same call to fail, so it cannot pass on the config that still has the bug.
 - `bash tools/deploy.sh [target]` — back up and mirror the config into a live
   Emacs dir, preserving the group structure. Use on **non-Nix** machines. Do
   **not** point it at `~/.config/emacs` on NixOS: home-manager owns `init.el`

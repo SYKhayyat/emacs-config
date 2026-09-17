@@ -84,10 +84,35 @@
         #
         # This is the job that would have caught the post-split `require`
         # breakage that silently killed 1,569 lines of the seforim system.
-        modules =
-          pkgs.runCommand "check-modules" { nativeBuildInputs = [ pkgs.bash ]; }
+        modules = pkgs.runCommand "check-modules" { nativeBuildInputs = [ pkgs.bash ]; } ''
+          bash ${self}/tools/check-modules.sh ${self}/modules
+          touch $out
+        '';
+
+        # The `:style none' face-box sanitizer, driven through all four entry
+        # points a face spec can arrive through -- custom-theme-set-faces,
+        # custom-set-faces, face-spec-set and set-face-attribute.
+        #
+        # Two of those store the spec and fail later, mid-redisplay, where the
+        # error is attributed to whichever module happened to be loading; two
+        # validate eagerly.  Compiling cannot see any of it -- all four calls
+        # byte-compile clean -- and neither can a batch run, because the paths
+        # that need a display are the ones that fail first in a real session.
+        # This is the one check that has to construct the failure on purpose.
+        facebox =
+          pkgs.runCommand "check-face-box"
+            {
+              nativeBuildInputs = [
+                (import ./emacs-package.nix { inherit pkgs; })
+                pkgs.bash
+              ];
+            }
             ''
-              bash ${self}/tools/check-modules.sh ${self}/modules
+              cp -r ${self} ./src
+              chmod -R u+w ./src
+              export HOME="$PWD/home"
+              mkdir -p "$HOME"
+              bash ./src/tools/check-face-box.sh
               touch $out
             '';
 

@@ -146,11 +146,66 @@ rest of the box is kept."
   "Run `my/sanitize-spec-tree' over one theme face SPEC."
   (my/sanitize-spec-tree spec))
 
+;; ── `custom-theme-set-faces' was the only door, and there are four ────────
+;;
+;; The sanitizer above was written against the one entry point doom-themes
+;; happens to use -- `custom-theme-set-faces' -- and that turned out to be the
+;; least likely of the four to be the one that bites:
+;;
+;;   custom-theme-set-faces  stores the spec.  Emacs validates it later, on the
+;;                           way through redisplay, so the error is raised in
+;;                           whatever Lisp was running at that moment.  The
+;;                           report that prompted this blamed 11-pdf and
+;;                           16-seforim-integration; neither file mentions a
+;;                           face, and neither is at fault.
+;;   custom-set-faces        same shape, same deferred failure.
+;;   face-spec-set           validates *eagerly*.  This is the one that threw.
+;;   set-face-attribute      validates eagerly too, and takes a plist rather
+;;                           than a spec tree, so it needs its own walker.
+;;
+;; All four are advised, because the cost of missing one is a session that
+;; starts with two modules "failed to load" for a reason neither of them
+;; caused.  The two spec-tree entry points share an advice; the other two take
+;; arguments of a different shape and get their own.
+
+(defun my/sanitize-box (box)
+  "Return BOX with a `(:style none)' pair dropped; BOX itself if it is clean."
+  (if (and (consp box) (eq (plist-get box :style) 'none))
+      (my/drop-none-style box)
+    box))
+
+(defun my/sanitize-args-boxes (args)
+  "Return plist ARGS with every `:box' value passed through `my/sanitize-box'."
+  (let ((out nil))
+    (while args
+      (let ((key (pop args)))
+        (if (null args)
+            (push key out)              ; odd-length plist: keep the bare key
+          (let ((val (pop args)))
+            (push key out)
+            (push (if (eq key :box) (my/sanitize-box val) val) out)))))
+    (nreverse out)))
+
 (defun my/sanitize-theme-faces-advice (orig theme &rest specs)
   "Around advice for `custom-theme-set-faces' running `my/sanitize-face-spec'."
   (apply orig theme (mapcar #'my/sanitize-face-spec specs)))
 
+(defun my/sanitize-custom-faces-advice (orig &rest specs)
+  "Around advice for `custom-set-faces', which takes specs and no theme."
+  (apply orig (mapcar #'my/sanitize-face-spec specs)))
+
+(defun my/sanitize-face-spec-set-advice (orig face spec &rest args)
+  "Around advice for `face-spec-set', whose SPEC is a spec tree."
+  (apply orig face (my/sanitize-face-spec spec) args))
+
+(defun my/sanitize-set-face-attribute-advice (orig face frame &rest args)
+  "Around advice for `set-face-attribute', whose ARGS are a plist."
+  (apply orig face frame (my/sanitize-args-boxes args)))
+
 (advice-add 'custom-theme-set-faces :around #'my/sanitize-theme-faces-advice)
+(advice-add 'custom-set-faces :around #'my/sanitize-custom-faces-advice)
+(advice-add 'face-spec-set :around #'my/sanitize-face-spec-set-advice)
+(advice-add 'set-face-attribute :around #'my/sanitize-set-face-attribute-advice)
 
 ;; Theme
 (use-package doom-themes
