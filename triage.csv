@@ -1,0 +1,22 @@
+number,title,url,D,R,why,risk
+2,Bug: my/insert-hebrew-quotes doubles the mark at point,https://github.com/SYKhayyat/emacs-config/issues/2,1,3,Wrap region / pair around point; doubled mark is visible,Visible doubled mark
+3,Latent bug: daf-to-PDF-page math disagrees between goto-daf and pd-page,https://github.com/SYKhayyat/emacs-config/issues/3,2,4,Unify daf formula; fallback silently jumps to wrong page,Silent wrong page
+4,Inefficiency/duplication: three overlapping large-file handlers,https://github.com/SYKhayyat/emacs-config/issues/4,3,2,Unify thresholds/hooks; perf duplication visible lag at worst,Visible lag
+5,Perf: seforim--otzaria-file-line reads an entire .txt just to fetch one line,https://github.com/SYKhayyat/emacs-config/issues/5,2,2,Cache buffer / ranged read; repeated slurp is slow only,Slow only
+6,Hacky: module identity is coupled to load order,https://github.com/SYKhayyat/emacs-config/issues/6,5,3,Stable feature names + loader rework; renames break loading visibly,Visible load break
+7,Perf: study log fully rewritten to disk on every file visit,https://github.com/SYKhayyat/emacs-config/issues/7,2,2,Append + store abs path; rewrite/scan waste only,Waste only
+8,No automated tests despite documented silent regressions,https://github.com/SYKhayyat/emacs-config/issues/8,5,2,New ert harness + cases; missing coverage no direct harm,No direct harm
+9,Duplication: rich footnotes are a single want implemented three ways,https://github.com/SYKhayyat/emacs-config/issues/9,4,2,Shared footnote layer decision; triplicated preambles test-visible,Test-visible
+10,Cleanup: duplicate org headers and a stale keybinding comment,https://github.com/SYKhayyat/emacs-config/issues/10,1,1,Delete dup headers fix comment; harmless,Harmless
+11,Package choice: undo-tree re-architects all of undo for one visualizer,https://github.com/SYKhayyat/emacs-config/issues/11,3,3,Swap to built-in undo-redo; invasive surgery risks visible breakage,Visible breakage
+12,Silent cross-file override: read-process-output-max downgraded 4MiB to 1MiB,https://github.com/SYKhayyat/emacs-config/issues/12,1,3,Keep 4MiB dedupe knobs; LSP/rg throughput degraded visibly,Visible slowdown
+13,Two icon systems loaded every session,https://github.com/SYKhayyat/emacs-config/issues/13,1,1,Drop all-the-icons; duplicate fonts/caches only,Bloat only
+14,Lens-1: seforim subsystem coupled to Otzaria app-owned layout,https://github.com/SYKhayyat/emacs-config/issues/14,5,3,Contract test / Sefaria boundary is architectural; drift breaks visibly,Visible drift break
+15,[Low/perf] :demand t opt-outs of always-defer (by design),https://github.com/SYKhayyat/emacs-config/issues/15,2,1,Defer via hooks/bind; startup bloat only,Bloat only
+16,[Low/bug] Startup network+Org only on portable/first-run,https://github.com/SYKhayyat/emacs-config/issues/16,2,3,Idle-timer/async tangle+refresh; startup block is visible,Visible block
+18,[Low/perf] gptel ollama probe blocks first use only,https://github.com/SYKhayyat/emacs-config/issues/18,1,3,Lazy async models refresh; fork blocks visibly if daemon down,Visible block
+19,[Low/bug] Markdown preview sync + idle timer (on-demand),https://github.com/SYKhayyat/emacs-config/issues/19,2,3,Per-buffer timer + async; wrong-buffer preview is visible,Visible wrong preview
+20,[Low/bug] Typst preview re-enable leaks process,https://github.com/SYKhayyat/emacs-config/issues/20,2,3,Sentinel + guards + kill; leaked watch procs pile visibly,Visible proc leak
+21,[Low/perf] find-file-hook line-scan O(n) per open,https://github.com/SYKhayyat/emacs-config/issues/21,2,2,Size check + single hook; per-open scan waste,Waste only
+23,[Info] Double server-start + heavy reload (harmless),https://github.com/SYKhayyat/emacs-config/issues/23,1,1,Single deferred start; duplicate hooks/timers harmless,Harmless
+24,[Low/bug] Key shadowing + fragile requires,https://github.com/SYKhayyat/emacs-config/issues/24,2,3,Remap prefix + explicit requires; shadowed keys break visibly,Visible break
