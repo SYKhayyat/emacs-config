@@ -2,7 +2,7 @@
 #+PROPERTY: header-args:emacs-lisp :tangle 18-tabs.el :mkdirp yes :comments no
 
 The one tab system in this config is the built-in workspace *tab-bar*, set up in
-=05-navigation=: each tab is a complete window layout, so a tab is a *workspace*.
+=04-navigation=: each tab is a complete window layout, so a tab is a *workspace*.
 Split the window as much as you like inside a tab and the whole arrangement
 belongs to that tab — switching tabs swaps the entire layout at once.  That is
 the browser-tab-for-a-workspace model, and it is the natural fit for splits: the
@@ -20,7 +20,7 @@ What each thing is, so the keys make sense:
 - *Switch buffer* (=C-x b= / hydra _b_) = get to any open file inside a workspace.
 - *Kill a buffer* = actually close the file (=C-x k=, or the hydra).
 
-Nothing here duplicates =05-navigation=; it only surfaces and extends it.
+Nothing here duplicates =04-navigation=; it only surfaces and extends it.
 
 * Open a projectile project in its own workspace tab
 A fresh workspace tab, switched into a project, and named after it.  Aborting
@@ -46,7 +46,7 @@ the picker cleans up the tab.
 Sticky (pink) so you can step through workspaces with =h/l= repeatedly;
 =] [/= and =1-9= make the workspace row behave like the row it is.  The
 switch/manage column routes through =consult-buffer= and the kill commands from
-=05-navigation=, which is what lets one menu reach everything inside a
+=04-navigation=, which is what lets one menu reach everything inside a
 workspace.
 #+begin_src emacs-lisp
 (with-eval-after-load 'hydra

@@ -22,8 +22,17 @@
   (interactive)
   (compile "nix-collect-garbage -d"))
 
-;; Note: Keybindings are handled by Hydra C-c E in 16-hydras.el
-;; to avoid "non-prefix key" errors.
+;; Keybindings: these three commands are reachable only via M-x.  They were
+;; previously delegated to "Hydra C-c E in 16-hydras.el" -- a file that does not
+;; exist; it is =23-hydras= in essentials and =17-hydras= in extras, and neither
+;; ever defined a C-c E hydra.  The essentials/extras renumber took the bindings
+;; with the file and left the comment pointing at a name nothing resolves.
+;; An interface edge stored in a comment is not checked and cannot be; see the
+;; prose-reference rule now in tools/check-modules.sh, which is why this is a
+;; real binding rather than another comment.
+(global-set-key (kbd "C-c C-e R") #'my/nixos-rebuild)
+(global-set-key (kbd "C-c C-e h") #'my/home-manager-switch)
+(global-set-key (kbd "C-c C-e g") #'my/nix-garbage-collect)
 
 (provide '22-nix-system)
 #+end_src

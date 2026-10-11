@@ -8,9 +8,10 @@ belong to this half of the config: =C-c S= drives the seforim system and
 =C-c D= drives RTL/LTR.
 
 The Spell line that used to sit in the direction hydra is gone. Hebrew spell
-checking through Enchant was not reliable enough to be worth the key, and
-=essentials/23-hydras= now has a general =s: set language= under =C-c W=
-for the languages that do work.
+checking through Enchant was not reliable enough to be worth the key. Note that
+=essentials/23-hydras= does *not* now carry an =s: set language= row — that
+line is commented out there, with jinx. This paragraph used to claim otherwise,
+which is the stale-prose failure mode `tools/check-modules.sh' now guards.
 
 #+begin_src emacs-lisp
 ;;; 17-hydras.el --- Seforim and direction hydras -*- lexical-binding: t; -*-

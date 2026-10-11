@@ -100,6 +100,31 @@ tangle[base] == "" && /^#\+PROPERTY:[[:space:]]+header-args:emacs-lisp[[:space:]
     if ($fi == ":tangle") { tangle[base] = $(fi + 1); break }
 }
 
+# -- prose cross-references, OUTSIDE src blocks ------------------------------
+# The literate .org layer is a SECOND copy of the architecture, and it goes
+# stale silently: a renumber or a deleted module leaves `=NN-name=' pointing at
+# a file that no longer exists, and nothing above notices because a comment is
+# not code.  Three such references are live today -- 18-tabs.org names a
+# nonexistent `05-navigation' twice (it is 04-navigation), and
+# extras/17-hydras.org advertises an `s: set language' hydra row that
+# extras/23-hydras commented out.  Interface edges stored in prose are not
+# checked and cannot be, until something checks them.
+#
+# Only module-shaped names are read, so `=o/`-style prose and real library names
+# are untouched.  The boundary rejects ranges like "heads =1-9=" and =1-9= after
+# a bracket, which are not module references.  Verified against a synthetic
+# fixture before being added.
+!in_src && /(^|[^[:alnum:]-])=[0-9]+[a-z]?-[a-z0-9-]+/ {
+  rest = $0
+  while ((t = grab(rest, "(^|[^[:alnum:]-])=[0-9]+[a-z]?-[a-z0-9-]+")) != "") {
+    rest = substr(rest, RSTART + RLENGTH)
+    sub(/^.*=/, "", t)
+    # A trailing digit run is a range, not a module: `=1-9=' enumerates heads.
+    if (t !~ /-[0-9]+$/ && !(t in names) && !(t in namesall)) proseenames[t]++
+    if (t !~ /-[0-9]+$/) proseat[t] = proseat[t] " " relof[base] ":" FNR
+  }
+}
+
 tolower($0) ~ /^[[:space:]]*#\+begin_src[[:space:]]+emacs-lisp/ { in_src = 1; next }
 tolower($0) ~ /^[[:space:]]*#\+end_src/                        { in_src = 0; next }
 
@@ -182,6 +207,16 @@ END {
   for (i = 1; i <= ng; i++)
     if (!(gates[i] in names))
       err("init.el: my/module-enabled-p gates on \"" gates[i] "\", which no module is named")
+
+  # -- prose cross-references must name a module that exists ----------------
+  # Built here rather than in the line rules, because `names` is only complete
+  # once every file has been seen.
+  for (i = 1; i <= nf; i++) { s = order[i]; sub(/\.el$/, "", s); namesall[s] = 1 }
+  for (t in proseenames)
+    if (!(t in namesall)) {
+      where = proseat[t]; sub(/^ /, "", where)
+      err("prose references = " t "=, which no module provides (at " where ")")
+    }
 
   for (i = 1; i <= ne; i++) print errs[i]  > "/dev/stderr"
   for (i = 1; i <= nw; i++) print warns[i] > "/dev/stderr"
