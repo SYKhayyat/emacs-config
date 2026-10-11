@@ -78,9 +78,22 @@
 ;; Frame
 (add-to-list 'default-frame-alist '(height . 35))
 ;; Files and backups
+;; Emacs defaults are t/t/t for all three.  This config is a daily driver, and
+;; the trade is backwards: auto-save's idle timer costs a few cheap wakeups a
+;; minute, while having it off means a crash, a restart, or an OOM kill loses
+;; every unsaved buffer.  A SIGSEGV in the font-rendering path is already on the
+;; record (#30), and systemd restarts the daemon from it.
+;;
+;; Lockfiles are off by the same stroke, and combined with init.el's
+;; `vc-handled-backends '(Git)' -- one supported VCS -- two Emacs instances can
+;; clobber each other silently (#47).
+;;
+;; Backups stay off: they are the least costly of the three to lose, and they
+;; are the only one that writes on every save.
 (setq make-backup-files nil
-      auto-save-default nil
-      create-lockfiles nil)
+      auto-save-default t
+      auto-save-time (* 10 60)
+      create-lockfiles t)
 
 ;; Encoding
 (set-default-coding-systems 'utf-8)

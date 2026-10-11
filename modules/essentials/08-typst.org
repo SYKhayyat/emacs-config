@@ -6,10 +6,28 @@
 #+begin_src emacs-lisp
 ;;; 08-typst.el --- Typst mode configuration -*- lexical-binding: t; -*-
 
+;; Grammars are provisioned by the package set (`treesit-grammars.with-all-grammars'
+;; in emacs-package.nix), so nothing needs installing at runtime.
+;;
+;; `treesit-auto-install' must NOT be 'prompt' here.  Answering its y/n prompt
+;; runs (treesit-auto.el:484-509):
+;;
+;;     (treesit-auto--prompt-to-install-package lang)
+;;     (if (and (stringp buffer-file-name) (file-exists-p buffer-file-name))
+;;         (revert-buffer nil t)          ;; <-- noconfirm = t
+;;       ...)
+;;
+;; `noconfirm = t' means Emacs DISCARDS UNSAVED CHANGES without asking.  So on any
+;; machine missing a grammar -- i.e. exactly the fresh portable box this config
+;; targets -- opening a file, typing, and saying `y' to "install this grammar?"
+;; loses the typing.  Install deliberately with `M-x treesit-auto-install-all'
+;; instead, which never touches a buffer.
+;;
+;; `:demand t' is also dropped: `:mode' associations register eagerly regardless,
+;; and this package costs ~75ms at startup for nothing.
 (use-package treesit-auto
-  :demand t
   :config
-  (setq treesit-auto-install 'prompt)
+  (setq treesit-auto-install nil)
   (treesit-auto-add-to-auto-mode-alist 'all)
   (global-treesit-auto-mode 1))
 

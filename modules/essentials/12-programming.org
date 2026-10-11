@@ -7,11 +7,14 @@
 ;;; 12-programming.el --- Programming modes and LSP -*- lexical-binding: t; -*-
 
 ;; Eglot - LSP client
+;; No `java-mode' here: `eglot-java-mode' already calls `eglot-ensure' via
+;; `eglot-java--ensure', so the two hooks were both redundant and conflicting --
+;; and `run-hooks' aborts on the first error, so a failed eglot-ensure meant
+;; eglot-java-mode never ran at all (#31).
 (use-package eglot
   :ensure nil
   :hook ((python-mode . eglot-ensure)
          (rust-mode . eglot-ensure)
-         (java-mode . eglot-ensure)
          (nix-mode . eglot-ensure))
   :config
   (setq eglot-autoshutdown t
@@ -38,8 +41,23 @@
   :hook (rust-mode . cargo-minor-mode))
 
 ;; Java
+;; Gate on the server binary.  Without this, `eglot-java-mode' runs
+;; `eglot-java--ensure' inside the mode hook, which does a SYNCHRONOUS
+;; `url-retrieve-synchronously' of ~100MB of JDT and then:
+;;
+;;     (let ((b (find-file dest-abspath)))
+;;       (switch-to-buffer b)
+;;       (tar-untar-buffer)
+;;       (kill-buffer b))
+;;
+;; i.e. your window switches to a tar buffer mid-find-file.  Gate on the tool, not
+;; the OS -- the same axis `my/module-enabled-p' uses in init.el.
 (use-package eglot-java
-  :hook (java-mode . eglot-java-mode))
+  :if (executable-find "jdtls")
+  :hook (java-mode . eglot-java-mode)
+  :config
+  ;; Stop it rewriting eglot-server-programs behind your back.
+  (setq eglot-java-eglot-server-programs-manual-updates t))
 
 ;; Nix
 (use-package nix-mode
