@@ -126,8 +126,39 @@ ordinary Org footnote definition."
   ;; a non-Hebrew document is not made to load bidi machinery it never uses.
   (dolist (pkg '(("bidi=basic" "babel" t)
                  ("" "bigfoot" t)
-                 ("" "enumitem" t)))
+                 ("" "enumitem" t)
+                 ("" "etoolbox" t)))
     (add-to-list 'org-latex-packages-alist pkg t))
+
+  ;; `article-hebrew' is registered but never SELECTED: not one of the 689 .org
+  ;; files under ~/Documents/siach_shai/b_typed carries a #+LATEX_CLASS line, so
+  ;; Org exports plain `article' -- no fontspec, no \babelfont, no Hebrew font --
+  ;; and bold Hebrew dies as "Missing character: There is no ה (U+05D4) in font
+  ;; ec-lmbx10!".  Choose the class for the user instead of making every file
+  ;; remember: any org file with no explicit #+LATEX_CLASS that contains Hebrew
+  ;; gets `article-hebrew'.  An explicit #+LATEX_CLASS in the file still wins --
+  ;; this only supplies a default.
+  (defun my/org--hebrew-buffer-p ()
+    "Non-nil if the current buffer contains Hebrew script."
+    (save-excursion
+      (goto-char (point-min))
+      (re-search-forward "[\u0590-\u05FF]" nil t)))
+
+  ;; `:latex-class' is an org-export option (ox-latex.el:123) defaulting to
+  ;; `org-latex-default-class'.  Buffer-local, and an explicit #+LATEX_CLASS in
+  ;; the file wins over any value set here -- so setting it supplies a default
+  ;; only when the file is silent.
+  (defun my/org--default-latex-class (&optional backend)
+    "Select `article-hebrew' for Hebrew documents that name no LaTeX class."
+    (when (eq backend 'latex)
+      (save-excursion
+        (goto-char (point-min))
+        (when (and (not (bound-and-true-p org-latex-class))
+                   (re-search-forward "[\u0590-\u05FF]" nil t))
+          (setq-local org-latex-class "article-hebrew")
+          t))))
+
+  (add-hook 'org-export-before-processing-hook #'my/org--default-latex-class)
 
   (add-to-list 'org-latex-classes
                '("article-hebrew"
@@ -156,6 +187,34 @@ ordinary Org footnote definition."
 \\DeclareNewFootnote{H}
 \\DeclareNewFootnote{I}
 \\DeclareNewFootnote{J}
+
+% ── List depth ──
+% Org turns headings past level 3 into nested \\begin{enumerate}.  A shiur-style
+% outline reaches depth 5+, past LaTeX's default \\@listdepth of 4, and fails
+% with \"! LaTeX Error: Too deeply nested\".  Verified against
+% sikkum_basar_chalav.org: 17 such errors before, 0 after.
+%
+% enumitem must be loaded first, and \\renewlist discards its default label
+% formats -- measured, each line is load-bearing:
+%   \\setlistdepth{20} alone      -> 17 nesting errors still
+%   \\renewlist x2, no \\setlist  -> 0 nesting, 684 \"Undefined label\"
+%   all four                     -> 0 and 0
+\\renewlist{itemize}{itemize}{20}
+\\renewlist{enumerate}{enumerate}{20}
+\\setlist[itemize]{label=\\textbullet}
+\\setlist[enumerate]{label=\\arabic*.}
+
+% ── \\footnote inside a heading ──
+% \\footnote is not \\robust, so one inside a sectioning argument (\\subsubsection
+% [short]{long ... \\footnote{...}}) makes LaTeX write to the footnote insert
+% while that argument is still being expanded, giving \"! Paragraph ended before
+% \\@sect was complete\".  \\robustify from etoolbox fixes it.
+%
+% This MUST come after every \\DeclareNewFootnote above: bigfoot redefines
+% \\footnote, so a robustify placed earlier is silently undone.  Verified --
+% with it before \\DeclareNewFootnote the error persists; after, it clears.
+\\usepackage{etoolbox}
+\\AtBeginDocument{\\robustify\\footnote}
 
 [EXTRA]"
                  ("\\section{%s}" . "\\section*{%s}")
