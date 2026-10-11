@@ -136,10 +136,14 @@ coherent before shrinking.
 
 ## Phase 8 — Hygiene
 
+- [ ] **#14** seforim coupled to Otzaria's app-owned on-disk format with no
+      contract test. Resolved by #27/#26 (gate or drop), not a separate task.
 - [ ] #16 startup network, #19 markdown sync, #20 typst process leak,
       #13 two icon systems, #10 duplicate org headers, #7 study-log rewrite,
       #5 file-line O(file), #2 hebrew-quotes pair, #3 daf→page off-by-one,
-      #11 undo-tree decision, #9 footnote triplication.
+      #11 undo-tree decision, #9 footnote triplication, #18 ollama probe
+      (blocking `call-process`, no timeout — see #39's class),
+      #24 key shadowing + fragile requires (subsumed by #50/#51).
 - [ ] **#37** 9 confirmed cross-file overrides (partly fixed by #48/#49).
 - [ ] **#30** the one SIGSEGV — *not reproduced*, cause unknown. Revisit only if
       it recurs; do not spend effort speculating.
