@@ -25,31 +25,34 @@ want that was never stated and has no corpus installed.
 - `1699866` — Hebrew LaTeX export: list depth, `\footnote`-in-heading, and
   `article-hebrew` auto-selection. `sikkum_basar_chalav.org` now compiles
   (exit 0, clean PDF). #33 partially fixed.
+- `f043378` — Phase 0 complete: #35 (treesit data loss), #38 (auto-save off),
+  #31 (`.java` double hook + JDT download). All three closed.
+- `e0258c0` — `check-modules.sh` now validates `=NN-name=` prose references.
+  Found and fixed three stale ones. #58 closed. (#6 partly advanced.)
 
 ---
 
 ## Phase 0 — Stop the data loss
 
-Unattended data loss outranks everything. All three are small.
+~~Unattended data loss outranks everything. All three are small.~~ **DONE.**
 
-- [ ] **#35** `treesit-auto 'prompt` reverts unsaved buffers with `noconfirm=t` on
+- [x] **#35** `treesit-auto 'prompt` reverts unsaved buffers with `noconfirm=t` on
       any non-Nix machine missing a grammar. **Fix: `(setq treesit-auto-install nil)`.**
       One line.
-- [ ] **#38** auto-save, lockfiles and backups all off — a crash loses every
+- [x] **#38** auto-save, lockfiles and backups all off — a crash loses every
       unsaved buffer. One line in `01-ui`.
-- [ ] **#31** `.java` errors on open or blocks on a 100 MB JDT download. Two
+- [x] **#31** `.java` errors on open or blocks on a 100 MB JDT download. Two
       conflicting hooks on `java-mode-hook`, no capability gate.
 
 ## Phase 1 — Foundations (verify-first)
 
 - [ ] **#8** automated tests. Everything below is verified by hand right now;
-      this is what stops the next silent regression.
+      this is what stops the next silent regression. **Now the top item.**
+- [x] **#58** `check-modules.sh` validates `=NN-name=` prose references. Three
+      were stale; fixed. `22-nix-system`'s three commands are now really bound
+      rather than described as reachable from a hydra that never existed.
 - [ ] **#6** module identity coupled to load order (see #47).
 - [ ] **#12** `read-process-output-max` silently downgraded 4 MiB → 1 MiB.
-- [ ] **New: extend `tools/check-modules.sh`** to assert every `=NN-name=`
-      reference in an `.org` resolves to a real module. Three are already stale
-      (`18-tabs.org` names a nonexistent `05-navigation` twice; `17-hydras.org`
-      advertises a commented-out row). Cheapest high-leverage line in the repo.
 
 ## Phase 2 — Hebrew correctness
 
