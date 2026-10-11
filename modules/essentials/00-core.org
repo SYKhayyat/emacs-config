@@ -282,8 +282,16 @@ here by `my/large-file-mode' instead of that degradation."
   "Non-nil when the current buffer is being handled for a large file.")
 
 (defun my/large-file-p ()
-  "Non-nil when `buffer-file-name' is at least `my/large-file-size' bytes."
+  "Non-nil when `buffer-file-name' is at least `my/large-file-size' bytes.
+
+The `file-exists-p' guard is load-bearing, not defensive padding.
+`file-attributes' returns nil for a file that is not on disk yet, and
+`nth' applied to nil signals a wrong-type-argument -- which this predicate
+did, on `find-file-hook', for every file created through Emacs.  A brand new
+path therefore failed to open, while any file that already existed was
+fine, so the breakage tracked 'does not exist yet' rather than 'is large'."
   (and buffer-file-name
+       (file-exists-p buffer-file-name)
        (>= (nth 7 (file-attributes buffer-file-name))
            my/large-file-size)))
 
