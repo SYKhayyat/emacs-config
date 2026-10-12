@@ -34,10 +34,34 @@
     (my/set-rtl)))
 
 (defun my/toggle-bidi-reordering ()
-  "Toggle bidi reordering."
+  "Toggle bidi reordering in the current buffer.
+`setq-local', and not `setq', because the intent is per-buffer and the hydra
+advertises this as a per-buffer head.
+
+Measured, since it was filed as a bug and is not one (#32): a bare `setq' inside
+a buffer with no local value CREATES a local binding rather than changing the
+global default, so this was never a session-wide leak --
+
+    before   local? = nil    value = t
+    after    local? = t     value = nil   global = t
+
+so the change is about intent and about not depending on that behaviour, not about
+a live bug."
   (interactive)
-  (setq bidi-display-reordering (not bidi-display-reordering))
+  (setq-local bidi-display-reordering (not bidi-display-reordering))
   (message "Bidi: %s" (if bidi-display-reordering "ON" "OFF")))
+
+(defun my/toggle-bidi-reordering-global ()
+  "Toggle bidi reordering for the WHOLE session.
+Separate from `my/toggle-bidi-reordering' on purpose: that one is per-buffer, and
+having one command serve both meanings is what made #32's original claim look
+plausible.  Reach for this only when debugging a rendering problem you cannot
+attribute to a buffer."
+  (interactive)
+  (setq-default bidi-display-reordering
+                (not (default-value 'bidi-display-reordering)))
+  (message "Bidi (global default): %s"
+           (if (default-value 'bidi-display-reordering) "ON" "OFF")))
 
 (defun my/setup-rtl-mode ()
   "Setup RTL for prose."

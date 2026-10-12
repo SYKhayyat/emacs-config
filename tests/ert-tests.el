@@ -161,24 +161,34 @@ and this guard is what tells us the setq-local is no longer needed.  #32."
   (skip-unless (boundp 'bidi-display-reordering))
   (should-not (local-variable-p 'bidi-display-reordering)))
 
-(ert-deftest bidi-toggle-does-not-change-the-global-default nil
-  "my/toggle-bidi-reordering must not alter the global default.
-C-c B used (setq bidi-display-reordering ...) on a variable that is not
-buffer-local, so one keystroke in one buffer made every other Hebrew buffer in
-the session render in logical order.  #32."
+(ert-deftest bidi-toggle-creates-a-local-binding nil
+  "my/toggle-bidi-reordering must leave the global default alone.
+RETAINED as a guard, but see the note: this does NOT reproduce #32 as filed.
+
+`bidi-display-reordering' is not automatically buffer-local.  What a bare `setq'
+does inside a buffer that has no local value was measured in Emacs 30.2:
+
+    before  local? = nil   value = t
+    after   local? = t    value = nil   global = t
+
+-- `setq' CREATES a local binding rather than changing the global.  Two buffers
+in the same session, one toggled, the other untouched, global unchanged.  So the
+original #32 claim that `C-c B' corrupted every Hebrew buffer in the session was
+wrong, and `setq-local' is a correctness-of-intent change rather than a bug fix.
+
+Kept because `setq-local' says what is meant and does not depend on that
+`setq'-makes-it-local behaviour holding in some other Emacs.  #32, corrected."
   (ert-tests/load-modules '("extras"))
-  (let ((buf (generate-new-buffer "ert-bidi-victim"))
+  (let ((a (generate-new-buffer "ert-bidi-a"))
+        (b (generate-new-buffer "ert-bidi-b"))
         (before (default-value 'bidi-display-reordering)))
     (unwind-protect
-        (with-current-buffer buf
-          (setq-local bidi-display-reordering t)
-          (my/toggle-bidi-reordering))
-      (should (eq (default-value 'bidi-display-reordering) before))
-      (kill-buffer buf))))
-
-;; ═══════════════════════════════════════════════════════════════════════════
-;; Suite: data safety -- nothing may discard unsaved work unattended
-;; ═══════════════════════════════════════════════════════════════════════════
+        (progn
+          (with-current-buffer a (my/toggle-bidi-reordering))
+          (should (eq (default-value 'bidi-display-reordering) before))
+          (should (eq (with-current-buffer b bidi-display-reordering) before)))
+      (kill-buffer a)
+      (kill-buffer b))))
 
 (defgroup ert-safety nil "Unattended data loss." :group 'ert)
 
