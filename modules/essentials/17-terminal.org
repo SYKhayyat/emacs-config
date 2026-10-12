@@ -7,7 +7,7 @@ running a shell *inside* Emacs also fixes the console paste weirdness.
 
 *Default shell is PowerShell.* Other installed shells (Bash from Git for
 Windows, Nushell) can be picked per tab. Multiple sessions show as
-browser-style *tabs* along the top via =tab-line-mode=.
+terminals appear in the workspace tab strip alongside everything else.
 
 Bindings: =C-`= toggle bottom panel · =C-c t n= new PowerShell tab ·
 =C-c t N= new tab (pick shell) · in a terminal =C-PgDn=/=C-PgUp= switch tabs.
@@ -64,22 +64,23 @@ With prefix arg PICK, prompt for which shell to use."
   (my/new-terminal t))
 #+end_src
 
-* Tabs — show every terminal buffer as a tab
+* Terminals live in the workspace tab strip
+
+Deleted.  This used to arm =tab-line-mode= from =shell-mode-hook= to list shell
+buffers as browser-style tabs, which is the wrong artifact for two reasons:
+
+1. *It replaced the workspace tab-bar.*  =18-tabs= calls the built-in tab-bar
+   "the one tab system in this config"; a mode hook fires the moment you open a
+   terminal, long after load, so it is not settled by load order the way every
+   other conflict in this config is.  Opening one terminal replaced the whole
+   workspace strip with a list containing one tab.  #49.
+2. *Terminals are buffers.*  tab-bar already groups by =mode=, so shell buffers
+   appear in the workspace strip with no special case at all.
+
+The =C-<next>=/=C-<prior>= keys are gone too: =]= and =[= in 18-tabs already
+switch workspace tabs.  Two spellings of the same verb, one of them tied to a
+mechanism that no longer exists, is the ambiguity this removed.
 #+begin_src emacs-lisp
-(defun my/terminal-tabs-setup ()
-  "Turn on tab-line listing all shell buffers as tabs."
-  (setq-local tab-line-tabs-function
-              (lambda ()
-                (seq-filter
-                 (lambda (b) (with-current-buffer b (derived-mode-p 'shell-mode)))
-                 (buffer-list))))
-  (tab-line-mode 1))
-
-(add-hook 'shell-mode-hook #'my/terminal-tabs-setup)
-
-(with-eval-after-load 'shell
-  (define-key shell-mode-map (kbd "C-<next>")  #'tab-line-switch-to-next-tab)
-  (define-key shell-mode-map (kbd "C-<prior>") #'tab-line-switch-to-prev-tab))
 #+end_src
 
 * Toggle a bottom terminal panel

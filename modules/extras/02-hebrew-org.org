@@ -44,6 +44,13 @@ what each backend was measured to do.
 ;; essentials/05-org and 06-org-roam keep the general sets; the Hebrew entries
 ;; are appended here so the base config carries no tag it has no use for.
 (with-eval-after-load 'org
+  ;; `org-capture-templates' is defined in org-capture.el and `org-tag-alist' in
+  ;; org.el proper, and `with-eval-after-load 'org' fires the instant org is
+  ;; loaded -- which under `use-package-always-defer' can be before either
+  ;; exists.  Require the owning libraries here so the hooks below cannot land
+  ;; against a void variable.  Found by tests/ert-tests.el, which loads this
+  ;; module outside a running Emacs and saw (void-variable org-capture-templates).
+  (require 'org-capture)
   (add-to-list 'org-tag-alist '("hebrew" . ?h) t)
   (add-to-list 'org-capture-templates
                '("h" "Hebrew Note" entry

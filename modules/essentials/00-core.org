@@ -234,9 +234,13 @@ rather than silently missing."
   (gcmh-mode 1))
 
 ;; Process performance
-(setq read-process-output-max (* 1024 1024)
-      process-adaptive-read-buffering nil
-      auto-window-vscroll nil
+;; `read-process-output-max' is early-init's to set and it set it to 4 MiB.
+;; Setting it again here silently halved it: Emacs' own default is 64 KiB, so
+;; the sequence was 64 KiB -> 4 MiB -> 1 MiB, and an LSP client streaming
+;; publishDiagnostics gets 4x the read events per response.  `process-adaptive-
+;; read-buffering' is set identically in both files; early-init owns it too.
+;; #12, #47.
+(setq auto-window-vscroll nil
       fast-but-imprecise-scrolling t
       jit-lock-defer-time 0)
 
