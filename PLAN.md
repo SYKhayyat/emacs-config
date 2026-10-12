@@ -28,7 +28,26 @@ want that was never stated and has no corpus installed.
 - `f043378` — Phase 0 complete: #35 (treesit data loss), #38 (auto-save off),
   #31 (`.java` double hook + JDT download). All three closed.
 - `e0258c0` — `check-modules.sh` now validates `=NN-name=` prose references.
-  Found and fixed three stale ones. #58 closed. (#6 partly advanced.)
+  Found and fixed three stale ones. #58 closed.
+- `beb41e4` — **the ert suite (#8)**, 22 tests, and the four bugs it found:
+  #12 (read-process-output-max), #48 (default face had two owners), #49
+  (17-terminal replaced the workspace tab-bar), and a void-variable landmine in
+  `02-hebrew-org`. Plus a stale-`.elc` hazard now covered by a test. All three
+  of #8/#12/#48/#49 closed.
+
+## Running the checks
+
+```
+tools/tangle.sh          # .org -> .el
+tools/check-modules.sh   # tree structure; exits 1 on error
+tools/verify.sh          # byte-compile every module against the real packages
+tools/test.sh            # the ert regression suite (new)
+tools/test.sh niqqud     # substring selectors
+```
+
+`test.sh` is the one that catches values and owners. `verify.sh` and
+`check-modules.sh` cover shape and structure; all three were blind to every bug
+above.
 
 ---
 
@@ -46,13 +65,15 @@ want that was never stated and has no corpus installed.
 
 ## Phase 1 — Foundations (verify-first)
 
-- [ ] **#8** automated tests. Everything below is verified by hand right now;
-      this is what stops the next silent regression. **Now the top item.**
+- [x] **#8** automated tests — **done**, 22 tests, grouped by failure class.
 - [x] **#58** `check-modules.sh` validates `=NN-name=` prose references. Three
       were stale; fixed. `22-nix-system`'s three commands are now really bound
       rather than described as reachable from a hydra that never existed.
-- [ ] **#6** module identity coupled to load order (see #47).
-- [ ] **#12** `read-process-output-max` silently downgraded 4 MiB → 1 MiB.
+- [x] **#12** `read-process-output-max` was downgraded 4 MiB → 1 MiB in `00-core`;
+      removed, `early-init`'s value stands.
+- [ ] **#6** module identity coupled to load order (see #47). The suite's
+      `hygiene-all-modules-load-cleanly` is the first guard against it; the
+      structural fix (stable names that are not ordinals) is still open.
 
 ## Phase 2 — Hebrew correctness
 
@@ -91,12 +112,15 @@ Three bugs each independently block `sikkum_basar_chalav.org`.
 filename digit. Five confirmed instances. Polishing anything below this line is
 polishing the loser.
 
-- [ ] **#47** no ownership model. *(Do the four below; they are the fix.)*
-- [ ] **#48** two modules own the default face. The portable path picks
-      `"JetBrains Mono"` — **not installed here** — so it chooses DejaVu at height
-      90, then loses to a generated `99-local-fonts.el` that is not in this repo.
-- [ ] **#49** `17-terminal` arms `tab-line-mode` from `shell-mode-hook`, replacing
-      the workspace `tab-bar`. **Live at runtime**, unlike every other instance.
+- [ ] **#47** no ownership model. **Two of four done** (#48, #49). Remaining: #50
+      keymap ownership, #51 crux vs visual-line-mode.
+- [x] **#48** two modules owned the default face. Done in `beb41e4`: `01-ui` no
+      longer writes `default` at all, so the portable list — which named
+      `"JetBrains Mono"`, **not installed here** — can no longer choose DejaVu at
+      height 90 only to be corrected by a file outside this repo.
+- [x] **#49** `17-terminal` armed `tab-line-mode` from `shell-mode-hook`, replacing
+      the workspace `tab-bar`. Done in `beb41e4`; the `C-<next>`/`<prior>` keys
+      it installed went with it.
 - [ ] **#50** ~14 undeclared `C-c` families. `M-g` split across two modules with no
       table to keep them consistent.
 - [ ] **#51** global crux `C-a`/`C-k` defeated by `visual-line-mode` in 7 places,
@@ -147,7 +171,7 @@ coherent before shrinking.
       #11 undo-tree decision, #9 footnote triplication, #18 ollama probe
       (blocking `call-process`, no timeout — see #39's class),
       #24 key shadowing + fragile requires (subsumed by #50/#51).
-- [ ] **#37** 9 confirmed cross-file overrides (partly fixed by #48/#49).
+- [ ] **#37** 9 confirmed cross-file overrides. #12, #48, #49 fixed; six remain.
 - [ ] **#30** the one SIGSEGV — *not reproduced*, cause unknown. Revisit only if
       it recurs; do not spend effort speculating.
 - [ ] #23 double server-start — harmless, last.
