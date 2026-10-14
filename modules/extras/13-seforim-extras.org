@@ -32,7 +32,7 @@ a library status dashboard, and a few Embark actions on files.
       (if (fboundp 'my/pdf-jump-to-daf)
           (funcall 'my/pdf-jump-to-daf daf amud)
         (pdf-view-goto-page
-         (+ (* (1- daf) 2) (if (string= amud alef) 0 1)))))
+         (+ (* (- daf 2) 2) (if (string= amud alef) 3 4)))))
      (t
       (let* ((h-daf  (seforim--num-to-heb daf))
              (s-daf  (seforim--h-s 3 16))     ; דף

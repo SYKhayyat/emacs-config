@@ -123,14 +123,14 @@ attribute to a buffer."
 (defun my/insert-hebrew-quotes ()
   "Insert Hebrew quotes (״)."
   (interactive)
-  (insert "״")
-  (save-excursion (insert "״")))
+  (save-excursion (insert "״"))
+  (insert "״"))
 
 (defun my/insert-hebrew-parens ()
   "Insert Hebrew parentheses ()( in reverse order)."
   (interactive)
-  (insert ")")
-  (save-excursion (insert "(")))
+  (save-excursion (insert ")"))
+  (insert "("))
 
 (defun my/count-hebrew-words ()
   "Count Hebrew words in buffer."
