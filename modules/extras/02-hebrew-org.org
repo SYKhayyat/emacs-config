@@ -70,7 +70,8 @@ what each backend was measured to do.
 (with-eval-after-load 'org
   (advice-add 'org-footnote-new :after
               (lambda (&rest _)
-                (when (eq bidi-paragraph-direction 'right-to-left)
+                (when (and (eq bidi-paragraph-direction 'right-to-left)
+                           (looking-back "\\[fn:[^]]+\\]" nil t))
                   (insert ?\x200F)))))
 
 (defun my/org-fix-all-footnotes-rtl ()
