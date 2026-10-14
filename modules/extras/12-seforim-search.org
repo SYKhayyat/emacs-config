@@ -59,7 +59,7 @@ Honours `seforim-niqqud-ignore'; a no-op when it is nil."
   (let ((out (ignore-errors (shell-command-to-string "plocate --limit 1 /"))))
     (when (and out (string-empty-p (string-trim out)))
       (message "Warning: plocate database empty. Run 'sudo updatedb'.")))
-  (call-interactively #'consult-locate))
+  (seforim--call-in-dir #'consult-locate))
 
 ;; ---------------------------------------------------------------------------
 ;; 2. fd — exact filename search within the library
